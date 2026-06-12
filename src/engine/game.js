@@ -513,6 +513,23 @@ function resolveBattleOutcome(state, rng) {
       addEvent(state, { type: 'hunterDefeated', unit: victim.id });
       if (attacker.kind === 'hunter') {
         attacker.tally.killPts = (attacker.tally.killPts || 0) + 500;
+        const stealOptions = [];
+        if (victim.hasTarget) {
+          stealOptions.push({ itemId: 'TARGET', label: 'TARGET ITEM' });
+        }
+        for (const item of victim.items || []) {
+          stealOptions.push({ itemId: item.itemId, identified: item.identified });
+        }
+        if (stealOptions.length > 0) {
+          state.pendingChoice = {
+            kind: 'steal',
+            chooser: state.battle.attacker,
+            defender: state.battle.defender,
+            options: stealOptions,
+          };
+          state.phase = 'choice.steal';
+          return;
+        }
         if (victim.hasTarget) {
           attacker.hasTarget = true;
           victim.hasTarget = false;
@@ -952,6 +969,27 @@ function applyPick(state, action, rng) {
     state.phase = 'turn.postMove';
     return;
   }
+  if (choice.kind === 'steal') {
+    const defender = resolveUnit(state, choice.defender);
+    const attacker = resolveUnit(state, choice.chooser);
+    if (!defender || !attacker) return;
+    if (action.option.itemId === 'TARGET') {
+      defender.hasTarget = false;
+      attacker.hasTarget = true;
+      state.targetHolder = unitRef(state, attacker);
+      addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId: 'TARGET' });
+    } else {
+      const idx = defender.items.findIndex((item) => item.itemId === action.option.itemId && item.identified === action.option.identified);
+      if (idx >= 0 && (attacker.items || []).length < 6) {
+        const item = defender.items.splice(idx, 1)[0];
+        attacker.items.push(item);
+        addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId: item.itemId });
+      }
+    }
+    state.pendingChoice = null;
+    applyEndTurn(state, rng);
+    return;
+  }
   if (choice.kind === 'surrenderGive') {
     const defender = resolveUnit(state, state.battle?.defender);
     const attacker = resolveUnit(state, choice.attacker);
@@ -1019,7 +1057,7 @@ export function applyAction(state, action) {
       applyStep(next, action, rng);
     } else if (next.phase === 'turn.steer' && action.type === 'stop') {
       applyStop(next, rng);
-    } else if (next.phase === 'turn.postMove' && action.type === 'attack') {
+    } else if ((next.phase === 'turn.postMove' || next.phase === 'turn.action') && action.type === 'attack') {
       applyAttack(next, action, rng);
     } else if (next.phase === 'turn.postMove' && action.type === 'pass') {
       applyPass(next, rng);

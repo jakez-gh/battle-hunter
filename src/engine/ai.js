@@ -13,22 +13,10 @@ function getLegalActions(state) {
   return [];
 }
 
-function sortActions(actions) {
-  return [...actions].sort((a, b) => {
-    const order = {
-      attack: 10,
-      move: 20,
-      rest: 30,
-      respond: 5,
-      battleCard: 15,
-      pick: 40,
-      stop: 50,
-      pass: 60,
-      timing: 70,
-      confirm: 80,
-    };
-    return (order[a.type] ?? 100) - (order[b.type] ?? 100);
-  });
+function chooseBattleCard(actions) {
+  const cards = actions.filter((a) => a.type === 'battleCard');
+  const playable = cards.find((a) => a.card);
+  return playable || cards[0];
 }
 
 export function chooseAction(state) {
@@ -38,14 +26,38 @@ export function chooseAction(state) {
     if (state?.phase === 'react.dodge' || state?.phase === 'react.crit') {
       return { type: 'timing', hit: false };
     }
-    const sorted = sortActions(actions);
-    // prefer attack if available, else move, else rest, else first legal action
+    if (state?.phase === 'turn.steer') {
+      const step = actions.find((a) => a.type === 'step');
+      if (step) return step;
+      const stop = actions.find((a) => a.type === 'stop');
+      if (stop) return stop;
+      return actions[0];
+    }
+    if (state?.phase === 'turn.postMove') {
+      const attack = actions.find((a) => a.type === 'attack');
+      if (attack) return attack;
+      return actions.find((a) => a.type === 'pass') || actions[0];
+    }
+    if (state?.phase === 'battle.defCard' || state?.phase === 'battle.atkCard') {
+      return chooseBattleCard(actions);
+    }
+    if (state?.phase === 'battle.response') {
+      const prefer = ['counter', 'guard', 'escape', 'surrender', 'none'];
+      for (const response of prefer) {
+        const candidate = actions.find((a) => a.type === 'respond' && a.response === response);
+        if (candidate) return candidate;
+      }
+      return actions[0];
+    }
+    if (state?.pendingChoice) {
+      return actions[0];
+    }
     const prefer = ['attack', 'move', 'rest', 'respond', 'battleCard', 'pick', 'stop', 'pass', 'confirm'];
     for (const type of prefer) {
-      const candidate = sorted.find((a) => a.type === type);
+      const candidate = actions.find((a) => a.type === type);
       if (candidate) return candidate;
     }
-    return sorted[0];
+    return actions[0];
   } catch (e) {
     return { type: 'pass' };
   }

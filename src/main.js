@@ -160,8 +160,6 @@ const adapt = {
     next.events = [];
     return { state: next, events };
   },
-  // ADAPT: ai.js contract (§3.4) — one chooser-agnostic entry point.
-  aiAction: (state) => ai.chooseAction(state),
   // ADAPT: renderer.js real API — createRenderer(canvas, {atlas}) returning
   // { setState, pushEvents, update(dtMs), draw(), busy(), skip(),
   //   tileAtPixel(px,py), ... }. Tolerates a missing renderer (null): the
