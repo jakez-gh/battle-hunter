@@ -196,6 +196,12 @@ const adapt = {
     }
     drawFallbackBoard(state);
   },
+  // ADAPT: ai.js may want the game legalActions helper attached to the
+  // state object so it can choose actions in a contract-aware way.
+  aiAction: (state) => ai.chooseAction({
+    ...state,
+    legalActions: typeof game?.legalActions === 'function' ? (s) => game.legalActions(s) : undefined,
+  }),
   // ADAPT: unitRef shape isn't pinned by §3.1 — accept ids, indices or units.
   resolveUnit,
   unitName(state, ref) {
