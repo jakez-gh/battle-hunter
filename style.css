@@ -1,0 +1,25 @@
+/* Dark page, centered 4:3 canvas, crisp pixel scaling. */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #0b0b12;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#game {
+  /* largest 4:3 rectangle that fits the window */
+  width: min(100vw, calc(100vh * 4 / 3));
+  height: min(100vh, calc(100vw * 3 / 4));
+  background: #000;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  outline: none;
+  cursor: default;
+}
