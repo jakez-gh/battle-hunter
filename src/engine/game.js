@@ -346,7 +346,8 @@ function drawBox(state, hunter) {
     addEvent(state, { type: 'boxOpened', pos: { ...box }, contents: null });
     return;
   }
-  if ((hunter.items || []).length < 6) {
+  hunter.items = hunter.items || [];
+  if (hunter.items.length < 6) {
     hunter.items.push({ itemId: contents, identified: true });
     addEvent(state, { type: 'boxOpened', pos: { ...box }, contents });
     addEvent(state, { type: 'itemTaken', unit: hunter.id, itemId: contents });
@@ -457,6 +458,15 @@ function endMovement(state, rng) {
   applyEndTurn(state, rng);
 }
 
+function defeatHunter(state, victim, rng) {
+  victim.maxHp = Math.max(1, Math.floor(victim.maxHp / 2));
+  victim.hp = victim.maxHp;
+  victim.pos = randomFreeTile(state, rng);
+  if (victim.status) victim.status.stun = (victim.status.stun || 0) + 1;
+  if (victim.tally) victim.tally.defeats = (victim.tally.defeats || 0) + 1;
+  addEvent(state, { type: 'hunterDefeated', unit: victim.id });
+}
+
 function resolveBattleOutcome(state, rng) {
   const battle = state.battle;
   if (!battle) return;
@@ -466,99 +476,95 @@ function resolveBattleOutcome(state, rng) {
     applyEndTurn(state, rng);
     return;
   }
-  const atkSide = buildBattleSide(state, attacker, battle.attacker.kind);
-  const defSide = buildBattleSide(state, defender, battle.defender.kind);
+  const atkKind = battle.attacker.kind;  // 'hunter' or 'monster' (from ref)
+  const defKind = battle.defender.kind;
+  const atkSide = buildBattleSide(state, attacker, atkKind);
+  const defSide = buildBattleSide(state, defender, defKind);
   const ctx = {
     rng,
     attacker: atkSide,
     defender: defSide,
     response: battle.response,
-    atkCard: battle.atkCard ? battle.atkCard : null,
-    defCard: battle.defCard ? battle.defCard : null,
+    atkCard: battle.atkCard || null,
+    defCard: battle.defCard || null,
     critNegateAttempt: battle.critNegateAttempt || {},
     relicLevel: state.relicLevel,
   };
   const result = resolveBattle(ctx);
   for (const ev of result.events || []) addEvent(state, ev);
+
+  // Apply HP changes from combat (resolveBattle is pure and does not mutate units).
+  if (result.hpChanges) {
+    attacker.hp = Math.max(0, attacker.hp + result.hpChanges.attacker);
+    defender.hp = Math.max(0, defender.hp + result.hpChanges.defender);
+  }
+
+  // Apply status effects from crits.
+  if (result.statuses) {
+    for (const kind of result.statuses.attacker || []) {
+      if (atkKind === 'hunter' && attacker.status) attacker.status[kind] = (attacker.status[kind] || 0) + 1;
+    }
+    for (const kind of result.statuses.defender || []) {
+      if (defKind === 'hunter' && defender.status) defender.status[kind] = (defender.status[kind] || 0) + 1;
+    }
+  }
+
   if (result.outcome.defenderDefeated) {
-    if (battle.defender.kind === 'monster') {
-      const monster = defender;
-      const killer = attacker;
-      const killBonus = MONSTERS[monster.kind]?.killBonus || 0;
-      if (attacker.kind === 'hunter') {
+    if (defKind === 'monster') {
+      const killBonus = MONSTERS[defender.kind]?.killBonus || 0;
+      if (atkKind === 'hunter' && attacker.tally) {
         attacker.tally.killPts = (attacker.tally.killPts || 0) + killBonus;
       }
       let drop = null;
-      if (attacker.kind === 'hunter' && monster.kind !== 'WYRM' && rng.float() < DROP_CHANCE) {
-        const itemId = MONSTERS[monster.kind]?.dropItemId;
-        if (itemId && (attacker.items || []).length < 6) {
-          attacker.items.push({ itemId, identified: true });
-          drop = itemId;
-          addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId });
+      if (atkKind === 'hunter' && defender.kind !== 'WYRM' && rng.float() < DROP_CHANCE) {
+        const itemId = MONSTERS[defender.kind]?.dropItemId;
+        if (itemId) {
+          attacker.items = attacker.items || [];
+          if (attacker.items.length < 6) {
+            attacker.items.push({ itemId, identified: true });
+            drop = itemId;
+            addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId });
+          }
         }
       }
-      addEvent(state, { type: 'monsterKilled', unit: monster.id, drop });
-      monster.hp = 0;
-      monster.pos = null;
-      if (monster.kind === 'WYRM' && state.deck.length === 0) {
-        return setMissionOver(state, false, 'WYRM killed the target holder');
-      }
+      addEvent(state, { type: 'monsterKilled', unit: defender.id, drop });
+      defender.hp = 0;
+      defender.pos = null;
     } else {
-      const victim = defender;
-      victim.maxHp = Math.max(1, Math.floor(victim.maxHp / 2));
-      victim.hp = victim.maxHp;
-      victim.pos = randomFreeTile(state, rng);
-      victim.status.stun = (victim.status.stun || 0) + 1;
-      victim.tally.defeats = (victim.tally.defeats || 0) + 1;
-      addEvent(state, { type: 'hunterDefeated', unit: victim.id });
-      if (attacker.kind === 'hunter') {
-        attacker.tally.killPts = (attacker.tally.killPts || 0) + 500;
+      // Hunter defender defeated.
+      const hadTarget = !!defender.hasTarget;
+      defeatHunter(state, defender, rng);
+      if (atkKind === 'hunter') {
+        if (attacker.tally) attacker.tally.killPts = (attacker.tally.killPts || 0) + 500;
         const stealOptions = [];
-        if (victim.hasTarget) {
-          stealOptions.push({ itemId: 'TARGET', label: 'TARGET ITEM' });
-        }
-        for (const item of victim.items || []) {
-          stealOptions.push({ itemId: item.itemId, identified: item.identified });
-        }
+        if (hadTarget) stealOptions.push({ itemId: 'TARGET', label: 'TARGET ITEM' });
+        for (const item of defender.items || []) stealOptions.push({ itemId: item.itemId, identified: item.identified });
         if (stealOptions.length > 0) {
           state.pendingChoice = {
             kind: 'steal',
-            chooser: state.battle.attacker,
-            defender: state.battle.defender,
+            chooser: battle.attacker,
+            defender: battle.defender,
             options: stealOptions,
           };
           state.phase = 'choice.steal';
           return;
         }
-        if (victim.hasTarget) {
+        if (hadTarget) {
+          defender.hasTarget = false;
           attacker.hasTarget = true;
-          victim.hasTarget = false;
           state.targetHolder = unitRef(state, attacker);
           addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId: 'TARGET' });
         }
+      } else if (atkKind === 'monster' && hadTarget) {
+        return setMissionOver(state, false, 'monster eliminated target holder');
       }
-      if (attacker.kind === 'monster' && defender.hasTarget && attacker.kind === 'monster' && attacker.kind === 'monster') {
-        return setMissionOver(state, false, 'WYRM killed the target holder');
-      }
     }
   }
-  if (result.outcome.attackerDefeated && attacker.kind === 'hunter') {
-    const victim = attacker;
-    victim.maxHp = Math.max(1, Math.floor(victim.maxHp / 2));
-    victim.hp = victim.maxHp;
-    victim.pos = randomFreeTile(state, rng);
-    victim.status.stun = (victim.status.stun || 0) + 1;
-    victim.tally.defeats = (victim.tally.defeats || 0) + 1;
-    addEvent(state, { type: 'hunterDefeated', unit: victim.id });
+
+  if (result.outcome.attackerDefeated && atkKind === 'hunter') {
+    defeatHunter(state, attacker, rng);
   }
-  if (result.statuses) {
-    for (const kind of result.statuses.attacker || []) {
-      if (attacker.kind === 'hunter') attacker.status[kind] = (attacker.status[kind] || 0) + 1;
-    }
-    for (const kind of result.statuses.defender || []) {
-      if (defender.kind === 'hunter') defender.status[kind] = (defender.status[kind] || 0) + 1;
-    }
-  }
+
   applyEndTurn(state, rng);
 }
 
@@ -767,6 +773,7 @@ function applyMove(state, action, rng) {
 function applyStep(state, action, rng) {
   const current = resolveUnit(state, state.current);
   if (!current || !state.move) return;
+  const isHunterUnit = state.current?.kind === 'hunter';
   const delta = DIRS[action.dir];
   if (!delta) throw new Error('invalid step direction');
   const nextPos = { x: current.pos.x + delta.x, y: current.pos.y + delta.y };
@@ -775,65 +782,65 @@ function applyStep(state, action, rng) {
   current.pos = nextPos;
   state.move.path.push({ ...nextPos });
   state.move.remaining = Math.max(0, state.move.remaining - 1);
-  const trap = state.board.traps.find((t) => samePos(t, nextPos));
-  if (trap) {
-    const chance = passiveEvasion(current, state.move.cardPlayed);
-    if (rng.float() < chance) {
-      addEvent(state, { type: 'trapDodged', unit: current.id, pos: { ...nextPos } });
-      return;
+  if (isHunterUnit) {
+    const trap = state.board.traps.find((t) => samePos(t, nextPos));
+    if (trap) {
+      const chance = passiveEvasion(current, state.move.cardPlayed);
+      if (rng.float() < chance) {
+        addEvent(state, { type: 'trapDodged', unit: current.id, pos: { ...nextPos } });
+        if (state.move.remaining > 0) return;
+      } else if (current.human) {
+        state.phase = 'react.dodge';
+        state.move.trap = trap;
+        return;
+      } else {
+        triggerTrap(state, current, trap, rng, true);
+        return;
+      }
     }
-    if (current.human) {
-      state.phase = 'react.dodge';
-      state.move.trap = trap;
-      return;
+    const flag = state.board.flags.find((f) => samePos(f, nextPos) && !f.taken);
+    if (flag) {
+      flag.taken = true;
+      const roll = rng.d6();
+      flagEffect(state, current, flag, roll, rng);
     }
-    triggerTrap(state, current, trap, rng);
-    return;
-  }
-  const flag = state.board.flags.find((f) => samePos(f, nextPos) && !f.taken);
-  if (flag) {
-    flag.taken = true;
-    const roll = rng.d6();
-    flagEffect(state, current, flag, roll, rng);
   }
   if (state.move.remaining === 0) {
-    if (samePos(current.pos, state.board.exit)) {
+    if (isHunterUnit && samePos(current.pos, state.board.exit)) {
       if (current.hasTarget) {
         setMissionOver(state, true);
       } else {
         current.pos = randomFreeTile(state, rng);
-        current.status.leg = false;
+        if (current.status) current.status.leg = false;
         addEvent(state, { type: 'exitWarpedAway', unit: current.id, pos: { ...current.pos } });
         applyEndTurn(state, rng);
       }
       return;
     }
-    openBoxIfNeeded(state, rng, current);
+    if (isHunterUnit) openBoxIfNeeded(state, rng, current);
     endMovement(state, rng);
   }
 }
 
-function triggerTrap(state, unit, trap, rng) {
+function triggerTrap(state, unit, trap, rng, isHunterUnit) {
   if (!trap) return;
   state.board.traps = state.board.traps.filter((t) => t !== trap);
   addEvent(state, { type: 'trapTriggered', unit: unit.id, kind: trap.kind, pos: { x: trap.x, y: trap.y } });
+  if (!isHunterUnit) { applyEndTurn(state, rng); return; }
   if (trap.kind === 'damage') {
     const damage = 2;
     unit.hp = Math.max(0, unit.hp - damage);
-    unit.tally.damage = (unit.tally.damage || 0) + damage;
+    if (unit.tally) unit.tally.damage = (unit.tally.damage || 0) + damage;
   } else if (trap.kind === 'stun') {
-    unit.status.stun = (unit.status.stun || 0) + 1;
+    if (unit.status) unit.status.stun = (unit.status.stun || 0) + 1;
   } else if (trap.kind === 'leg') {
-    unit.status.leg = true;
+    if (unit.status) unit.status.leg = true;
   } else if (trap.kind === 'empty') {
-    unit.status.empty = 1;
+    if (unit.status) unit.status.empty = 1;
     unit.hand = [];
   }
-  if (unit.hp <= 0 && unit.kind === 'hunter') {
-    unit.maxHp = Math.max(1, Math.floor(unit.maxHp / 2));
-    unit.hp = unit.maxHp;
-    unit.pos = randomFreeTile(state, rng);
-    addEvent(state, { type: 'hunterDefeated', unit: unit.id, pos: { ...unit.pos } });
+  if (unit.hp <= 0) {
+    defeatHunter(state, unit, rng);
   }
   applyEndTurn(state, rng);
 }
@@ -841,14 +848,15 @@ function triggerTrap(state, unit, trap, rng) {
 function applyStop(state, rng) {
   const current = resolveUnit(state, state.current);
   if (!current || !state.move) return;
-  openBoxIfNeeded(state, rng, current);
-  if (samePos(current.pos, state.board.exit)) {
+  const isHunterUnit = state.current?.kind === 'hunter';
+  if (isHunterUnit) openBoxIfNeeded(state, rng, current);
+  if (isHunterUnit && samePos(current.pos, state.board.exit)) {
     if (current.hasTarget) {
       setMissionOver(state, true);
       return;
     }
     current.pos = randomFreeTile(state, rng);
-    current.status.leg = false;
+    if (current.status) current.status.leg = false;
     addEvent(state, { type: 'exitWarpedAway', unit: current.id, pos: { ...current.pos } });
     applyEndTurn(state, rng);
     return;
@@ -980,7 +988,8 @@ function applyPick(state, action, rng) {
       addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId: 'TARGET' });
     } else {
       const idx = defender.items.findIndex((item) => item.itemId === action.option.itemId && item.identified === action.option.identified);
-      if (idx >= 0 && (attacker.items || []).length < 6) {
+      attacker.items = attacker.items || [];
+      if (idx >= 0 && attacker.items.length < 6) {
         const item = defender.items.splice(idx, 1)[0];
         attacker.items.push(item);
         addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId: item.itemId });
@@ -1001,7 +1010,8 @@ function applyPick(state, action, rng) {
       addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId: 'TARGET' });
     } else {
       const idx = defender.items.findIndex((item) => item.itemId === action.option.itemId && item.identified === action.option.identified);
-      if (idx >= 0 && (attacker.items || []).length < 6) {
+      attacker.items = attacker.items || [];
+      if (idx >= 0 && attacker.items.length < 6) {
         const item = defender.items.splice(idx, 1)[0];
         attacker.items.push(item);
         addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId: item.itemId });
