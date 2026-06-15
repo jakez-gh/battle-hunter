@@ -220,6 +220,7 @@ function passiveEvasion(unit, card) {
   }
   const sensor = effectiveStats(unit).sensor || 0;
   if (sensor > 0) chance = Math.max(chance, sensor / 100);
+  if (hunterHasEffect(unit, 'cursedgem')) chance = Math.max(0, chance - 0.9);
   return Math.min(1, chance);
 }
 
@@ -248,7 +249,26 @@ function applyEndTurn(state, rng) {
       }
     }
     if (current.status?.empty > 0) current.status.empty = Math.max(0, current.status.empty - 1);
-    if (current.status?.panic > 0) current.status.panic = Math.max(0, current.status.panic - 1);
+    // Calmant: auto-cure panic at turn end.
+    if (hunterHasEffect(current, 'calmant')) current.status.panic = 0;
+    else if (current.status?.panic > 0) current.status.panic = Math.max(0, current.status.panic - 1);
+    // Angel Feather: heal 1d6 HP after each own turn.
+    if (hunterHasEffect(current, 'angelfeather')) {
+      const heal = rng.d6();
+      current.hp = Math.min(current.maxHp, current.hp + heal);
+      addEvent(state, { type: 'healed', unit: current.id, amount: heal });
+    }
+    // Fear Stone (cursed): 20% chance of self-panic.
+    if (hunterHasEffect(current, 'fearstone') && rng.float() < 0.2) {
+      current.status.panic = (current.status.panic || 0) + 1;
+      addEvent(state, { type: 'statusInflicted', kind: 'panic', target: current.id });
+    }
+    // Dark Gem (cursed): 20% chance of self-empty (discard hand).
+    if (hunterHasEffect(current, 'darkgem') && rng.float() < 0.2) {
+      current.hand = [];
+      current.status.empty = 1;
+      addEvent(state, { type: 'statusInflicted', kind: 'empty', target: current.id });
+    }
   }
   if (state.turn?.moved) {
     maybeSpawnMonster(state, rng);
@@ -904,7 +924,8 @@ function applyAttack(state, action, rng) {
 function applyRest(state, rng) {
   const current = resolveUnit(state, state.current);
   if (!current) return;
-  const amount = Math.ceil(current.maxHp / 4);
+  const base = Math.ceil(current.maxHp / 4);
+  const amount = hunterHasEffect(current, 'medkit') ? Math.ceil(base * 1.5) : base;
   current.hp = Math.min(current.maxHp, current.hp + amount);
   addEvent(state, { type: 'healed', unit: current.id, amount });
   drawDeckCards(state, current, rng, current.hand.length === 0 ? 3 : 2);
