@@ -497,6 +497,13 @@ function resolveBattleOutcome(state, rng) {
   if (result.hpChanges) {
     attacker.hp = Math.max(0, attacker.hp + result.hpChanges.attacker);
     defender.hp = Math.max(0, defender.hp + result.hpChanges.defender);
+    // Track damage dealt (positive = damage done to the enemy) in hunter tallies.
+    const atkDmgDealt = Math.max(0, -result.hpChanges.defender);
+    const defDmgDealt = Math.max(0, -result.hpChanges.attacker);
+    if (atkKind === 'hunter' && attacker.tally && atkDmgDealt > 0)
+      attacker.tally.damage = (attacker.tally.damage || 0) + atkDmgDealt;
+    if (defKind === 'hunter' && defender.tally && defDmgDealt > 0)
+      defender.tally.damage = (defender.tally.damage || 0) + defDmgDealt;
   }
 
   // Apply status effects from crits.
@@ -780,6 +787,7 @@ function applyStep(state, action, rng) {
   if (unitAt(state, nextPos)) throw new Error('target occupied');
   addEvent(state, { type: 'stepped', unit: current.id, from: { ...current.pos }, to: { ...nextPos } });
   current.pos = nextPos;
+  if (isHunterUnit && current.tally) current.tally.moved = (current.tally.moved || 0) + 1;
   state.move.path.push({ ...nextPos });
   state.move.remaining = Math.max(0, state.move.remaining - 1);
   if (isHunterUnit) {
@@ -830,7 +838,6 @@ function triggerTrap(state, unit, trap, rng, isHunterUnit) {
   if (trap.kind === 'damage') {
     const damage = 2;
     unit.hp = Math.max(0, unit.hp - damage);
-    if (unit.tally) unit.tally.damage = (unit.tally.damage || 0) + damage;
   } else if (trap.kind === 'stun') {
     if (unit.status) unit.status.stun = (unit.status.stun || 0) + 1;
   } else if (trap.kind === 'leg') {
