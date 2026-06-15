@@ -131,6 +131,12 @@ export function hunterHasEffect(hunter, effectKey) {
     (slot) => isActive(slot) && ITEMS[slot.itemId].effect === effectKey);
 }
 
+// Returns true if the hunter holds an active counter item matching the given monster kind.
+export function hunterHasCounter(hunter, monsterKind) {
+  const target = `counter-${monsterKind}`;
+  return (hunter.items || []).some((slot) => isActive(slot) && ITEMS[slot.itemId]?.effect === target);
+}
+
 // Base sale price at the Client (haggling applied by the hub on top).
 export function sellPrice(itemId, relicLevel) {
   const item = ITEMS[itemId];

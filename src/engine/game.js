@@ -1,6 +1,6 @@
 import { buildDeck, cardColor, cardValue, isSpecial } from './cards.js';
 import { generateBoard, neighbors, occupiedSet, pathDistance, reachableTiles, randomFreeTile } from './board.js';
-import { rollBoxItem, effectiveStats, hunterHasEffect } from './items.js';
+import { rollBoxItem, effectiveStats, hunterHasEffect, hunterHasCounter } from './items.js';
 import { monsterStats, MONSTERS, SPAWN_CHANCE, DROP_CHANCE, MAX_REGULAR_MONSTERS } from './monsters.js';
 import { resolveBattle } from './combat.js';
 
@@ -502,6 +502,10 @@ function resolveBattleOutcome(state, rng) {
   const defKind = battle.defender.kind;
   const atkSide = buildBattleSide(state, attacker, atkKind);
   const defSide = buildBattleSide(state, defender, defKind);
+  // Counter items: hunter holding matching counter vs monster → monster fights stunned.
+  if (atkKind === 'hunter' && defKind === 'monster' && hunterHasCounter(attacker, defender.kind)) {
+    defSide.stunned = true;
+  }
   const ctx = {
     rng,
     attacker: atkSide,
