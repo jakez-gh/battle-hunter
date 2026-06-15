@@ -217,8 +217,8 @@ export function chooseAction(state) {
     }
 
     if (phase === 'turn.postMove') {
-      // Passive: never initiate attack.
-      if (priority !== 'passive') {
+      // Passive or target-holder: never initiate attack (flee to exit).
+      if (priority !== 'passive' && !unit?.hasTarget) {
         const attack = actions.find((a) => a.type === 'attack');
         if (attack) return attack;
       }
@@ -252,20 +252,25 @@ export function chooseAction(state) {
     if (phase === 'turn.action') {
       const hpFrac = unit ? unit.hp / Math.max(1, unit.maxHp) : 1;
       const handLow = (unit?.hand?.length ?? 5) < 2;
+      const deckEmpty = (state?.deck?.length ?? 0) === 0;
 
-      // Aggressive: attack before anything else if possible.
-      if (priority === 'aggressive') {
-        const attack = actions.find((a) => a.type === 'attack');
-        if (attack) return attack;
+      // Target-holder: skip attacking and head for the exit.
+      if (!unit?.hasTarget) {
+        // Aggressive: attack before anything else if possible.
+        if (priority === 'aggressive') {
+          const attack = actions.find((a) => a.type === 'attack');
+          if (attack) return attack;
+        }
       }
 
-      // Rest when HP is below archetype threshold or hand is critically low.
-      if ((hpFrac < restHp || handLow) && actions.find((a) => a.type === 'rest')) {
+      // Rest when HP is below archetype threshold or hand is critically low
+      // (skip hand-low rest when deck is empty — drawing is impossible).
+      if ((hpFrac < restHp || (handLow && !deckEmpty)) && actions.find((a) => a.type === 'rest')) {
         return actions.find((a) => a.type === 'rest');
       }
 
-      // Non-aggressive: attack only if not passive.
-      if (priority !== 'passive' && priority !== 'aggressive') {
+      // Non-aggressive non-holder: attack adjacent enemies.
+      if (priority !== 'passive' && priority !== 'aggressive' && !unit?.hasTarget) {
         const attack = actions.find((a) => a.type === 'attack');
         if (attack) return attack;
       }
