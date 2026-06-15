@@ -42,8 +42,9 @@ function defenseTotal(dice, df, guard, card) {
 // yellow helps the target; off-color cards are inert here by design.
 function strike(phase, rng, events, striker, strikerCard, target, targetCard, opts) {
   const { guard = false, dfZero = false, negateAttempt = false, targetLabel } = opts;
-  const sDice = [rng.d6(), rng.d6()];
-  const tDice = [rng.d6(), rng.d6()];
+  const capDie = (d, eff) => eff.blackgem ? Math.min(d, 4) : eff.amulet ? Math.max(d, 3) : d;
+  const sDice = [rng.d6(), rng.d6()].map((d) => capDie(d, fx(striker)));
+  const tDice = [rng.d6(), rng.d6()].map((d) => capDie(d, fx(target)));
   const crit = sDice[0] === sDice[1];
   const atk = attackTotal(sDice, striker.at, target.at, strikerCard);
   const def = defenseTotal(tDice, dfZero ? 0 : target.df, guard, targetCard);

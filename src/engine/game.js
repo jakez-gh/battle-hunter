@@ -175,6 +175,8 @@ function buildBattleSide(state, unit, kind) {
     if (hunterHasEffect(unit, 'voyager')) effects.voyager = true;
     if (hunterHasEffect(unit, 'actuator')) effects.actuator = true;
     if (hunterHasEffect(unit, 'generator')) effects.generator = true;
+    if (hunterHasEffect(unit, 'blackgem')) effects.blackgem = true;
+    if (hunterHasEffect(unit, 'amulet')) effects.amulet = true;
     if (hunterHasEffect(unit, 'voyager')) effects.escapeBonus = 0;
     const escapeItem = ['slickboots', 'jumpsuit', 'longcoat'].find((id) => hunterHasEffect(unit, id));
     if (escapeItem) {
