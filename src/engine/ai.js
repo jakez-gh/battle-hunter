@@ -1,6 +1,40 @@
 // AI: choose a legal action for the current unit. Receives the full GameState
 // (with an optional legalActions helper attached). Returns an action object.
 
+// Archetype → { priority, restHp } per §2.11. restHp is the HP fraction below
+// which the AI rests instead of acting. Panicked = RAVEN agents (random each turn).
+const BEHAVIORS = {
+  'Normal':       { priority: 'balanced',    restHp: 0.50 },
+  'Turtle':       { priority: 'passive',     restHp: 0.75 },
+  'Bandit':       { priority: 'aggressive',  restHp: 0.25 },
+  'Speedster':    { priority: 'clever',      restHp: 0.50 },
+  'Defender':     { priority: 'passive',     restHp: 0.75 },
+  'Guardian':     { priority: 'balanced',    restHp: 0.50 },
+  'Bully':        { priority: 'aggressive',  restHp: 0.25 },
+  'Elite':        { priority: 'clever',      restHp: 0.50 },
+  'Battler':      { priority: 'aggressive',  restHp: 0.50 },
+  'Survivor':     { priority: 'balanced',    restHp: 1.00 },
+  'Collector':    { priority: 'passive',     restHp: 0.75 },
+  'Runner':       { priority: 'clever',      restHp: 0.25 },
+  'Sprint spec.': { priority: 'clever',      restHp: 0.00 },
+  'Attack spec.': { priority: 'aggressive',  restHp: 0.00 },
+  'Defense spec.': { priority: 'passive',   restHp: 1.00 },
+  'HP spec.':     { priority: 'balanced',    restHp: 1.00 },
+  'RAVEN':        { priority: 'panicked',    restHp: 0.50 },
+  'Clever':       { priority: 'clever',      restHp: 0.50 },
+  'Aggressive':   { priority: 'aggressive',  restHp: 0.25 },
+  'Passive':      { priority: 'passive',     restHp: 0.75 },
+};
+
+const PANICKED_CYCLE = ['aggressive', 'clever', 'balanced', 'passive'];
+
+function getBehavior(unit, state) {
+  const b = BEHAVIORS[unit?.archetype ?? ''] ?? { priority: 'balanced', restHp: 0.50 };
+  if (b.priority !== 'panicked') return b;
+  // RAVEN: deterministic but varied — cycle through priorities each round.
+  return { priority: PANICKED_CYCLE[(state?.round ?? 0) % PANICKED_CYCLE.length], restHp: b.restHp };
+}
+
 function getLegalActions(state) {
   if (!state) return [];
   if (typeof state.legalActions === 'function') return state.legalActions(state) || [];
@@ -14,6 +48,15 @@ function currentUnit(state) {
   if (ref.kind === 'hunter') return state.hunters?.[ref.index] ?? null;
   if (ref.kind === 'monster') return state.monsters?.[ref.index] ?? null;
   return null;
+}
+
+function nearest(pos, targets) {
+  if (!targets.length) return null;
+  return targets.reduce((best, t) => {
+    const d = Math.abs(t.x - pos.x) + Math.abs(t.y - pos.y);
+    const bd = Math.abs(best.x - pos.x) + Math.abs(best.y - pos.y);
+    return d < bd ? t : best;
+  }, targets[0]);
 }
 
 // BFS from `from` toward `goal`; returns the direction char to step ('N','S','W','E')
@@ -62,19 +105,42 @@ function occupiedSet(state) {
   return s;
 }
 
-function hunterGoal(unit, board) {
+// Pick a navigation goal for a hunter based on their archetype priority.
+function hunterGoal(unit, state, priority) {
+  const board = state?.board;
   if (!board || !unit?.pos) return null;
   if (unit.hasTarget && board.exit) return board.exit;
-  const candidates = [
-    ...(board.boxes || []).filter((b) => !b.opened),
-    ...(board.flags || []).filter((f) => !f.taken),
-  ];
-  if (!candidates.length) return board.exit;
-  return candidates.reduce((best, t) => {
-    const d = Math.abs(t.x - unit.pos.x) + Math.abs(t.y - unit.pos.y);
-    const bd = Math.abs(best.x - unit.pos.x) + Math.abs(best.y - unit.pos.y);
-    return d < bd ? t : best;
-  }, candidates[0]);
+
+  const boxes = (board.boxes || []).filter((b) => !b.opened);
+  const flags = (board.flags || []).filter((f) => !f.taken);
+
+  const targetHolder = state.targetHolder?.kind === 'hunter'
+    ? state.hunters?.[state.targetHolder.index]
+    : null;
+  const holderPos = (targetHolder?.pos && targetHolder.id !== unit.id) ? targetHolder.pos : null;
+
+  if (priority === 'aggressive') {
+    // Chase target holder if target is in play, else nearest other alive hunter.
+    if (state.targetFound && holderPos) return holderPos;
+    const others = (state.hunters || []).filter((h) => h.id !== unit.id && h.hp > 0 && h.pos);
+    if (others.length) return nearest(unit.pos, others.map((h) => h.pos));
+    return nearest(unit.pos, boxes) ?? board.exit;
+  }
+
+  if (priority === 'passive') {
+    // Boxes first, then flags; avoid picking fights.
+    return nearest(unit.pos, [...boxes, ...flags]) ?? board.exit;
+  }
+
+  if (priority === 'clever') {
+    // Loot until target found; then chase holder → exit.
+    if (state.targetFound) return holderPos ?? board.exit;
+    return nearest(unit.pos, boxes) ?? board.exit;
+  }
+
+  // Balanced (default): boxes first, then chase holder once target is found.
+  if (state.targetFound && holderPos) return holderPos;
+  return nearest(unit.pos, boxes) ?? board.exit;
 }
 
 function monsterGoal(state) {
@@ -85,13 +151,13 @@ function monsterGoal(state) {
   return target?.pos ?? null;
 }
 
-function chooseBestStep(state, steps) {
+function chooseBestStep(state, steps, priority) {
   if (!steps.length) return null;
   const unit = currentUnit(state);
   if (!unit?.pos) return steps[0];
   const goal = state.current?.kind === 'monster'
     ? monsterGoal(state)
-    : hunterGoal(unit, state.board);
+    : hunterGoal(unit, state, priority ?? 'balanced');
   if (!goal) return steps[0];
   const occ = occupiedSet(state);
   const dir = bfsDir(state.board, occ, unit.pos, goal);
@@ -135,6 +201,9 @@ export function chooseAction(state) {
     if (!actions.length) return { type: 'pass' };
 
     const phase = state?.phase;
+    const unit = currentUnit(state);
+    const beh = getBehavior(unit, state);
+    const { priority, restHp } = beh;
 
     if (phase === 'react.dodge' || phase === 'react.crit') {
       return { type: 'timing', hit: false };
@@ -144,13 +213,16 @@ export function chooseAction(state) {
       const steps = actions.filter((a) => a.type === 'step');
       const stop = actions.find((a) => a.type === 'stop');
       if (!steps.length) return stop || actions[0];
-      return chooseBestStep(state, steps);
+      return chooseBestStep(state, steps, priority);
     }
 
     if (phase === 'turn.postMove') {
-      return actions.find((a) => a.type === 'attack')
-        ?? actions.find((a) => a.type === 'pass')
-        ?? actions[0];
+      // Passive: never initiate attack.
+      if (priority !== 'passive') {
+        const attack = actions.find((a) => a.type === 'attack');
+        if (attack) return attack;
+      }
+      return actions.find((a) => a.type === 'pass') ?? actions[0];
     }
 
     if (phase === 'battle.defCard' || phase === 'battle.atkCard') {
@@ -158,13 +230,17 @@ export function chooseAction(state) {
     }
 
     if (phase === 'battle.response') {
-      const unit = currentUnit(state);
       const hpFrac = unit ? unit.hp / Math.max(1, unit.maxHp) : 1;
       if (hpFrac < 0.25) {
         const escape = actions.find((a) => a.type === 'respond' && a.response === 'escape');
         if (escape) return escape;
       }
-      for (const r of ['counter', 'guard', 'none', 'escape', 'surrender']) {
+      const order = priority === 'aggressive'
+        ? ['counter', 'guard', 'none', 'escape', 'surrender']
+        : priority === 'passive'
+          ? ['guard', 'none', 'counter', 'escape', 'surrender']
+          : ['counter', 'guard', 'none', 'escape', 'surrender'];
+      for (const r of order) {
         const found = actions.find((a) => a.type === 'respond' && a.response === r);
         if (found) return found;
       }
@@ -174,15 +250,24 @@ export function chooseAction(state) {
     if (state?.pendingChoice) return actions[0];
 
     if (phase === 'turn.action') {
-      const unit = currentUnit(state);
-      const attack = actions.find((a) => a.type === 'attack');
-      if (attack) return attack;
-
-      // Rest to draw cards when hand is low or HP is very low.
       const hpFrac = unit ? unit.hp / Math.max(1, unit.maxHp) : 1;
       const handLow = (unit?.hand?.length ?? 5) < 2;
-      if ((hpFrac < 0.35 || handLow) && actions.find((a) => a.type === 'rest')) {
+
+      // Aggressive: attack before anything else if possible.
+      if (priority === 'aggressive') {
+        const attack = actions.find((a) => a.type === 'attack');
+        if (attack) return attack;
+      }
+
+      // Rest when HP is below archetype threshold or hand is critically low.
+      if ((hpFrac < restHp || handLow) && actions.find((a) => a.type === 'rest')) {
         return actions.find((a) => a.type === 'rest');
+      }
+
+      // Non-aggressive: attack only if not passive.
+      if (priority !== 'passive' && priority !== 'aggressive') {
+        const attack = actions.find((a) => a.type === 'attack');
+        if (attack) return attack;
       }
 
       const move = chooseMoveAction(actions);

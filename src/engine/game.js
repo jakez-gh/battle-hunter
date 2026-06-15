@@ -620,6 +620,15 @@ export function createGame(config) {
       tally: { moved: 0, damage: 0, flagPts: 0, killPts: 0, defeats: 0 },
     };
   });
+  // AI starting items by level (§2.11): L1-5 none, L6-8 one, L9-11 two, L12-15 three.
+  for (const h of hunters) {
+    if (h.human) continue;
+    const n = h.level >= 12 ? 3 : h.level >= 9 ? 2 : h.level >= 6 ? 1 : 0;
+    for (let i = 0; i < n && h.items.length < 6; i++) {
+      h.items.push({ itemId: rollBoxItem(rng, h.level), identified: true });
+    }
+  }
+
   if (config.mission?.carrierIndex != null && config.mission.carrierIndex >= 0 && config.mission.carrierIndex < 3) {
     const index = config.mission.carrierIndex + 1;
     if (hunters[index]) {
