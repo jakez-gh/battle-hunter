@@ -585,7 +585,7 @@ function resolveBattleOutcome(state, rng) {
           addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId: 'TARGET' });
         }
       } else if (atkKind === 'monster' && hadTarget) {
-        return setMissionOver(state, false, 'monster eliminated target holder');
+        return setMissionOver(state, false, `${attacker.kind ?? 'monster'} eliminated target holder`);
       }
     }
   }
