@@ -322,7 +322,7 @@ function maybeSpawnMonster(state, rng) {
         existing.kind = 'WYRM';
         addEvent(state, { type: 'wyrmRespawned', kind: 'WYRM', pos: free });
       } else {
-        state.monsters.push({ id: Date.now() + Math.floor(Math.random() * 1000), kind: 'WYRM', hp: monsterStats('WYRM', state.relicLevel).hp, maxHp: monsterStats('WYRM', state.relicLevel).hp, pos: free });
+        state.monsters.push({ id: rng.int(1000000), kind: 'WYRM', hp: monsterStats('WYRM', state.relicLevel).hp, maxHp: monsterStats('WYRM', state.relicLevel).hp, pos: free });
         addEvent(state, { type: 'wyrmSpawned', kind: 'WYRM', pos: free });
       }
       return;
@@ -354,7 +354,7 @@ function maybeSpawnMonster(state, rng) {
   const tile = rng.pick(freeTiles);
   const kind = rng.pick(MONSTER_KINDS);
   const stats = monsterStats(kind, state.relicLevel);
-  const id = Date.now() + Math.floor(Math.random() * 1000);
+  const id = rng.int(1000000);
   state.monsters.push({ id, kind, hp: stats.hp, maxHp: stats.hp, pos: tile, at: stats.at, df: stats.df, mv: stats.mv });
   addEvent(state, { type: 'monsterSpawned', kind, id, pos: tile });
 }
