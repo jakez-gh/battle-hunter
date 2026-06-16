@@ -490,6 +490,21 @@ function openBoxIfNeeded(state, rng, unit) {
   drawBox(state, unit);
 }
 
+// Rescue missions: check if a hunter lands on the rescue-NPC tile (§2.15).
+function checkRescueTile(state, unit) {
+  if (!state.board.rescue || state.board.rescue.claimed) return;
+  if (!samePos(unit.pos, state.board.rescue)) return;
+  state.board.rescue.claimed = true;
+  unit.hasTarget = true;
+  state.targetFound = true;
+  state.targetHolder = unitRef(state, unit);
+  addEvent(state, { type: 'targetFound', hunter: unit.id });
+  // If a rival AI reaches the NPC first in story mode, the mission is lost.
+  if (!unit.human && state.mode === 'story') {
+    setMissionOver(state, false, 'rival rescued the target first');
+  }
+}
+
 function endMovement(state, rng) {
   const unit = resolveUnit(state, state.current);
   if (!unit) return;
@@ -683,12 +698,28 @@ export function createGame(config) {
     }
     board.boxes.forEach((b) => { if (b.contents === 'TARGET') b.contents = rollBoxItem(rng, relicLevel); });
   }
+
+  // Rescue missions (§2.15): the Target is a stationary NPC on the board.
+  // Convert the TARGET box into a rescue-NPC position; rivals hold back for 2 rounds.
+  board.rescue = null;
+  let rescueHoldRounds = 0;
+  if (config.mission?.type === 'rescue') {
+    const targetBox = board.boxes.find((b) => b.contents === 'TARGET');
+    if (targetBox) {
+      board.rescue = { x: targetBox.x, y: targetBox.y, claimed: false };
+      targetBox.contents = rollBoxItem(rng, relicLevel);
+    }
+    rescueHoldRounds = 2;
+  }
+
   const state = {
     seed,
     rng: { s: rng.s },
     mode: config.mode || 'normal',
     missionId: config.mission?.id ?? null,
+    missionType: config.mission?.type ?? 'fetch',
     relicLevel,
+    rescueHoldRounds,
     board,
     deck,
     targetItemId: config.mission?.targetItemId || null,
@@ -881,8 +912,11 @@ function applyStep(state, action, rng) {
       }
       return;
     }
-    if (isHunterUnit) openBoxIfNeeded(state, rng, current);
-    endMovement(state, rng);
+    if (isHunterUnit) {
+      openBoxIfNeeded(state, rng, current);
+      checkRescueTile(state, current);
+    }
+    if (state.phase !== 'mission.over') endMovement(state, rng);
   }
 }
 
@@ -912,7 +946,11 @@ function applyStop(state, rng) {
   const current = resolveUnit(state, state.current);
   if (!current || !state.move) return;
   const isHunterUnit = state.current?.kind === 'hunter';
-  if (isHunterUnit) openBoxIfNeeded(state, rng, current);
+  if (isHunterUnit) {
+    openBoxIfNeeded(state, rng, current);
+    checkRescueTile(state, current);
+  }
+  if (state.phase === 'mission.over') return;
   if (isHunterUnit && samePos(current.pos, state.board.exit)) {
     if (current.hasTarget) {
       setMissionOver(state, true);

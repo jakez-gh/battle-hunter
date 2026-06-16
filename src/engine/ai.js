@@ -119,6 +119,14 @@ function hunterGoal(unit, state, priority) {
     : null;
   const holderPos = (targetHolder?.pos && targetHolder.id !== unit.id) ? targetHolder.pos : null;
 
+  // Rescue mission: unclaimed NPC drives non-human AI after hold-back rounds expire.
+  const rescue = board.rescue && !board.rescue.claimed ? board.rescue : null;
+  if (rescue && !unit.human) {
+    const holding = state.round > (state.rescueHoldRounds ?? 0);
+    if (holding) return rescue; // rush the NPC
+    // During hold-back: fall through to normal looting behaviour
+  }
+
   if (priority === 'aggressive') {
     // Chase target holder if target is in play, else nearest other alive hunter.
     if (state.targetFound && holderPos) return holderPos;
