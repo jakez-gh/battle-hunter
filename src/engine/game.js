@@ -397,11 +397,19 @@ function claimFlag(state, hunter, flag) {
 }
 
 function flagEffect(state, hunter, flag, roll, rng) {
-  const base = roll === 1 ? 250 : roll === 2 ? 250 : roll === 3 ? 500 : roll === 4 ? 1000 : roll === 5 ? 0 : 0;
+  // Base points per DESIGN §2.6 (JP table). Roll 5/6 non-yellow all award 250.
+  const pts =
+    roll === 1 ? 250
+    : roll === 2 ? 250
+    : roll === 3 ? 500
+    : roll === 4 ? 1000
+    : roll === 5 && flag.color === 'yellow' ? 1500
+    : roll === 6 && flag.color === 'yellow' ? 2000
+    : 250; // rolls 5/6 non-yellow = 250
+
   let effect = null;
-  let extra = 0;
+
   if (roll === 1) {
-    extra = 250;
     const trapKind = flag.color === 'red' ? 'damage' : flag.color === 'blue' ? 'leg' : flag.color === 'green' ? 'empty' : 'stun';
     state.board.traps.push({ x: flag.x, y: flag.y, kind: trapKind, byHunter: hunter.id });
     effect = trapKind;
@@ -415,22 +423,27 @@ function flagEffect(state, hunter, flag, roll, rng) {
     } else if (flag.color === 'green') {
       drawDeckCards(state, hunter, rng, 2);
     }
+    // yellow 5: pts only (handled above)
   } else if (roll === 6) {
     if (flag.color === 'red') {
       hunter.hp = hunter.maxHp;
-      hunter.maxHp = Math.max(hunter.baseMaxHp, hunter.maxHp);
+      // restore half of lost maxHP (round up) — red 6 partial maxHP repair
+      const lost = hunter.baseMaxHp - hunter.maxHp;
+      if (lost > 0) hunter.maxHp = Math.min(hunter.baseMaxHp, hunter.maxHp + Math.ceil(lost / 2));
     } else if (flag.color === 'blue') {
       hunter.status.leg = false;
       state.turn.actAgain = true;
       addEvent(state, { type: 'actAgain', unit: hunter.id });
     } else if (flag.color === 'green') {
-      const needed = 5 - hunter.hand.length;
-      drawDeckCards(state, hunter, rng, needed);
-    } else if (flag.color === 'yellow') {
-      extra = 1500;
+      if (!(hunter.status?.empty > 0)) {
+        const needed = 5 - hunter.hand.length;
+        drawDeckCards(state, hunter, rng, needed);
+      }
     }
+    // yellow 6: pts only (handled above)
   }
-  hunter.tally.flagPts = (hunter.tally.flagPts || 0) + (base + extra);
+
+  hunter.tally.flagPts = (hunter.tally.flagPts || 0) + pts;
   addEvent(state, { type: 'flagClaimed', unit: hunter.id, color: flag.color, roll, effect });
 }
 
