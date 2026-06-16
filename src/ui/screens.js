@@ -640,16 +640,81 @@ export function makeClientScreen(app) {
         onCancel() { host.pop(); },
       });
     }
-    const m = makeNormalMission([rec]);
-    return makeMenu([
-      { label: `${m.title}  (relic level ${m.level})`, value: m },
-      { label: 'Cancel', value: null },
-    ], {
-      title: 'FREE-PLAY',
-      footer: 'You and three rival hunters. Grab the Target, reach the EXIT.',
-      onPick(v) { v ? app.startMission(v) : host.pop(); },
-      onCancel() { host.pop(); },
-    });
+    return partyMenu(rec);
+  }
+
+  // Normal-mode party-setup menu. `baseRec` is always P1 (current hunter).
+  function partyMenu(baseRec) {
+    const coopIds = [...(app.session.coopIds || [])];
+
+    function currentParty() {
+      return [baseRec, ...coopIds.map((id) => app.roster.hunters.find((h) => h.id === id)).filter(Boolean)];
+    }
+
+    function rebuildMenu() {
+      host.pop();
+      host.push(buildPartyMenu());
+    }
+
+    function buildPartyMenu() {
+      const party = currentParty();
+      const m = makeNormalMission(party);
+      const items = party.map((h, i) => ({
+        label: `P${i + 1}: ${h.name}`,
+        right: i === 0 ? 'you' : 'remove',
+        value: i === 0 ? null : { kind: 'remove', id: h.id },
+        disabled: i === 0,
+        color: SLOT_COLORS[i],
+      }));
+      const available = app.roster.hunters.filter((h) => !party.find((p) => p.id === h.id));
+      if (party.length < 4 && available.length > 0) {
+        items.push({ label: `+ Add P${party.length + 1}`, value: { kind: 'add' }, color: OK });
+      }
+      items.push({ label: `Start  (relic Lv${m.level})`, value: { kind: 'start', mission: m }, color: OK });
+      items.push({ label: 'Cancel', value: { kind: 'cancel' } });
+      return makeMenu(items, {
+        title: 'PARTY SETUP',
+        footer: `${4 - party.length} CPU rival(s). Grab the Target, reach the EXIT.`,
+        onPick(v) {
+          if (!v || v.kind === 'cancel') { host.pop(); return; }
+          if (v.kind === 'start') {
+            app.session.coopIds = coopIds.slice();
+            app.startMission(v.mission);
+            return;
+          }
+          if (v.kind === 'remove') {
+            const idx = coopIds.indexOf(v.id);
+            if (idx !== -1) coopIds.splice(idx, 1);
+            rebuildMenu();
+            return;
+          }
+          if (v.kind === 'add') host.push(addHunterMenu());
+        },
+        onCancel() { host.pop(); },
+      });
+    }
+
+    function addHunterMenu() {
+      const party = currentParty();
+      const available = app.roster.hunters.filter((h) => !party.find((p) => p.id === h.id));
+      const items = available.map((h) => ({ label: h.name, right: `Lv${h.level}`, value: h.id }));
+      items.push({ label: 'Cancel', value: null });
+      return makeMenu(items, {
+        title: `ADD P${party.length + 1}`,
+        onPick(id) {
+          if (id) {
+            coopIds.push(id);
+            host.pop(); // remove addHunterMenu
+            rebuildMenu(); // refresh party menu
+          } else {
+            host.pop();
+          }
+        },
+        onCancel() { host.pop(); },
+      });
+    }
+
+    return buildPartyMenu();
   }
 
   function sellMenu() {
@@ -1357,32 +1422,36 @@ export function makeResultsScreen(app, g) {
   function applyToRoster() {
     if (applied) return;
     applied = true;
-    const human = st.hunters.find((h) => h.human && h.id === app.session.hunterId) ?? st.hunters.find((h) => h.human);
-    const rec = currentHunter(app);
-    if (!human || !rec) return;
-    const row = rows.find((r) => r.id === human.id);
+    const humans = st.hunters.filter((h) => h.human);
+    if (!humans.length) return;
     const winnerId = g.outcome.winnerRef != null ? app.adapt.resolveUnit(st, g.outcome.winnerRef)?.id : null;
-    const humanWon = win && (winnerId ? winnerId === human.id : !!human.hasTarget);
     const wipe = !win && app.session.mode === 'normal' && /wyrm/i.test(String(g.outcome.reason ?? ''));
-    const storyCleared = app.session.mode === 'story' && humanWon;
-    app.roster.hunters = applyResults(app.roster.hunters, {
-      relicLevel: st.relicLevel,
-      win: humanWon,
-      wipe,
-      storyCleared,
-      hunters: [{
-        id: human.id,
+    // Primary (P1) hunter drives story-mode clear.
+    const primaryId = app.session.hunterId;
+    const primary = humans.find((h) => h.id === primaryId) ?? humans[0];
+    const primaryWon = win && (winnerId ? winnerId === primary.id : !!primary.hasTarget);
+    const storyCleared = app.session.mode === 'story' && primaryWon;
+    const hunterEntries = humans.map((human) => {
+      const row = rows.find((r) => r.id === human.id);
+      const humanWon = win && (winnerId ? winnerId === human.id : !!human.hasTarget);
+      return {
+        id: human.id, _won: humanWon,
         score: row?.total ?? 0,
         items: (human.items || []).map((s) => ({ ...s })),
         maxHp: human.maxHp,
         returnedTarget: humanWon && !!human.hasTarget,
         targetPrice: ITEMS[st.targetItemId]?.price ?? 0,
-      }],
+      };
     });
-    const fresh = currentHunter(app);
-    if (fresh) {
-      fresh.record = { missions: (fresh.record?.missions ?? 0) + 1, wins: (fresh.record?.wins ?? 0) + (humanWon ? 1 : 0) };
-      if (storyCleared && typeof g.mission?.id === 'number') {
+    app.roster.hunters = applyResults(app.roster.hunters, {
+      relicLevel: st.relicLevel, win: primaryWon, wipe, storyCleared,
+      hunters: hunterEntries,
+    });
+    for (const entry of hunterEntries) {
+      const fresh = app.roster.hunters.find((r) => r.id === entry.id);
+      if (!fresh) continue;
+      fresh.record = { missions: (fresh.record?.missions ?? 0) + 1, wins: (fresh.record?.wins ?? 0) + (entry._won ? 1 : 0) };
+      if (storyCleared && entry.id === primary.id && typeof g.mission?.id === 'number') {
         fresh.storyProgress = Math.max(fresh.storyProgress ?? 0, g.mission.id);
       }
     }

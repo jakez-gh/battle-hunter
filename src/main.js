@@ -90,21 +90,23 @@ function aiHunterConfig(opponent, slot, level, used) {
   };
 }
 
-function buildMissionConfig(mission, rec, mode) {
+// recs: array of human hunter records (P1 first); AI fills remaining slots up to 4.
+function buildMissionConfig(mission, recs, mode) {
   const used = new Set();
-  const level = mode === 'story' ? mission.level : rec.level;
+  const level = mode === 'story' ? mission.level : recs[0].level;
   let opponents = mission.opponents;
+  const aiCount = Math.max(0, 4 - recs.length);
   if (!opponents || !opponents.length) { // normal free-play: random AI fill
-    opponents = Array.from({ length: 3 }, () => ARCHETYPE_NAMES[Math.floor(Math.random() * ARCHETYPE_NAMES.length)]);
+    opponents = Array.from({ length: aiCount }, () => ARCHETYPE_NAMES[Math.floor(Math.random() * ARCHETYPE_NAMES.length)]);
   }
   return {
     seed: (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0,
     mode,
     mission,
     hunters: [
-      {
+      ...recs.map((rec, i) => ({
         id: rec.id,
-        slot: 0,
+        slot: i,
         name: rec.name,
         spriteId: rec.spriteId,
         palette: rec.palette,
@@ -114,8 +116,8 @@ function buildMissionConfig(mission, rec, mode) {
         internal: { ...rec.internal },
         maxHp: rec.maxHp, // hospital damage persists (§2.8)
         items: rec.items.map((s) => ({ ...s })),
-      },
-      ...opponents.slice(0, 3).map((o, i) => aiHunterConfig(o, i + 1, level, used)),
+      })),
+      ...opponents.slice(0, aiCount).map((o, i) => aiHunterConfig(o, recs.length + i, level, used)),
     ],
   };
 }
@@ -285,7 +287,7 @@ const app = {
   canvas, ctx, W: canvas.width, H: canvas.height,
   atlas, stack, adapt,
   roster: loadRoster(),
-  session: { mode: 'normal', hunterId: null },
+  session: { mode: 'normal', hunterId: null, coopIds: [] },
   songName: null,
   bootNote: (game && ai) ? '' : 'engine modules missing - missions disabled (see console)',
   options() { return this.roster.options; },
@@ -304,7 +306,10 @@ const app = {
     const rec = this.roster.hunters.find((h) => h.id === this.session.hunterId);
     if (!rec) return false;
     try {
-      const config = buildMissionConfig(mission, rec, this.session.mode);
+      const coopRecs = (this.session.coopIds || [])
+        .map((id) => this.roster.hunters.find((h) => h.id === id))
+        .filter(Boolean);
+      const config = buildMissionConfig(mission, [rec, ...coopRecs], this.session.mode);
       const state = adapt.createGame(config);
       const renderer = adapt.makeRenderer(canvas, atlas);
       adapt.rendererFeed(renderer, state, state.events ?? []); // initial setState
