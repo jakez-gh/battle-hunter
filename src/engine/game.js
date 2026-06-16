@@ -1079,9 +1079,13 @@ function applyPick(state, action, rng) {
         addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId: item.itemId });
       }
     }
+    // Warp defender to a random tile and cure leg damage (§2.8 surrender).
+    const warpTo = randomFreeTile(state, rng);
+    if (warpTo) defender.pos = warpTo;
+    if (defender.status) defender.status.leg = false;
     addEvent(state, { type: 'surrendered', unit: defender.id });
     state.pendingChoice = null;
-    resolveBattleOutcome(state, rng);
+    applyEndTurn(state, rng);
     return;
   }
 }
