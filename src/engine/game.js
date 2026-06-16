@@ -164,6 +164,10 @@ function buildBattleSide(state, unit, kind) {
     side.at = unit.at;
     side.df = unit.df;
     side.mv = unit.mv;
+    // FNG crit rider: inflict Empty (§2.8 / combat.js actuator flag).
+    // WYRM crit rider: inflict Stun (§2.8 / combat.js generator flag).
+    if (unit.kind === 'FNG') side.effects.actuator = true;
+    if (unit.kind === 'WYRM') side.effects.generator = true;
   } else {
     const stats = combatStat(unit);
     side.at = stats.at + (effectiveStats(unit).at || 0);
