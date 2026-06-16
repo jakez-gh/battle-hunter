@@ -1,4 +1,4 @@
-import { buildDeck, cardColor, cardValue, isSpecial } from './cards.js';
+import { buildDeck, cardColor, cardValue, isSpecial, CARDS } from './cards.js';
 import { generateBoard, neighbors, occupiedSet, pathDistance, reachableTiles, randomFreeTile } from './board.js';
 import { rollBoxItem, effectiveStats, hunterHasEffect, hunterHasCounter } from './items.js';
 import { monsterStats, MONSTERS, SPAWN_CHANCE, DROP_CHANCE, MAX_REGULAR_MONSTERS } from './monsters.js';
@@ -110,6 +110,8 @@ function getNextCurrent(current, state) {
     const unit = resolveUnit(state, candidate);
     if (!unit || unit.hp <= 0 || !unit.pos) continue;
     if (unit.kind === 'hunter' && unit.status?.stun > 0) {
+      // Defeat heal: restore HP to maxHp on the first stun-consumed turn (§2.8).
+      if (unit.healNextTurn) { unit.hp = unit.maxHp; unit.healNextTurn = false; }
       unit.status.stun = Math.max(0, unit.status.stun - 1);
       continue;
     }
@@ -141,6 +143,7 @@ function makeHunterRecord(h) {
     items: (h.items || []).map((it) => ({ ...it })),
     pos: { ...h.pos },
     hasTarget: !!h.hasTarget,
+    healNextTurn: !!h.healNextTurn,
     status: { ...(h.status || {}) },
     tally: { ...(h.tally || {}) },
   };
@@ -522,7 +525,9 @@ function endMovement(state, rng) {
 
 function defeatHunter(state, victim, rng) {
   victim.maxHp = Math.max(1, Math.floor(victim.maxHp / 2));
-  victim.hp = victim.maxHp;
+  // Heal happens on the consumed stunned turn, not immediately (§2.8).
+  victim.hp = 1;
+  victim.healNextTurn = true;
   victim.pos = randomFreeTile(state, rng);
   if (victim.status) victim.status.stun = (victim.status.stun || 0) + 1;
   if (victim.tally) victim.tally.defeats = (victim.tally.defeats || 0) + 1;
@@ -690,6 +695,7 @@ export function createGame(config) {
       items: (hRec.items || []).map((it) => ({ ...it })),
       pos: { ...start },
       hasTarget: false,
+      healNextTurn: false,
       status: { stun: 0, leg: false, panic: 0, empty: 0 },
       tally: { moved: 0, damage: 0, flagPts: 0, killPts: 0, defeats: 0 },
     };
@@ -767,9 +773,11 @@ function legalActions(state) {
 
   if (state.phase === 'turn.action') {
     const occupied = occupiedSet(state);
+    // Blue E-card: warp direct to EXIT — available regardless of adjacency (§2.7).
+    const beCards = (chooser.hand || []).filter((card) => cardColor(card) === 'blue' && isSpecial(card));
     const moveCardIds = (chooser.hand || []).filter((card) => {
       const color = cardColor(card);
-      return color === 'blue' || color === 'yellow' || color === 'green';
+      return (color === 'blue' && !isSpecial(card)) || color === 'yellow' || color === 'green';
     });
     // d6 always gives ≥1, so Move is available whenever any adjacent tile is walkable (range=1 check).
     const canMove = reachableTiles(state.board, occupied, chooser.pos, 1).size > 0;
@@ -777,6 +785,7 @@ function legalActions(state) {
     if (canMove) {
       for (const card of moveCardIds) actions.push({ type: 'move', card });
     }
+    for (const card of beCards) actions.push({ type: 'move', card });
     if (state.current?.kind === 'hunter') {
       actions.push({ type: 'rest' });
     }
@@ -868,6 +877,33 @@ function applyMove(state, action, rng) {
     addEvent(state, { type: 'cardPlayed', unit: current.id, card: action.card });
     state.turn.cardPlayed = action.card;
   }
+  // Blue E-card: warp directly to EXIT, cure Leg damage, then apply exit logic (§2.7, §2.9).
+  if (action.card && cardColor(action.card) === 'blue' && isSpecial(action.card)) {
+    current.pos = { ...state.board.exit };
+    if (current.status) current.status.leg = false;
+    state.turn.moved = true;
+    addEvent(state, { type: 'exitWarped', unit: current.id, pos: { ...current.pos } });
+    if (current.hasTarget) {
+      if (current.human || state.mode !== 'story') {
+        setMissionOver(state, true);
+      } else {
+        setMissionOver(state, false, 'rival exited with target');
+      }
+    } else {
+      current.pos = randomFreeTile(state, rng);
+      addEvent(state, { type: 'exitWarpedAway', unit: current.id, pos: { ...current.pos } });
+      applyEndTurn(state, rng);
+    }
+    return;
+  }
+  // Green card: set a trap on the tile being vacated before moving (§2.7).
+  if (action.card && cardColor(action.card) === 'green') {
+    const trapKind = CARDS[action.card]?.trap;
+    if (trapKind && !state.board.traps.some((t) => samePos(t, current.pos))) {
+      state.board.traps.push({ x: current.pos.x, y: current.pos.y, kind: trapKind });
+      addEvent(state, { type: 'trapSet', unit: current.id, pos: { x: current.pos.x, y: current.pos.y }, kind: trapKind });
+    }
+  }
   const die = rng.d6();
   addEvent(state, { type: 'dieRolled', unit: current.id, value: die });
   const range = Math.max(1, die + moveStatBonus(current, action.card));
@@ -920,7 +956,11 @@ function applyStep(state, action, rng) {
   if (state.move.remaining === 0) {
     if (isHunterUnit && samePos(current.pos, state.board.exit)) {
       if (current.hasTarget) {
-        setMissionOver(state, true);
+        if (current.human || state.mode !== 'story') {
+          setMissionOver(state, true);
+        } else {
+          setMissionOver(state, false, 'rival exited with target');
+        }
       } else {
         current.pos = randomFreeTile(state, rng);
         if (current.status) current.status.leg = false;
@@ -970,7 +1010,11 @@ function applyStop(state, rng) {
   if (state.phase === 'mission.over') return;
   if (isHunterUnit && samePos(current.pos, state.board.exit)) {
     if (current.hasTarget) {
-      setMissionOver(state, true);
+      if (current.human || state.mode !== 'story') {
+        setMissionOver(state, true);
+      } else {
+        setMissionOver(state, false, 'rival exited with target');
+      }
       return;
     }
     current.pos = randomFreeTile(state, rng);

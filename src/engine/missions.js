@@ -110,7 +110,7 @@ export const LEVEL_UP_FEES = [
 // Story clear pays 1/4 of the hunter's next level-up cost (§2.15); at the
 // level cap the last fee is used.
 export function storyClearReward(level) {
-  return LEVEL_UP_FEES[Math.min(level - 1, LEVEL_UP_FEES.length - 1)] / 4;
+  return Math.floor(LEVEL_UP_FEES[Math.min(level - 1, LEVEL_UP_FEES.length - 1)] / 4);
 }
 
 // Post-mission roster update (§2.12; §2.8 defeat persistence; §2.15 story

@@ -29,6 +29,10 @@ const BEHAVIORS = {
 const PANICKED_CYCLE = ['aggressive', 'clever', 'balanced', 'passive'];
 
 function getBehavior(unit, state) {
+  // Panicked human: AI controls the turn with a cycling archetype (§2.9).
+  if (unit?.human && unit?.status?.panic > 0) {
+    return { priority: PANICKED_CYCLE[(state?.round ?? 0) % PANICKED_CYCLE.length], restHp: 0.50 };
+  }
   const b = BEHAVIORS[unit?.archetype ?? ''] ?? { priority: 'balanced', restHp: 0.50 };
   if (b.priority !== 'panicked') return b;
   // RAVEN: deterministic but varied — cycle through priorities each round.
@@ -100,7 +104,7 @@ function bfsDir(board, occupiedKeys, from, goal) {
 function occupiedSet(state) {
   const s = new Set();
   for (const u of [...(state.hunters || []), ...(state.monsters || [])]) {
-    if (u.pos) s.add(`${u.pos.x},${u.pos.y}`);
+    if (u.pos && u.hp > 0) s.add(`${u.pos.x},${u.pos.y}`);
   }
   return s;
 }
@@ -221,7 +225,8 @@ export function chooseAction(state) {
       const steps = actions.filter((a) => a.type === 'step');
       const stop = actions.find((a) => a.type === 'stop');
       if (!steps.length) return stop || actions[0];
-      return chooseBestStep(state, steps, priority);
+      const best = chooseBestStep(state, steps, priority);
+      return best ?? stop ?? actions[0];
     }
 
     if (phase === 'turn.postMove') {
