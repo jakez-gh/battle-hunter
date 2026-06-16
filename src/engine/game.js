@@ -910,6 +910,11 @@ function applyStep(state, action, rng) {
       flag.taken = true;
       const roll = rng.d6();
       flagEffect(state, current, flag, roll, rng);
+      // Roll 1: trap was placed on the current tile — spring it immediately.
+      if (roll === 1) {
+        const selfTrap = state.board.traps.find((t) => samePos(t, nextPos));
+        if (selfTrap) { triggerTrap(state, current, selfTrap, rng, true); return; }
+      }
     }
   }
   if (state.move.remaining === 0) {
