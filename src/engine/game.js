@@ -246,7 +246,7 @@ function setMissionOver(state, win, reason = null) {
 function applyEndTurn(state, rng) {
   const current = resolveUnit(state, state.current);
   if (current?.kind === 'hunter') {
-    if (!state.turn?.rested && current.hand.length < 5) {
+    if (!state.turn?.rested && !(current.status?.empty > 0) && current.hand.length < 5) {
       if (state.deck.length > 0) {
         const card = state.deck.shift();
         current.hand.push(card);
