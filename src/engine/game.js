@@ -260,8 +260,8 @@ function applyEndTurn(state, rng) {
     // Calmant: auto-cure panic at turn end.
     if (hunterHasEffect(current, 'calmant')) current.status.panic = 0;
     else if (current.status?.panic > 0) current.status.panic = Math.max(0, current.status.panic - 1);
-    // Angel Feather: heal 1d6 HP after each own turn.
-    if (hunterHasEffect(current, 'angelfeather')) {
+    // Angel Feather: heal 1d6 HP after each own turn (blocked by Old Doll).
+    if (hunterHasEffect(current, 'angelfeather') && !hunterHasEffect(current, 'olddoll')) {
       const heal = rng.d6();
       current.hp = Math.min(current.maxHp, current.hp + heal);
       addEvent(state, { type: 'healed', unit: current.id, amount: heal });
@@ -417,9 +417,11 @@ function flagEffect(state, hunter, flag, roll, rng) {
     effect = trapKind;
   } else if (roll === 5) {
     if (flag.color === 'red') {
-      const heal = Math.ceil(hunter.maxHp / 4);
-      hunter.hp = Math.min(hunter.maxHp, hunter.hp + heal);
-      addEvent(state, { type: 'healed', unit: hunter.id, amount: heal });
+      if (!hunterHasEffect(hunter, 'olddoll')) {
+        const heal = Math.ceil(hunter.maxHp / 4);
+        hunter.hp = Math.min(hunter.maxHp, hunter.hp + heal);
+        addEvent(state, { type: 'healed', unit: hunter.id, amount: heal });
+      }
     } else if (flag.color === 'blue') {
       hunter.status.leg = false;
     } else if (flag.color === 'green') {
@@ -428,10 +430,12 @@ function flagEffect(state, hunter, flag, roll, rng) {
     // yellow 5: pts only (handled above)
   } else if (roll === 6) {
     if (flag.color === 'red') {
-      hunter.hp = hunter.maxHp;
-      // restore half of lost maxHP (round up) — red 6 partial maxHP repair
-      const lost = hunter.baseMaxHp - hunter.maxHp;
-      if (lost > 0) hunter.maxHp = Math.min(hunter.baseMaxHp, hunter.maxHp + Math.ceil(lost / 2));
+      if (!hunterHasEffect(hunter, 'olddoll')) {
+        hunter.hp = hunter.maxHp;
+        // restore half of lost maxHP (round up) — red 6 partial maxHP repair
+        const lost = hunter.baseMaxHp - hunter.maxHp;
+        if (lost > 0) hunter.maxHp = Math.min(hunter.baseMaxHp, hunter.maxHp + Math.ceil(lost / 2));
+      }
     } else if (flag.color === 'blue') {
       hunter.status.leg = false;
       state.turn.actAgain = true;
@@ -566,6 +570,14 @@ function resolveBattleOutcome(state, rng) {
       attacker.tally.damage = (attacker.tally.damage || 0) + atkDmgDealt;
     if (defKind === 'hunter' && defender.tally && defDmgDealt > 0)
       defender.tally.damage = (defender.tally.damage || 0) + defDmgDealt;
+    // Old Doll: defender holding it inflicts a random status on attacker when taking damage.
+    if (defKind === 'hunter' && atkDmgDealt > 0 && hunterHasEffect(defender, 'olddoll')) {
+      const kind = rng.pick(['panic', 'leg', 'empty', 'stun']);
+      if (atkKind === 'hunter' && attacker.status) {
+        attacker.status[kind] = (attacker.status[kind] || 0) + 1;
+        addEvent(state, { type: 'statusInflicted', kind, target: attacker.id });
+      }
+    }
   }
 
   // Apply status effects from crits.
@@ -989,10 +1001,12 @@ function applyAttack(state, action, rng) {
 function applyRest(state, rng) {
   const current = resolveUnit(state, state.current);
   if (!current) return;
-  const base = Math.ceil(current.maxHp / 4);
-  const amount = hunterHasEffect(current, 'medkit') ? Math.ceil(base * 1.5) : base;
-  current.hp = Math.min(current.maxHp, current.hp + amount);
-  addEvent(state, { type: 'healed', unit: current.id, amount });
+  if (!hunterHasEffect(current, 'olddoll')) {
+    const base = Math.ceil(current.maxHp / 4);
+    const amount = hunterHasEffect(current, 'medkit') ? Math.ceil(base * 1.5) : base;
+    current.hp = Math.min(current.maxHp, current.hp + amount);
+    addEvent(state, { type: 'healed', unit: current.id, amount });
+  }
   drawDeckCards(state, current, rng, current.hand.length === 0 ? 3 : 2);
   state.turn.rested = true;
   applyEndTurn(state, rng);
