@@ -332,6 +332,8 @@ function maybeSpawnMonster(state, rng) {
 
   const regular = (state.monsters || []).filter((m) => m.kind !== 'WYRM' && m.hp > 0);
   if (regular.length >= MAX_REGULAR_MONSTERS) return;
+  // Wardstone: any hunter holding an identified Wardstone blocks the spawn check (§2.10).
+  if (state.hunters.some((h) => h.pos && hunterHasEffect(h, 'wardstone'))) return;
   const chance = state.turn?.cardPlayed && cardColor(state.turn.cardPlayed) === 'yellow' ? SPAWN_CHANCE / 2 : SPAWN_CHANCE;
   if (rng.float() >= chance) return;
   const freeTiles = [];
