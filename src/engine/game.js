@@ -209,12 +209,14 @@ function cardEffectInfo(cardId) {
   };
 }
 
-function moveRange(unit, card) {
+// Stat portion only (no d6). d6 is rolled in applyMove and added at that point.
+// legalActions uses this with range=1 to check adjacency; actual range = d6 + this.
+function moveStatBonus(unit, card) {
   const baseMv = hunterHasEffect(unit, 'crutch') && unit.status?.leg ? 1 : Math.floor((unit.internal?.mv || 1) / 3);
   let mv = unit.status?.leg ? (hunterHasEffect(unit, 'crutch') ? 1 : 0) : baseMv + (effectiveStats(unit).mv || 0);
   const cardInfo = cardEffectInfo(card);
   if (cardInfo.color === 'blue' && typeof cardInfo.value === 'number') mv += cardInfo.value;
-  return Math.max(1, mv);
+  return mv;
 }
 
 function passiveEvasion(unit, card) {
@@ -711,13 +713,11 @@ function legalActions(state) {
       const color = cardColor(card);
       return color === 'blue' || color === 'yellow' || color === 'green';
     });
-    const canMove = (card) => {
-      const range = moveRange(chooser, card);
-      return reachableTiles(state.board, occupied, chooser.pos, range).size > 0;
-    };
-    if (canMove(null)) actions.push({ type: 'move' });
-    for (const card of moveCardIds) {
-      if (canMove(card)) actions.push({ type: 'move', card });
+    // d6 always gives ≥1, so Move is available whenever any adjacent tile is walkable (range=1 check).
+    const canMove = reachableTiles(state.board, occupied, chooser.pos, 1).size > 0;
+    if (canMove) actions.push({ type: 'move' });
+    if (canMove) {
+      for (const card of moveCardIds) actions.push({ type: 'move', card });
     }
     if (state.current?.kind === 'hunter') {
       actions.push({ type: 'rest' });
@@ -810,7 +810,9 @@ function applyMove(state, action, rng) {
     addEvent(state, { type: 'cardPlayed', unit: current.id, card: action.card });
     state.turn.cardPlayed = action.card;
   }
-  const range = moveRange(current, action.card);
+  const die = rng.d6();
+  addEvent(state, { type: 'dieRolled', unit: current.id, value: die });
+  const range = Math.max(1, die + moveStatBonus(current, action.card));
   state.move = { remaining: range, path: [], cardPlayed: action.card || null, trap: null };
   state.phase = 'turn.steer';
   state.turn.moved = true;
