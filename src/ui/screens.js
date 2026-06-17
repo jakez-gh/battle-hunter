@@ -79,6 +79,24 @@ function text(ctx, s, x, y, opt = {}) {
   ctx.fillText(s, x, y);
 }
 
+function wrapText(ctx, str, x, y, maxW, lineH, opt = {}) {
+  if (!str) return y;
+  ctx.font = font(opt.size ?? 13, opt.bold ?? false);
+  let line = '', cy = y;
+  for (const word of str.split(' ')) {
+    const test = line ? line + ' ' + word : word;
+    if (line && ctx.measureText(test).width > maxW) {
+      text(ctx, line, x, cy, opt);
+      line = word;
+      cy += lineH;
+    } else {
+      line = test;
+    }
+  }
+  if (line) text(ctx, line, x, cy, opt);
+  return cy + lineH;
+}
+
 function box(ctx, x, y, w, h, opt = {}) {
   ctx.fillStyle = opt.fill ?? 'rgba(10,12,24,0.92)';
   ctx.fillRect(x, y, w, h);
@@ -270,6 +288,21 @@ function drawHunterCard(app, rec, x, y, w) {
 }
 
 // ---------------------------------------------------------------------------
+// MANUAL — placeholder until how-to-play content is written.
+
+function makeManualScreen(app) {
+  return {
+    draw(ctx) {
+      drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      box(ctx, 80, 80, 800, 500, { title: 'HOW TO PLAY' });
+      wrapText(ctx, 'Coming soon. Press Esc to go back.', 100, 120, 760, 26, { size: 16, color: FG });
+    },
+    onKey(k) { if (k === 'cancel' || k === 'confirm') { sfx.menuCancel(); app.stack.pop(); } },
+    onClick() { sfx.menuCancel(); app.stack.pop(); },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // TITLE
 
 export function makeTitleScreen(app) {
@@ -277,10 +310,12 @@ export function makeTitleScreen(app) {
   const menu = makeMenu([
     { label: 'STORY', value: 'story' },
     { label: 'NORMAL', value: 'normal' },
+    { label: 'HOW TO PLAY', value: 'manual' },
     { label: 'OPTIONS', value: 'options' },
   ], {
     onPick(v) {
       if (v === 'options') { app.stack.push(makeOptionsScreen(app)); return; }
+      if (v === 'manual') { app.stack.push(makeManualScreen(app)); return; }
       app.session.mode = v;
       app.stack.push(makeRosterScreen(app));
     },
@@ -609,6 +644,49 @@ export function makeHubScreen(app) {
 }
 
 // ---------------------------------------------------------------------------
+// BRIEFING — shown before a story mission starts; full-screen word-wrapped
+// briefing text plus Start / Back options.
+
+function makeBriefingScreen(app, mission, onConfirm) {
+  let sel = 0;
+  return {
+    draw(ctx) {
+      drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      box(ctx, 80, 60, 800, 48, {});
+      text(ctx, `M${String(mission.id).padStart(2, '0')}: ${mission.title}`, 100, 70, { size: 20, color: GOLD });
+      text(ctx, `Lv${mission.level}  ${cap(mission.type)}`, 868, 74, { align: 'right', size: 14, color: DIM });
+      box(ctx, 80, 120, 800, 190, { title: 'BRIEFING' });
+      wrapText(ctx, mission.briefing ?? '', 100, 150, 760, 26, { size: 13, bold: false, color: FG });
+      const btnOpts = ['Start Mission', 'Back'];
+      btnOpts.forEach((label, i) => {
+        const bx = 80 + i * 420, by = 560;
+        box(ctx, bx, by, 380, 40, { stroke: sel === i ? GOLD : '#3c4364' });
+        text(ctx, label, bx + 190, by + 10, { size: 16, align: 'center', color: sel === i ? GOLD : FG });
+      });
+    },
+    onKey(k) {
+      if (k === 'left' || k === 'right' || k === 'up' || k === 'down') { sel = 1 - sel; sfx.menuMove(); }
+      else if (k === 'confirm') {
+        if (sel === 0) { sfx.menuConfirm(); app.stack.pop(); onConfirm(); }
+        else { sfx.menuCancel(); app.stack.pop(); }
+      } else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); }
+    },
+    onClick(pos) {
+      for (let i = 0; i < 2; i++) {
+        const r = { x: 80 + i * 420, y: 560, w: 380, h: 40 };
+        if (inRect(pos, r)) {
+          if (sel === i) {
+            if (i === 0) { sfx.menuConfirm(); app.stack.pop(); onConfirm(); }
+            else { sfx.menuCancel(); app.stack.pop(); }
+          } else { sel = i; sfx.menuMove(); }
+          return;
+        }
+      }
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // CLIENT — mission select, sell with haggle, appraise (§2.13).
 
 export function makeClientScreen(app) {
@@ -647,7 +725,10 @@ export function makeClientScreen(app) {
       items.push({ label: 'Cancel', value: null });
       return makeMenu(items, {
         title: 'STORY MISSIONS',
-        onPick(m) { m ? app.startMission(m) : host.pop(); },
+        onPick(m) {
+          if (!m) { host.pop(); return; }
+          app.stack.push(makeBriefingScreen(app, m, () => app.startMission(m)));
+        },
         onCancel() { host.pop(); },
       });
     }

@@ -455,11 +455,15 @@ export function createRenderer(canvas, opts = {}) {
     const floors = ['floorA', 'floorB', 'floorC'];
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
-        if (!b.floor[y]?.[x]) { blitTile('tile.pit', x, y); continue; }
+        if (!b.floor[y]?.[x]) {
+          // Show stone wall face where the wall borders a walkable floor below it.
+          blitTile(b.floor[y + 1]?.[x] ? 'tile.wall' : 'tile.pit', x, y);
+          continue;
+        }
         blitTile(`tile.${floors[(x * 7 + y * 13) % 3]}`, x, y);
-        if (y > 0 && !b.floor[y - 1]?.[x]) { // faux depth under walls
+        if (y > 0 && !b.floor[y - 1]?.[x]) { // contact shadow where floor meets wall
           const p = worldToScreen(x, y, cam);
-          ctx.fillStyle = 'rgba(10, 10, 18, 0.45)';
+          ctx.fillStyle = 'rgba(10, 10, 18, 0.38)';
           ctx.fillRect(p.x, p.y, TILE * cam.scale, 4 * cam.scale);
         }
       }
@@ -698,12 +702,27 @@ export function createRenderer(canvas, opts = {}) {
     const bh = Math.min(canvas.height - HUD_H - 24, 210);
     const bx = (canvas.width - bw) / 2 | 0;
     const by = (canvas.height - HUD_H - bh) / 2 | 0;
-    ctx.fillStyle = 'rgba(17, 19, 29, 0.92)';
+    // Background + outer glow border
+    ctx.fillStyle = 'rgba(14, 15, 26, 0.96)';
     ctx.fillRect(bx, by, bw, bh);
-    ctx.strokeStyle = '#f0f4ff';
+    ctx.strokeStyle = '#cc4a3a';
+    ctx.lineWidth = 2;
     ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
-    drawCombatant(battle.a, bx + 24, by + 24, false);
-    drawCombatant(battle.d, bx + bw - 24 - 48, by + 24, true);
+    // Inner accent line
+    ctx.strokeStyle = 'rgba(240,180,160,0.18)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx + 3, by + 3, bw - 6, bh - 6);
+    // Title bar
+    ctx.fillStyle = 'rgba(180, 50, 40, 0.22)';
+    ctx.fillRect(bx + 2, by + 2, bw - 4, 16);
+    setFont(11);
+    ctx.fillStyle = '#f0c8c0';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('B A T T L E', (bx + bw / 2) | 0, by + 4);
+    ctx.textAlign = 'left';
+    drawCombatant(battle.a, bx + 24, by + 28, false);
+    drawCombatant(battle.d, bx + bw - 24 - 48, by + 28, true);
     text('VS', bx + bw / 2, by + 36, '#ffe98a', 16, 'center');
     if (battle.response) text(String(battle.response).toUpperCase(), bx + bw / 2, by + 60, '#9adfe8', 12, 'center');
     if (battle.escape) {
