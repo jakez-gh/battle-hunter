@@ -109,7 +109,7 @@ function getNextCurrent(current, state) {
     const candidate = order[(start + i) % order.length];
     const unit = resolveUnit(state, candidate);
     if (!unit || unit.hp <= 0 || !unit.pos) continue;
-    if (unit.kind === 'hunter' && unit.status?.stun > 0) {
+    if (candidate.kind === 'hunter' && unit.status?.stun > 0) {
       // Defeat heal: restore HP to maxHp on the first stun-consumed turn (§2.8).
       if (unit.healNextTurn) { unit.hp = unit.maxHp; unit.healNextTurn = false; }
       unit.status.stun = Math.max(0, unit.status.stun - 1);
@@ -474,7 +474,7 @@ function getAdjacentEnemies(state, unit) {
   const enemies = [];
   const pos = unit?.pos;
   if (!pos) return enemies;
-  const isHunter = unit.kind !== 'monster';
+  const isHunter = state.current?.kind !== 'monster';
   // Hunters fight both monsters and other hunters; monsters fight hunters only.
   const candidates = isHunter
     ? [
