@@ -331,6 +331,12 @@ export function makeTitleScreen(app) {
       // Chunky layered logo
       const cx = app.W / 2;
       const bob = Math.sin(t * 2) * 4;
+      // Purple atmospheric bloom behind the title
+      const bloom = ctx.createRadialGradient(cx, 160, 15, cx, 160, 190);
+      bloom.addColorStop(0, 'rgba(55, 12, 92, 0.48)');
+      bloom.addColorStop(1, 'transparent');
+      ctx.fillStyle = bloom;
+      ctx.fillRect(cx - 190, 55, 380, 210);
       for (const [dx, dy, c] of [[8, 8, '#000'], [4, 4, '#5c1d8f'], [0, 0, FG]]) {
         text(ctx, 'BATTLE', cx + dx, 110 + dy + bob, { size: 84, align: 'center', shadow: false, color: c });
       }
@@ -349,10 +355,23 @@ export function makeTitleScreen(app) {
         ctx.closePath(); ctx.fill();
       }
       text(ctx, 'relic dives of the Meridian Salvage Guild', cx, 314, { size: 15, align: 'center', color: DIM });
-      // All 8 hunters marching
+      // All 8 hunters marching with palette-colored ground glows
       const step = Math.floor(t * 3) % 2 ? 'step' : 'idle';
+      const HUNTER_GLOWS = ['#3a6ee0','#cc4a3a','#e0c63a','#3aa84a','#8c3ae0','#c85c2a','#3aacc8','#888aa0'];
       PALETTE_NAMES.forEach((pal, i) => {
-        sprite(app, `hunter${i}.${pal}.${step}`, cx - 350 + i * 88, 354, 5);
+        const hx = cx - 350 + i * 88;
+        const gcx = hx + 40;
+        const gcy = 428;
+        const pulse = 0.22 + 0.12 * Math.sin(t * 1.6 + i * 0.8);
+        ctx.save();
+        ctx.globalAlpha = pulse;
+        const gr = ctx.createRadialGradient(gcx, gcy, 0, gcx, gcy, 34);
+        gr.addColorStop(0, HUNTER_GLOWS[i]);
+        gr.addColorStop(1, 'transparent');
+        ctx.fillStyle = gr;
+        ctx.fillRect(gcx - 34, gcy - 34, 68, 68);
+        ctx.restore();
+        sprite(app, `hunter${i}.${pal}.${step}`, hx, 354, 5);
       });
       drawMenu(ctx, menu, cx - 130, 480, 260, { lineH: 34, size: 22 });
       text(ctx, 'arrows/WASD move - Enter confirm - Esc back - Tab info', cx, 660, { size: 13, align: 'center', color: DIM });
