@@ -487,6 +487,13 @@ export function createRenderer(canvas, opts = {}) {
     for (const box of b.boxes ?? []) {
       const closed = !box.opened || closedBoxes.has(key(box.x, box.y));
       blitTile(closed ? 'tile.boxClosed' : 'tile.boxOpen', box.x, box.y);
+      if (closed) {
+        const bp = worldToScreen(box.x, box.y, cam);
+        const pulse = 0.10 + 0.08 * Math.sin(clock / 1100 + box.x * 3.7 + box.y * 2.3);
+        ctx.globalAlpha = pulse; ctx.fillStyle = '#e8d87e';
+        ctx.fillRect(bp.x, bp.y, TILE * cam.scale, TILE * cam.scale);
+        ctx.globalAlpha = 1;
+      }
     }
     for (const f of b.flags ?? []) {
       if (f.taken && !standingFlags.has(key(f.x, f.y))) continue;
@@ -515,9 +522,15 @@ export function createRenderer(canvas, opts = {}) {
       for (const cell of overlays.range) {
         const [x, y] = String(cell).split(',').map(Number);
         const p = worldToScreen(x, y, cam);
-        ctx.fillStyle = 'rgba(240, 244, 255, 0.18)';
-        ctx.fillRect(p.x, p.y, TILE * s, TILE * s);
-        blit('tile.rangeDot', p.x, p.y);
+        const ts = TILE * s;
+        ctx.fillStyle = 'rgba(240, 244, 255, 0.12)';
+        ctx.fillRect(p.x, p.y, ts, ts);
+        const L = 3 * s, W = s;
+        ctx.fillStyle = 'rgba(210, 225, 255, 0.82)';
+        ctx.fillRect(p.x + 1, p.y + 1, L, W); ctx.fillRect(p.x + 1, p.y + 1, W, L);
+        ctx.fillRect(p.x + ts - L - 1, p.y + 1, L, W); ctx.fillRect(p.x + ts - W - 1, p.y + 1, W, L);
+        ctx.fillRect(p.x + 1, p.y + ts - W - 1, L, W); ctx.fillRect(p.x + 1, p.y + ts - L - 1, W, L);
+        ctx.fillRect(p.x + ts - L - 1, p.y + ts - W - 1, L, W); ctx.fillRect(p.x + ts - W - 1, p.y + ts - L - 1, W, L);
       }
     }
     if (overlays.path) {
@@ -642,6 +655,34 @@ export function createRenderer(canvas, opts = {}) {
     ctx.globalAlpha = 0.6 + 0.4 * Math.sin(clock / 160);
     blitTile('tile.cursor', cursor.x, cursor.y);
     ctx.restore();
+  }
+
+  function drawAmbientShimmer() {
+    if (!state?.board) return;
+    const b = state.board;
+    const { w: vw, h: vh } = viewSize();
+    const x0 = Math.max(0, Math.floor(cam.x / TILE));
+    const y0 = Math.max(0, Math.floor(cam.y / TILE));
+    const x1 = Math.min(b.w - 1, Math.ceil((cam.x + vw) / TILE));
+    const y1 = Math.min(b.h - 1, Math.ceil((cam.y + vh) / TILE));
+    const s = cam.scale;
+    for (let ty = y0; ty <= y1; ty++) {
+      for (let tx = x0; tx <= x1; tx++) {
+        if (!b.floor[ty]?.[tx]) continue;
+        const h = ((tx * 1637 + ty * 3571) ^ 997) & 0xFFFF;
+        const period = 5000 + (h % 4000);
+        const phase = ((clock + h * 3) % period) / period;
+        if (phase > 0.08) continue;
+        const t2 = phase < 0.04 ? phase / 0.04 : (0.08 - phase) / 0.04;
+        const sp2 = worldToScreen(tx, ty, cam);
+        const spx = sp2.x + ((h >> 4) & 13) * s;
+        const spy = sp2.y + ((h >> 8) & 13) * s;
+        ctx.globalAlpha = t2 * 0.14;
+        ctx.fillStyle = (h & 1) ? '#e8c87a' : '#9adfe8';
+        ctx.fillRect(spx, spy, s * 2, s * 2);
+      }
+    }
+    ctx.globalAlpha = 1;
   }
 
   function drawUnitShadow(k, pos, alpha) {
@@ -780,6 +821,9 @@ export function createRenderer(canvas, opts = {}) {
     // Background + outer glow border
     ctx.fillStyle = 'rgba(14, 15, 26, 0.96)';
     ctx.fillRect(bx, by, bw, bh);
+    const bglow = 0.4 + 0.6 * Math.sin(clock / 280);
+    ctx.save(); ctx.strokeStyle = '#cc4a3a'; ctx.lineWidth = 3 + bglow * 3;
+    ctx.globalAlpha = bglow * 0.35; ctx.strokeRect(bx - 2, by - 2, bw + 4, bh + 4); ctx.restore();
     ctx.strokeStyle = '#cc4a3a';
     ctx.lineWidth = 2;
     ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
@@ -892,6 +936,7 @@ export function createRenderer(canvas, opts = {}) {
         ctx.translate(Math.round((Math.random() * 2 - 1) * m), Math.round((Math.random() * 2 - 1) * m));
       }
       drawBoard();
+      drawAmbientShimmer();
       drawOverlays();
       drawUnits();
       drawDieChip();
