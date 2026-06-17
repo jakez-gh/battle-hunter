@@ -303,21 +303,6 @@ function drawHunterCard(app, rec, x, y, w) {
 }
 
 // ---------------------------------------------------------------------------
-// MANUAL — placeholder until how-to-play content is written.
-
-function makeManualScreen(app) {
-  return {
-    draw(ctx) {
-      drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
-      box(ctx, 80, 80, 800, 500, { title: 'HOW TO PLAY' });
-      wrapText(ctx, 'Coming soon. Press Esc to go back.', 100, 120, 760, 26, { size: 16, color: FG });
-    },
-    onKey(k) { if (k === 'cancel' || k === 'confirm') { sfx.menuCancel(); app.stack.pop(); } },
-    onClick() { sfx.menuCancel(); app.stack.pop(); },
-  };
-}
-
-// ---------------------------------------------------------------------------
 // TITLE
 
 export function makeTitleScreen(app) {
@@ -663,50 +648,6 @@ export function makeHubScreen(app) {
         text(ctx, 'No active hunter - visit the OFFICE first.', 120, 430, { size: 16, color: BAD });
       }
       text(ctx, 'Esc: back to title', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
-    },
-  };
-}
-
-// ---------------------------------------------------------------------------
-// BRIEFING — shown before a story mission starts; full-screen word-wrapped
-// briefing text plus Start / Back options.
-
-function makeMissionBriefingScreen(app, mission) {
-  let sel = 0;
-  return {
-    draw(ctx) {
-      drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
-      box(ctx, 80, 60, 800, 48, {});
-      text(ctx, `M${String(mission.id).padStart(2, '0')}: ${mission.title}`, 100, 70, { size: 20, color: GOLD });
-      text(ctx, `Lv${mission.level}  ${cap(mission.type)}`, 868, 74, { align: 'right', size: 14, color: DIM });
-      box(ctx, 80, 120, 800, 190, { title: 'BRIEFING' });
-      wrapText(ctx, mission.briefing ?? '', 100, 150, 760, 26, { size: 13, bold: false, color: FG });
-      const btnOpts = ['Start Mission', 'Back'];
-      btnOpts.forEach((label, i) => {
-        const bx = 80 + i * 420, by = 560;
-        box(ctx, bx, by, 380, 40, { stroke: sel === i ? GOLD : '#3c4364' });
-        text(ctx, label, bx + 190, by + 10, { size: 16, align: 'center', color: sel === i ? GOLD : FG });
-      });
-    },
-    onKey(k) {
-      if (k === 'left' || k === 'right' || k === 'up' || k === 'down') { sel = 1 - sel; sfx.menuMove(); }
-      else if (k === 'confirm') {
-        // startMission calls stack.replace internally, so no pop needed for Start
-        if (sel === 0) { sfx.menuConfirm(); app.startMission(mission); }
-        else { sfx.menuCancel(); app.stack.pop(); }
-      } else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); }
-    },
-    onClick(pos) {
-      for (let i = 0; i < 2; i++) {
-        const r = { x: 80 + i * 420, y: 560, w: 380, h: 40 };
-        if (inRect(pos, r)) {
-          if (sel === i) {
-            if (i === 0) { sfx.menuConfirm(); app.startMission(mission); }
-            else { sfx.menuCancel(); app.stack.pop(); }
-          } else { sel = i; sfx.menuMove(); }
-          return;
-        }
-      }
     },
   };
 }
@@ -1670,4 +1611,227 @@ export function makeResultsScreen(app, g) {
       return { id: h.id, name: h.name, moved, damage, flagPts, killPts, handicap, itemPts, total, credits };
     });
   }
+}
+
+// ---------------------------------------------------------------------------
+// MISSION BRIEFING — shown after story mission select, before game start.
+
+export function makeMissionBriefingScreen(app, mission) {
+  const TYPE_HINT = {
+    fetch:   'Find the Target Item in a box, then carry it to the EXIT to win.',
+    rescue:  'Reach the marked survivor before any RAVEN agent does.',
+    resteal: 'The Target is already in a rival\'s hands. Steal it, then reach EXIT.',
+  };
+  const TYPE_COLOR = { fetch: FG, rescue: OK, resteal: BAD };
+
+  return {
+    onKey(k) {
+      if (k === 'confirm') { sfx.menuConfirm(); app.startMission(mission); }
+      else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); }
+    },
+    onClick(pos) {
+      if (pos.y > app.H - 110) this.onKey('confirm');
+      else this.onKey('cancel');
+    },
+    draw(ctx) {
+      const BX = 60, BY = 44, BW = 840, BH = 596;
+      drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      box(ctx, BX, BY, BW, BH, { title: 'MISSION BRIEFING' });
+
+      text(ctx, 'M' + String(mission.id).padStart(2, '0') + '  ' + mission.title,
+        BX + 20, BY + 36, { size: 22, color: GOLD });
+
+      text(ctx, 'Level ' + mission.level, BX + 20, BY + 70, { size: 14, color: DIM });
+      text(ctx, mission.type.toUpperCase(), BX + 130, BY + 70,
+        { size: 14, color: TYPE_COLOR[mission.type] || FG });
+
+      ctx.fillStyle = '#3c4364';
+      ctx.fillRect(BX + 20, BY + 94, BW - 40, 1);
+
+      let nextY = wrapText(ctx, mission.briefing || 'No briefing on file.',
+        BX + 20, BY + 106, BW - 60, 22, { size: 15 });
+
+      nextY = Math.max(nextY, BY + 260);
+      ctx.fillStyle = '#3c4364';
+      ctx.fillRect(BX + 20, nextY, BW - 40, 1);
+
+      text(ctx, 'OBJECTIVE', BX + 20, nextY + 10, { size: 12, color: GOLD });
+      wrapText(ctx, TYPE_HINT[mission.type] || '', BX + 20, nextY + 28, BW - 60, 20, { size: 14, color: DIM });
+
+      const oppY = nextY + 78;
+      ctx.fillStyle = '#3c4364';
+      ctx.fillRect(BX + 20, oppY, BW - 40, 1);
+      text(ctx, 'OPPOSITION', BX + 20, oppY + 10, { size: 12, color: GOLD });
+      const oppNames = mission.opponents.map(function(o) {
+        if (o === 'RAVEN') return 'RAVEN agent';
+        if (o === 'keld') return 'Keld';
+        if (o === 'mira') return 'Mira';
+        return o;
+      });
+      text(ctx, oppNames.join(',  '), BX + 20, oppY + 28, { size: 14, color: DIM });
+
+      const depY = BY + BH - 54;
+      ctx.fillStyle = 'rgba(20,50,20,0.55)';
+      ctx.fillRect(BX + 20, depY, BW - 40, 44);
+      ctx.strokeStyle = '#3a8a3a';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(BX + 21, depY, BW - 42, 44);
+      text(ctx, 'Enter: DEPLOY', app.W / 2, depY + 6, { size: 17, align: 'center', color: OK });
+      text(ctx, 'Esc: back', app.W / 2, depY + 26, { size: 12, align: 'center', color: DIM });
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// MANUAL — multi-page in-game reference, accessible from the title screen.
+
+export function makeManualScreen(app) {
+  const PAGES = [
+    {
+      title: 'THE BASICS',
+      sections: [
+        { head: 'Goal', body: 'Be the first hunter to carry the Target Item out through the EXIT tile. The Target is hidden inside one of the boxes on the board.' },
+        { head: 'Your Turn', body: 'Each turn: Move (roll 1d6, use cards to extend), Rest (draw 2 cards; 3 from empty hand), or play cards for their effects. You must take at least one action.' },
+        { head: 'Target Found', body: 'Once a hunter opens the Target box, everyone on the board knows who holds it. From that point, rivals will pursue the holder.' },
+        { head: 'Winning', body: 'Step onto EXIT while holding the Target to win. In Story mode, a rival exiting with the Target, or the WYRM defeating the holder, ends the game as a loss.' },
+      ],
+    },
+    {
+      title: 'MOVEMENT',
+      sections: [
+        { head: 'Rolling', body: 'Choose Move to roll 1d6. Play Blue cards before or during movement to add +1, +2, or +3 to your budget. You must move at least 1 step.' },
+        { head: 'Steering', body: 'Move one tile at a time with arrow keys. You can backtrack freely. Press Enter to stop early. Movement ends when your budget hits zero.' },
+        { head: 'Boxes & Flags', body: 'Boxes open at the end of movement on their tile. Flag tiles trigger a 1d6 roll for points each turn you land or stay on them.' },
+        { head: 'Traps', body: 'Traps trigger when you step onto their tile. Press a direction key at the right moment to dodge (human players only). Monsters ignore traps.' },
+        { head: 'Green Cards', body: 'Playing a Green card places a trap on your current tile before you move. You can dodge your own trap.' },
+      ],
+    },
+    {
+      title: 'BATTLE',
+      sections: [
+        { head: 'Starting a Battle', body: 'Move onto a tile occupied by another hunter or monster. You are the attacker; they defend.' },
+        { head: 'Attacker Options', body: 'Attack: deal AT damage (play Red cards for +AT). Guard: double your DF (play Yellow). Escape: flee roll vs pursuer MV (play Blue to boost).' },
+        { head: 'Defender Options', body: 'Counter: fight back with Red or Yellow cards. Guard: Yellow cards for DF boost, no return damage. Surrender: hand over one item and end combat.' },
+        { head: 'Damage & Crits', body: 'Damage = (AT + card) - (DF + card), minimum 0. Rolling doubles = Critical Hit. Attacker gains a bonus effect; defender may get Panic. Human defenders can negate crits by pressing a key at the right moment.' },
+        { head: 'Defeat', body: 'At 0 HP: warp to a random tile, lose 1 permanent max HP, attacker picks one item. HP restores fully on the next turn. The Target changes hands on defeat.' },
+      ],
+    },
+    {
+      title: 'CARDS',
+      sections: [
+        { head: 'Red (20) — Battle AT bonus', body: '+3x3  +4x3  +5x3  +6x3  +7x2  +8x2  +9x2  C (match opp AT)  S (double your AT). Only usable in battle.' },
+        { head: 'Yellow (30) — DF / dodge', body: '+3x7  +4x6  +5x5  +6x4  +7x3  +8x2  +9x1  D (double DF / 100% trap dodge)  A (negate all damage / 100% dodge). Raises trap evasion by value x10% while moving.' },
+        { head: 'Blue (30) — Movement', body: '+1x16  +2x8  +3x4  E (warp to EXIT; cures Leg Damage; always wins flee roll). E cards are placed in the bottom 49 of the deck.' },
+        { head: 'Green (20) — Set Traps', body: 'D (Damage: relicLv+1d6 HP)  S (Stun)  L (Leg Damage)  E (Empty: discard hand). Place on your starting tile before you move.' },
+        { head: 'Rest', body: 'An action, not a card. Draw 2 cards (3 from empty hand). If hand is already full (5), still uses your turn.' },
+      ],
+    },
+    {
+      title: 'FLAGS',
+      sections: [
+        { head: 'How Flags Work', body: 'Land on a flag to roll 1-6. You roll again each turn you remain on the same flag. The color determines what the numbers mean.' },
+        { head: 'Red Flags', body: '1: 250pts + HP damage trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 250pts + HP restore.  6: 250pts + full HP + partial maxHP restore.' },
+        { head: 'Blue Flags', body: '1: 250pts + Leg Damage trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 250pts + Leg cured.  6: 250pts + Leg cured + act again this turn.' },
+        { head: 'Green Flags', body: '1: 250pts + Empty trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 250pts + draw 2 cards.  6: 250pts + fill hand to 5.' },
+        { head: 'Yellow Flags', body: '1: 250pts + Stun trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 1500pts.  6: 2000pts.' },
+      ],
+    },
+    {
+      title: 'STATUS EFFECTS',
+      sections: [
+        { head: 'Stun', body: 'Your next turn is skipped. You cannot counter-attack while stunned. Caused by Stun traps or WYRM critical hits.' },
+        { head: 'Leg Damage', body: 'Movement bonus drops to +0 (+1 with a Crutch item). Cured by: landing on EXIT, playing a Blue E card, or a Blue Flag roll of 5 or 6.' },
+        { head: 'Panic', body: 'Caused by Critical Hits (if you miss the negate window). AI controls your turn, cycling behaviour patterns each round. A Releaser item clears Panic at the start of your turn.' },
+        { head: 'Empty', body: 'Your entire hand is discarded. You cannot draw new cards while Empty. Clears at end of the current round. Caused by Empty traps or FNG (Cleaner) critical hits.' },
+      ],
+    },
+    {
+      title: 'MONSTERS',
+      sections: [
+        { head: 'Spawning', body: 'Up to 2 regular monsters can be present at once. One may appear next to you when you finish a move turn. An identified Folklore (Bible) item prevents spawns near you.' },
+        { head: 'FNG  (Cleaner)', body: 'Balanced stats. Critical hit inflicts Empty status. Counter item: Controller.' },
+        { head: 'BRO  (Blob)', body: 'High HP, low attack. No special critical rider. Counter item: Fragrance.' },
+        { head: 'RAD  (Predator)', body: 'Fast and hard-hitting. No special critical rider. Counter item: Chip.' },
+        { head: 'WYRM  (Dragon)', body: 'Appears when the deck runs out. Very high HP. Critical hit inflicts Stun. If WYRM defeats the Target holder: Story = game over; Normal = all players lose items and credits. Counter item: Buster.' },
+      ],
+    },
+    {
+      title: 'SCORING & CREDITS',
+      sections: [
+        { head: 'Score Sources', body: 'Movement: 15pts/tile.  Damage: 25pts/HP dealt.  Flags: face value per roll.  Monster kills: 500-750 bonus.  Handicap: (relic level - your level) x 250.  Items held: 250pts each.  Target Item: +1250pts.  Cap: 50,000pts.' },
+        { head: 'Credits Earned', body: 'Credits = floor(score / 15 x relic level). The hunter who returned the Target also receives its sale price.' },
+        { head: 'Story Bonus', body: 'Story mode clear pays an extra 1/4 of the next level-up cost.' },
+        { head: 'Hospital', body: 'Level up costs 1,000cr (Lv1->2) scaling to 46,500cr (Lv14->15). Max HP repair: 50cr x your level per 1 HP restored.' },
+      ],
+    },
+    {
+      title: 'MISSION TYPES',
+      sections: [
+        { head: 'Fetch', body: 'Standard mission. The Target Item is sealed inside one of the boxes. Find it, pick it up, and reach EXIT.' },
+        { head: 'Rescue', body: 'A survivor waits at a fixed position on the board. Reach them first. If a RAVEN agent gets there before you, the mission is lost. RAVEN teams hold back for the first couple of rounds.' },
+        { head: 'Re-steal', body: 'A RAVEN agent starts the mission already holding the Target. Defeat or outmanoeuvre them to take it, then escape via EXIT.' },
+        { head: 'Story Rivals', body: 'Keld (attack specialist) and Mira (speed specialist) are recurring rivals with stats that scale with mission level. Both use Clever AI: collect items until the Target is found, then pursue relentlessly.' },
+      ],
+    },
+  ];
+
+  let page = 0;
+
+  return {
+    onKey(k) {
+      if (k === 'cancel' || k === 'confirm') { sfx.menuCancel(); app.stack.pop(); }
+      else if (k === 'right' || k === 'down') { if (page < PAGES.length - 1) { page++; sfx.menuMove(); } }
+      else if (k === 'left' || k === 'up')   { if (page > 0)               { page--; sfx.menuMove(); } }
+    },
+    onClick(pos) {
+      if (pos.x > app.W * 0.72) { if (page < PAGES.length - 1) { page++; sfx.menuMove(); } }
+      else if (pos.x < app.W * 0.28) { if (page > 0) { page--; sfx.menuMove(); } }
+      else this.onKey('cancel');
+    },
+    draw(ctx) {
+      const BX = 44, BY = 44, BW = 872, BH = 614;
+      drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      box(ctx, BX, BY, BW, BH, { title: 'HOW TO PLAY' });
+
+      const pg = PAGES[page];
+      text(ctx, pg.title, BX + 20, BY + 36, { size: 22, color: GOLD });
+      text(ctx, (page + 1) + ' / ' + PAGES.length, BX + BW - 24, BY + 36,
+        { size: 14, align: 'right', color: DIM });
+
+      ctx.fillStyle = '#3c4364';
+      ctx.fillRect(BX + 20, BY + 66, BW - 40, 1);
+
+      let curY = BY + 78;
+      const bodyBottom = BY + BH - 58;
+      for (let si = 0; si < pg.sections.length; si++) {
+        const sec = pg.sections[si];
+        if (curY >= bodyBottom) break;
+        text(ctx, sec.head, BX + 20, curY, { size: 13, color: GOLD });
+        curY = wrapText(ctx, sec.body, BX + 28, curY + 18, BW - 60, 17, { size: 13, color: DIM });
+        curY += 6;
+      }
+
+      const navY = BY + BH - 50;
+      ctx.fillStyle = 'rgba(10,12,24,0.85)';
+      ctx.fillRect(BX + 1, navY, BW - 2, 49);
+      ctx.fillStyle = '#3c4364';
+      ctx.fillRect(BX + 20, navY, BW - 40, 1);
+
+      text(ctx, '< Prev', BX + 30, navY + 12,
+        { size: 13, color: page > 0 ? DIM : '#444', shadow: false });
+      text(ctx, 'Esc / Enter: close', app.W / 2, navY + 12,
+        { size: 13, align: 'center', color: DIM, shadow: false });
+      text(ctx, 'Next >', BX + BW - 30, navY + 12,
+        { size: 13, align: 'right', color: page < PAGES.length - 1 ? DIM : '#444', shadow: false });
+
+      const spacing = 14;
+      const dotsX = app.W / 2 - ((PAGES.length - 1) * spacing) / 2;
+      for (let di = 0; di < PAGES.length; di++) {
+        ctx.fillStyle = di === page ? GOLD : '#3c4364';
+        ctx.beginPath();
+        ctx.arc(dotsX + di * spacing, navY + 34, di === page ? 4 : 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    },
+  };
 }
