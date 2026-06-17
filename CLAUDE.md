@@ -1,7 +1,7 @@
 # Battle Hunter — Agent Guide
 
 This file is for Claude agents: onboarding, architecture, conventions, and where
-to find the active work plan. Read it first, then check `WORK.md` for current tasks.
+to find the active work plan. Read it first, then `ARCHITECTURE.md` for system shape and `WORK.md` for current tasks.
 
 ---
 
@@ -228,9 +228,14 @@ the next agent doesn't re-investigate:
 
 ## Key design decisions (don't re-litigate)
 
-- **No build step** — serves as static files; ES modules in the browser directly
-- **Deterministic engine** — same seed + same actions always replays identically;
-  all randomness goes through `makeRng(seed)` stored in state
-- **All assets original** — no ripped art/music; sprites are hand-authored string
-  grids; music is synthesized from note data; see `README.md`
-- **DESIGN.md is the spec** — when engine behavior is unclear, DESIGN.md wins
+The reasoning behind the architecture lives in `docs/decisions/` (ADRs) and
+`ARCHITECTURE.md` (system shape + rules new code must follow). The load-bearing ones:
+
+- **No build step** — raw ES modules, served static (ADR-001)
+- **Deterministic engine** — seeded RNG threaded through state; same seed + same
+  actions always replays identically (ADR-002)
+- **All assets original** — hand-authored string-grid sprites + synthesized audio,
+  no binary art/sample files (ADR-003)
+- **DESIGN.md is the spec** — when engine *behavior* is unclear, DESIGN.md wins.
+  Doc map: ARCHITECTURE.md = why it's shaped this way; this file = onboarding +
+  conventions; DESIGN.md = mechanics; `WORK.md` = tasks.
