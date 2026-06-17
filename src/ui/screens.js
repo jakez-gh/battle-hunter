@@ -191,6 +191,12 @@ function drawWallpaper(ctx, W, H, index) {
       ctx.beginPath(); ctx.arc(x, y, S / 3, 0, Math.PI * 2); ctx.stroke();
     }
   }
+  // Radial vignette darkens edges and corners on every wallpaper
+  const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.15, W / 2, H / 2, H * 0.95);
+  vig.addColorStop(0, 'transparent');
+  vig.addColorStop(1, 'rgba(0,0,0,0.52)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, W, H);
 }
 
 // ---------------------------------------------------------------------------
@@ -255,8 +261,10 @@ function drawMenu(ctx, m, x, y, w, opt = {}) {
   m.items.forEach((it, i) => {
     const sel = i === m.idx;
     if (sel) {
-      ctx.fillStyle = 'rgba(80,100,200,0.35)';
-      ctx.fillRect(x + 4, oy - 2, w - 8, lh);
+      const sg = ctx.createLinearGradient(x + 4, 0, x + w - 8, 0);
+      sg.addColorStop(0, 'rgba(80,100,220,0.42)'); sg.addColorStop(1, 'rgba(80,100,220,0.10)');
+      ctx.fillStyle = sg; ctx.fillRect(x + 4, oy - 2, w - 8, lh);
+      ctx.fillStyle = 'rgba(120,150,255,0.72)'; ctx.fillRect(x + 4, oy - 2, 2, lh);
     }
     const color = it.disabled ? '#565d75' : it.color ?? (sel ? '#ffffff' : FG);
     text(ctx, (sel ? '>' : ' ') + it.label, x + 10, oy, { size: opt.size ?? 15, color });
@@ -313,6 +321,10 @@ function drawHunterCard(app, rec, x, y, w) {
   box(ctx, x, y, w, 76, { stroke: accent });
   ctx.fillStyle = accent;
   ctx.fillRect(x + 2, y + 2, 3, 72);
+  // Palette-colored glow behind portrait
+  const pg = ctx.createRadialGradient(x + 38, y + 38, 4, x + 38, y + 38, 38);
+  pg.addColorStop(0, accent + '44'); pg.addColorStop(1, accent + '00');
+  ctx.fillStyle = pg; ctx.fillRect(x + 5, y + 4, 66, 68);
   sprite(app, `hunter${rec.spriteId}.${rec.palette}.icon`, x + 8, y + 8, 5);
   const d = displayStats(rec.internal, rec.level);
   text(ctx, rec.name, x + 76, y + 8, { size: 18, color: GOLD });
