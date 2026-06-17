@@ -1390,6 +1390,15 @@ export function makeGameScreen(app, g) {
       text(ctx, names.slice(3).join(', '), X + 10, 400, { size: 11, color: DIM });
     }
 
+    // mission goal
+    const GOAL_TEXT = {
+      fetch: 'Grab Target → EXIT',
+      rescue: 'Reach survivor first',
+      resteal: 'Steal Target from carrier → EXIT',
+    };
+    box(ctx, X, 424, W, 44, { title: st.missionTitle ?? 'GOAL' });
+    text(ctx, GOAL_TEXT[st.missionType] ?? 'Grab Target → EXIT', X + 10, 450, { size: 11, color: DIM });
+
     // the human's hand, mini cards
     const me = (st.hunters || []).find((x) => x.human);
     if (me) {

@@ -741,6 +741,7 @@ export function createGame(config) {
     rng: { s: rng.s },
     mode: config.mode || 'normal',
     missionId: config.mission?.id ?? null,
+    missionTitle: config.mission?.title ?? null,
     missionType: config.mission?.type ?? 'fetch',
     relicLevel,
     rescueHoldRounds,
