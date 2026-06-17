@@ -474,11 +474,17 @@ function getAdjacentEnemies(state, unit) {
   const enemies = [];
   const pos = unit?.pos;
   if (!pos) return enemies;
-  const all = unit.kind === 'monster' ? state.hunters : state.monsters;
-  const kind = unit.kind === 'monster' ? 'hunter' : 'monster';
-  for (let index = 0; index < (all?.length || 0); index++) {
-    const other = all[index];
+  const isHunter = unit.kind !== 'monster';
+  // Hunters fight both monsters and other hunters; monsters fight hunters only.
+  const candidates = isHunter
+    ? [
+        ...(state.monsters || []).map((u, i) => ({ u, i, kind: 'monster' })),
+        ...(state.hunters || []).map((u, i) => ({ u, i, kind: 'hunter' })),
+      ]
+    : (state.hunters || []).map((u, i) => ({ u, i, kind: 'hunter' }));
+  for (const { u: other, i: index, kind } of candidates) {
     if (!other?.pos || other.hp <= 0) continue;
+    if (samePos(other.pos, pos)) continue;
     if (Math.abs(other.pos.x - pos.x) + Math.abs(other.pos.y - pos.y) === 1) {
       enemies.push({ kind, index, unit: other });
     }
