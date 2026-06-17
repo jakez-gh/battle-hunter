@@ -934,7 +934,7 @@ export function makeOptionsScreen(app) {
       opts.wallpaper = unlocked[(at + dir + unlocked.length) % unlocked.length];
       sfx.menuMove();
     } else if (row === 'aiSpeed') {
-      opts.aiSpeed = Math.max(1, Math.min(16, (opts.aiSpeed ?? 8) + dir));
+      opts.aiSpeed = Math.max(1, Math.min(64, (opts.aiSpeed ?? 8) + dir));
       sfx.menuMove();
     } else if (row !== 'back') {
       opts.volumes[row] = Math.round(Math.max(0, Math.min(1, opts.volumes[row] + dir * 0.05)) * 100) / 100;
@@ -983,7 +983,7 @@ export function makeOptionsScreen(app) {
         if (row === 'aiSpeed') {
           text(ctx, 'AI Speed', 260, y, { size: 20, color: sel ? '#fff' : FG });
           const spd = opts.aiSpeed ?? 8;
-          const sv = (spd - 1) / 15;
+          const sv = (spd - 1) / 63;
           ctx.fillStyle = '#23263a';
           ctx.fillRect(500, y + 4, 200, 14);
           ctx.fillStyle = sel ? GOLD : '#7e9fee';
@@ -1263,7 +1263,7 @@ export function makeGameScreen(app, g) {
     onKey(k, e) {
       if (broken) { if (k === 'cancel') { app.music('hub'); app.stack.pop(); } return; }
       if (k === 'speedDown') { aiSpeed = Math.max(1, Math.floor(aiSpeed / 2)); say(`AI speed: ${aiSpeed}x`, 1.2); return; }
-      if (k === 'speedUp') { aiSpeed = Math.min(16, aiSpeed * 2); say(`AI speed: ${aiSpeed}x`, 1.2); return; }
+      if (k === 'speedUp') { aiSpeed = Math.min(64, aiSpeed * 2); say(`AI speed: ${aiSpeed}x`, 1.2); return; }
       if (A.rendererBusy(g.renderer)) { A.rendererSkip(g.renderer); return; } // any key skips animations
       if (timing) {
         if (k === 'confirm' && !e?.repeat) {
