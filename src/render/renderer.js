@@ -285,6 +285,7 @@ export function createRenderer(canvas, opts = {}) {
         break;
       case 'exitWarpedAway':
         unitFlash = { key: k, t: 0, dur: EVENT_DURATIONS.exitWarpedAway, color: '#f7f7ff' };
+        addSparkles(k, '#7ee8a0');
         break;
       case 'drewBlank':
         addFloat(k, 'NO CARD', '#8d8d9e');
@@ -642,9 +643,10 @@ export function createRenderer(canvas, opts = {}) {
       const p = worldToScreen(pos.x, pos.y, cam);
       const cx = p.x + TILE * s / 2;
       const cy = p.y + TILE * s / 2;
-      const pulse = 0.14 + 0.10 * Math.sin(clock / 680 + m.id * 1.7);
+      const isWyrm = m.kind === 'WYRM';
+      const pulse = 0.14 + 0.10 * Math.sin(clock / (isWyrm ? 900 : 680) + m.id * 1.7);
       const auraCol = MONSTER_AURA[m.kind] ?? 'rgba(210,55,35,0.55)';
-      const gr = ctx.createRadialGradient(cx, cy, 0, cx, cy, 9 * s);
+      const gr = ctx.createRadialGradient(cx, cy, 0, cx, cy, (isWyrm ? 16 : 9) * s);
       gr.addColorStop(0, auraCol);
       gr.addColorStop(1, 'transparent');
       ctx.save();
