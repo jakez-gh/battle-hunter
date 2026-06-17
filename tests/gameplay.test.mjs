@@ -429,3 +429,117 @@ test('missionWon or missionLost event emitted on game end', () => {
     [...new Set(events.map((e) => e.type))].join(', '),
   );
 });
+
+// ---------------------------------------------------------------------------
+// 9. Event Completeness
+
+test('dieRolled events fire during normal gameplay', () => {
+  const { events } = runGame({
+    seed: 42, mode: 'normal',
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  }, 3000);
+  assert.ok(
+    events.some((e) => e.type === 'dieRolled'),
+    'expected dieRolled events; seen types: ' + [...new Set(events.map((e) => e.type))].join(', '),
+  );
+});
+
+test('boxOpened event fires in a complete game (target lives in a box)', () => {
+  const { events } = runGame({
+    seed: 42, mode: 'normal',
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  }, 3000);
+  assert.ok(
+    events.some((e) => e.type === 'boxOpened'),
+    'expected at least one boxOpened event in a full game',
+  );
+});
+
+test('targetFound event fires before missionWon in winning games', () => {
+  // seed 42 produces a win.
+  const { events } = runGame({
+    seed: 42, mode: 'normal',
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  }, 3000);
+  const targetFoundIdx = events.findIndex((e) => e.type === 'targetFound');
+  const missionWonIdx = events.findIndex((e) => e.type === 'missionWon');
+  assert.ok(targetFoundIdx >= 0, 'targetFound event not found in events list');
+  assert.ok(missionWonIdx >= 0, 'missionWon event not found — game did not end as a win');
+  assert.ok(
+    targetFoundIdx < missionWonIdx,
+    `targetFound (index ${targetFoundIdx}) must precede missionWon (index ${missionWonIdx})`,
+  );
+});
+
+test('missionWon event carries a winner reference', () => {
+  const { events } = runGame({
+    seed: 42, mode: 'normal',
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  }, 3000);
+  const wonEv = events.find((e) => e.type === 'missionWon');
+  assert.ok(wonEv, 'missionWon event not found');
+  assert.ok(wonEv.winner, 'missionWon event should carry a winner field');
+});
+
+// ---------------------------------------------------------------------------
+// 10. State Integrity
+
+test('all hunters have hp > 0 at end of a won game (defeat heals, never removes)', () => {
+  // seed 42 → win; defeatHunter heals in the same action cycle, so all hp > 0 at game end.
+  const { state } = runGame({
+    seed: 42, mode: 'normal',
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  }, 3000);
+  if (state._missionEnd?.win !== true) return; // WYRM loss can leave hp ≤ 0; skip
+  for (const h of state.hunters) {
+    assert.ok(h.hp > 0,
+      `hunter ${h.id} has hp=${h.hp} at game end — defeat should always heal`);
+  }
+});
+
+test('game length is reasonable: 10 – 3000 steps for fast hunters', () => {
+  for (const seed of [42, 7, 13]) {
+    const { steps } = runGame({
+      seed, mode: 'normal',
+      hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+    }, 3000);
+    assert.ok(steps >= 10, `seed ${seed}: game ended suspiciously fast (${steps} steps)`);
+    assert.ok(steps <= 3000, `seed ${seed}: game did not end within 3000 steps`);
+  }
+});
+
+test('legalActions is never empty during active gameplay', () => {
+  // Strong correctness invariant: every non-terminal state has at least one legal action.
+  let state = createGame({
+    seed: 33, mode: 'normal',
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  });
+  for (let i = 0; i < 3000 && state.phase !== 'mission.over'; i++) {
+    const acts = legalActions(state);
+    assert.ok(
+      acts.length > 0,
+      `empty legalActions in phase '${state.phase}' at step ${i}`,
+    );
+    const action = chooseAction({ ...state, legalActions: (s) => legalActions(s) });
+    assert.ok(
+      action,
+      `chooseAction returned null in phase '${state.phase}' at step ${i} (${acts.length} legal actions available)`,
+    );
+    state = applyAction(state, action).state;
+  }
+});
+
+test('same seed produces identical final state (full-game determinism)', () => {
+  const config = {
+    seed: 88, mode: 'normal',
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  };
+  const r1 = runGame(config, 3000);
+  const r2 = runGame(config, 3000);
+  assert.equal(r1.steps, r2.steps,
+    'same seed must take the same number of steps');
+  assert.equal(r1.state.phase, r2.state.phase,
+    'same seed must produce the same final phase');
+  assert.deepEqual(r1.state._missionEnd, r2.state._missionEnd,
+    'same seed must produce the same mission end result');
+});
