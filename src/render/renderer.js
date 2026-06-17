@@ -465,11 +465,11 @@ export function createRenderer(canvas, opts = {}) {
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
           ctx.fillStyle = 'rgba(0,0,0,0.22)';
           ctx.fillRect(fp.x, fp.y + ts - 1, ts, 1);
-          ctx.fillRect(fp.x + ts - 1, fp.y, 1, ts - 1); }
-        if (y > 0 && !b.floor[y - 1]?.[x]) { // contact shadow where floor meets wall
-          const p = worldToScreen(x, y, cam);
-          ctx.fillStyle = 'rgba(10, 10, 18, 0.38)';
-          ctx.fillRect(p.x, p.y, TILE * cam.scale, 4 * cam.scale);
+          ctx.fillRect(fp.x + ts - 1, fp.y, 1, ts - 1);
+          const vs = 'rgba(10,10,18,0.38)'; const vd = 4 * cam.scale;
+          if (y > 0 && !b.floor[y - 1]?.[x]) { ctx.fillStyle = vs; ctx.fillRect(fp.x, fp.y, ts, vd); }
+          if (!b.floor[y]?.[x + 1]) { ctx.fillStyle = vs; ctx.fillRect(fp.x + ts - vd, fp.y, vd, ts); }
+          if (!b.floor[y]?.[x - 1]) { ctx.fillStyle = vs; ctx.fillRect(fp.x, fp.y, vd, ts); }
         }
       }
     }
