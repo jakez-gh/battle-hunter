@@ -389,7 +389,8 @@ export function makeRosterScreen(app, opts = {}) {
           sprite(app, `hunter${rec.spriteId}.${rec.palette}.idle`, 520, 230, 8);
           const d = displayStats(rec.internal, rec.level);
           const lines = [
-            `Level ${rec.level}   Story: mission ${Math.min(15, rec.storyProgress + 1)}`,
+            `Level ${rec.level}`,
+            `Story: mission ${Math.min(15, rec.storyProgress + 1)}`,
             `MV +${d.mv}   AT ${d.at}   DF ${d.df}`,
             `Max HP ${rec.maxHp}${rec.maxHp < baseMaxHp(rec) ? ` (base ${baseMaxHp(rec)})` : ''}`,
             `Credits ${rec.credits}`,
