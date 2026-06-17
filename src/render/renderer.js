@@ -67,6 +67,7 @@ const FONT = '"Courier New", monospace';
 const SLOT_COLORS = ['#3a6ee0', '#cc4a3a', '#e0c63a', '#3aa84a']; // P1..P4
 const CARD_MINI = { R: '#cc4a3a', Y: '#d8b83a', B: '#3a6ee0', G: '#3aa84a' };
 const TRAP_COLORS = { damage: '#cc4a3a', stun: '#d8b83a', leg: '#3a6ee0', empty: '#8d8d9e' };
+const STATUS_GLOW = { stun: '#d8b83a', leg: '#3a6ee0', panic: '#cc4a3a', empty: '#8d8d9e' };
 const MONSTER_KINDS = new Set(['VAC', 'OOZ', 'FNG', 'WYRM']);
 const BATTLE_EVENTS = new Set([
   'battleStarted', 'responseChosen', 'escapeRolled', 'strikeRolled',
@@ -552,12 +553,18 @@ export function createRenderer(canvas, opts = {}) {
       }
     }
     if (overlays.path) {
-      ctx.fillStyle = '#ffe98a';
       for (const step of overlays.path) {
         const c = typeof step === 'string'
           ? { x: +step.split(',')[0], y: +step.split(',')[1] } : step;
         const p = worldToScreen(c.x, c.y, cam);
-        ctx.fillRect(p.x + 6 * s, p.y + 6 * s, 4 * s, 4 * s);
+        const dcx = p.x + 8 * s, dcy = p.y + 8 * s;
+        const gr = ctx.createRadialGradient(dcx, dcy, 0, dcx, dcy, 5 * s);
+        gr.addColorStop(0, '#ffe98a');
+        gr.addColorStop(1, 'transparent');
+        ctx.fillStyle = gr;
+        ctx.fillRect(dcx - 5 * s, dcy - 5 * s, 10 * s, 10 * s);
+        ctx.fillStyle = '#ffe98a';
+        ctx.fillRect(p.x + 7 * s, p.y + 7 * s, 2 * s, 2 * s);
       }
     }
   }
@@ -594,7 +601,16 @@ export function createRenderer(canvas, opts = {}) {
       const active = Object.entries(u.status ?? {}).filter(([, v]) => v).map(([n]) => n);
       let ix = p.x + (TILE * s - active.length * 8 * s) / 2;
       for (const st of active) {
-        if (atlas[`status.${st}`]) blit(`status.${st}`, ix, p.y - 8 * s);
+        if (atlas[`status.${st}`]) {
+          if (STATUS_GLOW[st]) {
+            ctx.save();
+            ctx.globalAlpha = 0.42;
+            ctx.fillStyle = STATUS_GLOW[st];
+            ctx.fillRect(ix - s, p.y - 9 * s, 8 * s + 2 * s, 8 * s + 2 * s);
+            ctx.restore();
+          }
+          blit(`status.${st}`, ix, p.y - 8 * s);
+        }
         ix += 8 * s;
       }
     }
