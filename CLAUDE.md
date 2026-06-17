@@ -194,13 +194,12 @@ backlog; research artifacts → `docs/decisions/`.
 breakdown ladder so no piece exceeds a fraction of one context:
 concept → architecture → slices → tasks. Each level is a durable doc, and later
 levels are re-derived as earlier ones change — the plan evolves alongside the
-work, it is not write-once. This repo runs the ladder lightweight: `DESIGN.md`
-(spec/architecture) + `WORK.md` (sprints → tasks). That is a deliberate choice —
-Battle Hunter is in a polish phase of small, independent tasks, where heavier
-tooling would be ceremony without payoff. Adopt Context Forge (`cf init`) only
-when an initiative actually needs architecture + multiple slices (network play
-or replay mode in the backlog are the likely first ones); the recipe is parked
-in the "Harness & Project-Tracking Setup" sprint in `WORK.md`.
+work, it is not write-once. This repo runs the ladder lightweight:
+`ARCHITECTURE.md` + `docs/decisions/` (why it's shaped this way) → `WORK.md`
+(sprints → tasks). When a multi-slice initiative is greenlit (network play,
+replay mode), capture it as epics in `ROADMAP.md` — goal + acceptance criteria +
+phase breakdown — and feed slices down into `WORK.md`. Plain markdown on purpose;
+heavier project tooling would be ceremony without payoff for a project this size.
 
 ### Fresh-agent bootstrap (every new conversation/agent)
 
