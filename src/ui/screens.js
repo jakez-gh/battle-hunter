@@ -617,8 +617,10 @@ export function makeCreationScreen(app) {
         const y = 120 + i * 56;
         const sel = state.row === i;
         if (sel) {
-          ctx.fillStyle = 'rgba(80,100,200,0.3)';
-          ctx.fillRect(56, y - 8, 488, 48);
+          const sg = ctx.createLinearGradient(56, 0, 56 + 488, 0);
+          sg.addColorStop(0, 'rgba(80,100,220,0.42)'); sg.addColorStop(1, 'rgba(80,100,220,0.10)');
+          ctx.fillStyle = sg; ctx.fillRect(56, y - 8, 488, 48);
+          ctx.fillStyle = 'rgba(120,150,255,0.72)'; ctx.fillRect(56, y - 8, 2, 48);
         }
         const [lab, val] = labels[row];
         if (lab) text(ctx, lab, 70, y, { size: 18, color: sel ? '#fff' : DIM });
