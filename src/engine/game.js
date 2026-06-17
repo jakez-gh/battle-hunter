@@ -248,7 +248,7 @@ function setMissionOver(state, win, reason = null) {
 
 function applyEndTurn(state, rng) {
   const current = resolveUnit(state, state.current);
-  if (current?.kind === 'hunter') {
+  if (state.current?.kind === 'hunter') {
     if (!state.turn?.rested && !(current.status?.empty > 0) && current.hand.length < 5) {
       if (state.deck.length > 0) {
         const card = state.deck.shift();
@@ -650,8 +650,8 @@ function resolveBattleOutcome(state, rng) {
           state.targetHolder = unitRef(state, attacker);
           addEvent(state, { type: 'itemTaken', unit: attacker.id, itemId: 'TARGET' });
         }
-      } else if (atkKind === 'monster' && hadTarget) {
-        return setMissionOver(state, false, `${attacker.kind ?? 'monster'} eliminated target holder`);
+      } else if (atkKind === 'monster' && attacker.kind === 'WYRM' && hadTarget) {
+        return setMissionOver(state, false, 'WYRM eliminated target holder');
       }
     }
   }

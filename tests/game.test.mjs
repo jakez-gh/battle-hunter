@@ -759,3 +759,119 @@ test('createGame with no mission has null missionTitle and rescueHoldRounds=0', 
   assert.equal(s.missionType, 'fetch');
   assert.equal(s.rescueHoldRounds, 0);
 });
+
+// ---------------------------------------------------------------------------
+// Panic status mechanics
+
+test('isHumanTurn returns false when human hunter has panic > 0', () => {
+  const state = makeGame(1, { humanSlot: 0 });
+  assert.equal(isHumanTurn(state), true, 'baseline: human turn with no panic');
+  const s = JSON.parse(JSON.stringify(state));
+  s.hunters[0].status.panic = 1;
+  assert.equal(isHumanTurn(s), false, 'panicked human hunter is not a human turn');
+});
+
+test('panic decrements by 1 at end of own turn', () => {
+  const state = makeGame(1);
+  const s = JSON.parse(JSON.stringify(state));
+  s.hunters[0].status.panic = 2;
+  s.hunters[0].human = false; // AI plays the turn
+  const { state: after } = applyAction(s, { type: 'rest' });
+  assert.equal(after.hunters[0].status.panic, 1, 'panic decremented from 2 to 1 after one turn');
+});
+
+test('panic = 1 reaches 0 after one own turn', () => {
+  const state = makeGame(1);
+  const s = JSON.parse(JSON.stringify(state));
+  s.hunters[0].status.panic = 1;
+  s.hunters[0].human = false;
+  const { state: after } = applyAction(s, { type: 'rest' });
+  assert.equal(after.hunters[0].status.panic, 0, 'panic reaches 0 after one turn');
+});
+
+test('defeat clears panic on the defeated hunter', () => {
+  const state = makeGame(42);
+  const s = JSON.parse(JSON.stringify(state));
+  // Attacker: very high AT guarantees defeat. Defender: 1 HP, existing panic.
+  s.hunters[0].internal = { mv: 3, at: 20, df: 4, hp: 4 };
+  s.hunters[1].internal = { mv: 3, at: 1, df: 0, hp: 1 };
+  s.hunters[1].hp = 1;
+  s.hunters[1].maxHp = 10;
+  s.hunters[1].human = false;
+  s.hunters[1].status = { stun: 0, leg: false, panic: 3, empty: 0 };
+  s.phase = 'battle.response';
+  s.battle = {
+    attacker: { kind: 'hunter', index: 0 },
+    defender: { kind: 'hunter', index: 1 },
+    stage: 'response', response: null, defCard: null, atkCard: null,
+  };
+  let r = applyAction(s, { type: 'respond', response: 'counter' });
+  r = applyAction(r.state, { type: 'battleCard', card: null });
+  r = applyAction(r.state, { type: 'battleCard', card: null });
+  assert.equal(r.state.hunters[1].status.panic, 0, 'defeat clears panic regardless of prior value');
+});
+
+test('human hunter regains control after panic expires (single-hunter game)', () => {
+  // Single-hunter game so the same hunter is current every turn.
+  const single = createGame({
+    seed: 1, mode: 'normal',
+    hunters: [
+      { id: 'h0', slot: 0, name: 'H', spriteId: 0, palette: 'cobalt', human: true,
+        archetype: 'Normal', level: 1, internal: { mv: 3, at: 4, df: 4, hp: 4 }, items: [] },
+    ],
+  });
+  const s = JSON.parse(JSON.stringify(single));
+  s.hunters[0].status.panic = 1;
+  assert.equal(isHumanTurn(s), false, 'panicked human is not a human turn');
+  // Advance the panicked turn (rest is a valid action regardless of panic).
+  const { state: after } = applyAction(s, { type: 'rest' });
+  assert.equal(after.hunters[0].status.panic, 0, 'panic cleared after one turn');
+  assert.equal(isHumanTurn(after), true, 'human regains control once panic reaches 0');
+});
+
+// ---------------------------------------------------------------------------
+// WYRM wipe clause (§2.8): only WYRM ending mission; non-WYRM does not
+
+function makeMonsterBattleState(seed, monsterKind, holdsTarget = true) {
+  const state = makeGame(seed);
+  const s = JSON.parse(JSON.stringify(state));
+  // Place a monster as the "current" unit by injecting a battle state.
+  s.monsters = [{ id: 99, kind: monsterKind, hp: 20, maxHp: 20, pos: { x: 1, y: 1 } }];
+  s.hunters[0].hp = 1;
+  s.hunters[0].maxHp = 10;
+  s.hunters[0].hasTarget = holdsTarget;
+  if (holdsTarget) {
+    s.targetFound = true;
+    s.targetHolder = { kind: 'hunter', index: 0 };
+  }
+  s.phase = 'battle.response';
+  s.battle = {
+    attacker: { kind: 'monster', index: 0 },
+    defender: { kind: 'hunter', index: 0 },
+    stage: 'response', response: null, defCard: null, atkCard: null,
+  };
+  return s;
+}
+
+test('WYRM defeating target holder ends mission as loss', () => {
+  const s = makeMonsterBattleState(1, 'WYRM', true);
+  s.monsters[0].at = 99; s.monsters[0].df = 0; s.monsters[0].mv = 3;
+  let r = applyAction(s, { type: 'respond', response: 'guard' });
+  r = applyAction(r.state, { type: 'battleCard', card: null });
+  r = applyAction(r.state, { type: 'battleCard', card: null });
+  assert.equal(r.state.phase, 'mission.over', 'mission ends when WYRM kills target holder');
+  assert.equal(r.state._missionEnd?.win, false, 'mission is a loss');
+  assert.match(r.state._missionEnd?.reason ?? '', /wyrm/i, 'reason contains WYRM');
+});
+
+test('non-WYRM monster defeating target holder does not end mission', () => {
+  for (const kind of ['VAC', 'OOZ', 'FNG']) {
+    const s = makeMonsterBattleState(1, kind, true);
+    // Give monster overwhelming AT to guarantee defeat
+    s.monsters[0].at = 99;
+    let r = applyAction(s, { type: 'respond', response: 'guard' });
+    r = applyAction(r.state, { type: 'battleCard', card: null });
+    r = applyAction(r.state, { type: 'battleCard', card: null });
+    assert.notEqual(r.state.phase, 'mission.over', `${kind} killing target holder should NOT end mission`);
+  }
+});
