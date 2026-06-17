@@ -469,6 +469,7 @@ export function createRenderer(canvas, opts = {}) {
           ctx.fillRect(fp.x + ts - 1, fp.y, 1, ts - 1);
           const vs = 'rgba(10,10,18,0.38)'; const vd = 4 * cam.scale;
           if (y > 0 && !b.floor[y - 1]?.[x]) { ctx.fillStyle = vs; ctx.fillRect(fp.x, fp.y, ts, vd); }
+          if (!b.floor[y + 1]?.[x]) { ctx.fillStyle = vs; ctx.fillRect(fp.x, fp.y + ts - vd, ts, vd); }
           if (!b.floor[y]?.[x + 1]) { ctx.fillStyle = vs; ctx.fillRect(fp.x + ts - vd, fp.y, vd, ts); }
           if (!b.floor[y]?.[x - 1]) { ctx.fillStyle = vs; ctx.fillRect(fp.x, fp.y, vd, ts); }
         }
@@ -883,6 +884,8 @@ export function createRenderer(canvas, opts = {}) {
     for (const cardId of h.hand ?? []) {
       ctx.fillStyle = CARD_MINI[String(cardId)[0]] ?? '#8d8d9e';
       ctx.fillRect(cx, y + 3, 5, 9);
+      ctx.save(); ctx.globalAlpha = 0.38; ctx.fillStyle = '#fff';
+      ctx.fillRect(cx + 1, y + 4, 3, 2); ctx.restore();
       ctx.strokeStyle = '#101018';
       ctx.strokeRect(cx + 0.5, y + 3.5, 5, 9);
       cx += 7;
