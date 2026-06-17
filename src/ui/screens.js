@@ -100,9 +100,24 @@ function wrapText(ctx, str, x, y, maxW, lineH, opt = {}) {
 function box(ctx, x, y, w, h, opt = {}) {
   ctx.fillStyle = opt.fill ?? 'rgba(10,12,24,0.92)';
   ctx.fillRect(x, y, w, h);
-  ctx.strokeStyle = opt.stroke ?? '#3c4364';
+  const bdr = opt.stroke ?? '#3c4364';
+  ctx.strokeStyle = bdr;
   ctx.lineWidth = 2;
   ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+  // Subtle inner highlight on top and left edges (lit from upper-left)
+  ctx.save();
+  ctx.strokeStyle = 'rgba(160,170,215,0.16)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x + 3, y + h - 4);
+  ctx.lineTo(x + 3, y + 3);
+  ctx.lineTo(x + w - 4, y + 3);
+  ctx.stroke();
+  // Corner accent squares
+  ctx.fillStyle = bdr;
+  [[x + 1, y + 1], [x + w - 4, y + 1], [x + 1, y + h - 4], [x + w - 4, y + h - 4]]
+    .forEach(([cx, cy]) => ctx.fillRect(cx, cy, 3, 3));
+  ctx.restore();
   if (opt.title) text(ctx, opt.title, x + 10, y + 8, { size: 14, color: GOLD });
 }
 
@@ -337,13 +352,22 @@ export function makeTitleScreen(app) {
       for (const [dx, dy, c] of [[8, 8, '#000'], [4, 4, '#8f6f1d'], [0, 0, GOLD]]) {
         text(ctx, 'HUNTER', cx + dx, 200 + dy + bob, { size: 84, align: 'center', shadow: false, color: c });
       }
+      // Decorative separator line + flanking diamonds
       ctx.fillStyle = GOLD;
-      ctx.fillRect(cx - 260, 300, 520, 4);
-      text(ctx, 'relic dives of the Meridian Salvage Guild', cx, 316, { size: 16, align: 'center', color: DIM });
-      // marching hunter sprites
+      ctx.fillRect(cx - 260, 300, 520, 3);
+      // Flanking accent diamonds
+      ctx.fillStyle = GOLD;
+      for (const [dx, fy] of [[cx - 280, 302], [cx + 280, 302]]) {
+        ctx.beginPath();
+        ctx.moveTo(dx, fy - 5); ctx.lineTo(dx + 5, fy);
+        ctx.lineTo(dx, fy + 5); ctx.lineTo(dx - 5, fy);
+        ctx.closePath(); ctx.fill();
+      }
+      text(ctx, 'relic dives of the Meridian Salvage Guild', cx, 314, { size: 15, align: 'center', color: DIM });
+      // All 8 hunters marching
       const step = Math.floor(t * 3) % 2 ? 'step' : 'idle';
-      PALETTE_NAMES.slice(0, 4).forEach((pal, i) => {
-        sprite(app, `hunter${i * 2}.${pal}.${step}`, cx - 200 + i * 110, 360, 5);
+      PALETTE_NAMES.forEach((pal, i) => {
+        sprite(app, `hunter${i}.${pal}.${step}`, cx - 350 + i * 88, 354, 5);
       });
       drawMenu(ctx, menu, cx - 130, 480, 260, { lineH: 34, size: 22 });
       text(ctx, 'arrows/WASD move - Enter confirm - Esc back - Tab info', cx, 660, { size: 13, align: 'center', color: DIM });
@@ -647,7 +671,7 @@ export function makeHubScreen(app) {
 // BRIEFING — shown before a story mission starts; full-screen word-wrapped
 // briefing text plus Start / Back options.
 
-function makeBriefingScreen(app, mission, onConfirm) {
+function makeMissionBriefingScreen(app, mission) {
   let sel = 0;
   return {
     draw(ctx) {
@@ -667,7 +691,8 @@ function makeBriefingScreen(app, mission, onConfirm) {
     onKey(k) {
       if (k === 'left' || k === 'right' || k === 'up' || k === 'down') { sel = 1 - sel; sfx.menuMove(); }
       else if (k === 'confirm') {
-        if (sel === 0) { sfx.menuConfirm(); app.stack.pop(); onConfirm(); }
+        // startMission calls stack.replace internally, so no pop needed for Start
+        if (sel === 0) { sfx.menuConfirm(); app.startMission(mission); }
         else { sfx.menuCancel(); app.stack.pop(); }
       } else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); }
     },
@@ -676,7 +701,7 @@ function makeBriefingScreen(app, mission, onConfirm) {
         const r = { x: 80 + i * 420, y: 560, w: 380, h: 40 };
         if (inRect(pos, r)) {
           if (sel === i) {
-            if (i === 0) { sfx.menuConfirm(); app.stack.pop(); onConfirm(); }
+            if (i === 0) { sfx.menuConfirm(); app.startMission(mission); }
             else { sfx.menuCancel(); app.stack.pop(); }
           } else { sel = i; sfx.menuMove(); }
           return;
@@ -727,7 +752,7 @@ export function makeClientScreen(app) {
         title: 'STORY MISSIONS',
         onPick(m) {
           if (!m) { host.pop(); return; }
-          app.stack.push(makeBriefingScreen(app, m, () => app.startMission(m)));
+          app.stack.push(makeMissionBriefingScreen(app, m));
         },
         onCancel() { host.pop(); },
       });

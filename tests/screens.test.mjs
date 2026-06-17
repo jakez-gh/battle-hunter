@@ -141,6 +141,17 @@ test('RESPONSE_HINTS: hints are non-empty strings', () => {
   }
 });
 
+// Mission briefing: all story missions that have a briefing field provide
+// a non-empty string; the wrapText utility will word-wrap at runtime.
+test('STORY_MISSIONS briefings are non-empty strings when present', () => {
+  for (const m of STORY_MISSIONS) {
+    if (m.briefing != null) {
+      assert.ok(typeof m.briefing === 'string' && m.briefing.length > 0,
+        `M${m.id} briefing must be a non-empty string`);
+    }
+  }
+});
+
 // INFO panel item names: two lines at x=X+10=734, sz=11, box right=956 → 212px available.
 // drawHud clips each line at 30 chars (198px) to prevent overflow from long names joined with ", ".
 test('INFO panel: longest possible item names clipped to 30 chars each fit in 212px at size 11', () => {
