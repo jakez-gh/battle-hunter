@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /c/Users/jake/Documents/src/github/games/battle-hunter && node --test 2>&1 | tail -8"
+          }
+        ]
+      }
+    ]
+  }
+}
