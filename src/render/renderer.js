@@ -499,7 +499,11 @@ export function createRenderer(canvas, opts = {}) {
     for (const f of b.flags ?? []) {
       if (f.taken && !standingFlags.has(key(f.x, f.y))) continue;
       const cap = f.color[0].toUpperCase() + f.color.slice(1);
-      blitTile(`tile.flag${cap}`, f.x, f.y);
+      // gentle sway — each flag offset by position for phase variety
+      const sway = Math.sin(clock / 900 + f.x * 1.4 + f.y * 0.9) * 0.4;
+      const fp = worldToScreen(f.x, f.y, cam);
+      const img = atlas[`tile.flag${cap}`];
+      if (img) ctx.drawImage(img, fp.x | 0, (fp.y + sway * cam.scale) | 0, img.width * cam.scale, img.height * cam.scale);
     }
   }
 
@@ -670,11 +674,17 @@ export function createRenderer(canvas, opts = {}) {
     const k = evKey(ev);
     const pos = displayPos(k);
     if (!pos) return;
-    const settled = anim.t / anim.dur >= 0.6;
+    const phase = anim.t / anim.dur;
+    const settled = phase >= 0.6;
     const v = settled ? (ev.value ?? ev.roll ?? 1) : 1 + Math.floor(clock / 60) % 6;
     const p = worldToScreen(pos.x, pos.y, cam);
     const s = cam.scale;
-    blit(`chip.${clamp(v, 1, 6) | 0}`, p.x + 4 * s, p.y - 18 * s, s);
+    // jitter while rolling; pop scale-up when value locks in
+    const jx = settled ? 0 : Math.sin(clock / 38) * 1.5 * s;
+    const jy = settled ? 0 : Math.cos(clock / 33) * 1.5 * s;
+    const popT = settled && phase < 0.78 ? (phase - 0.6) / 0.18 : 0;
+    const chipScale = (1 + Math.sin(popT * Math.PI) * 0.32) * s;
+    blit(`chip.${clamp(v, 1, 6) | 0}`, p.x + 4 * s + jx, p.y - 18 * s + jy, chipScale);
     if (ev.type === 'flagClaimed' && settled && ev.effect != null) {
       text(String(ev.effect), p.x + 8 * s, p.y - 28 * s, '#ffe98a', 12, 'center');
     }
