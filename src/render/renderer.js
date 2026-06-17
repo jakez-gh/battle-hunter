@@ -921,26 +921,34 @@ export function createRenderer(canvas, opts = {}) {
     const bh = Math.min(canvas.height - HUD_H - 24, 210);
     const bx = (canvas.width - bw) / 2 | 0;
     const by = (canvas.height - HUD_H - bh) / 2 | 0;
-    // Background + outer glow border
+    // Background
     ctx.fillStyle = 'rgba(14, 15, 26, 0.96)';
     ctx.fillRect(bx, by, bw, bh);
+    // Inner vignette for depth
+    { const vg = ctx.createRadialGradient(bx + bw / 2, by + bh / 2, 20, bx + bw / 2, by + bh / 2, bh * 0.85);
+      vg.addColorStop(0, 'rgba(30,28,44,0.0)'); vg.addColorStop(1, 'rgba(0,0,0,0.45)');
+      ctx.fillStyle = vg; ctx.fillRect(bx, by, bw, bh); }
+    // Team color backdrops — attacker left (red), defender right (cyan)
+    { const al = ctx.createRadialGradient(bx + 70, by + 90, 0, bx + 70, by + 90, 80);
+      al.addColorStop(0, 'rgba(200,55,35,0.22)'); al.addColorStop(1, 'transparent');
+      ctx.fillStyle = al; ctx.fillRect(bx, by, bw / 2, bh); }
+    { const dr = ctx.createRadialGradient(bx + bw - 70, by + 90, 0, bx + bw - 70, by + 90, 80);
+      dr.addColorStop(0, 'rgba(60,168,200,0.18)'); dr.addColorStop(1, 'transparent');
+      ctx.fillStyle = dr; ctx.fillRect(bx + bw / 2, by, bw / 2, bh); }
+    // Outer glow border
     const bglow = 0.4 + 0.6 * Math.sin(clock / 280);
     ctx.save(); ctx.strokeStyle = '#cc4a3a'; ctx.lineWidth = 3 + bglow * 3;
     ctx.globalAlpha = bglow * 0.35; ctx.strokeRect(bx - 2, by - 2, bw + 4, bh + 4); ctx.restore();
-    ctx.strokeStyle = '#cc4a3a';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#cc4a3a'; ctx.lineWidth = 2;
     ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
-    // Inner accent line
-    ctx.strokeStyle = 'rgba(240,180,160,0.18)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(240,180,160,0.18)'; ctx.lineWidth = 1;
     ctx.strokeRect(bx + 3, by + 3, bw - 6, bh - 6);
     // Title bar
     ctx.fillStyle = 'rgba(180, 50, 40, 0.22)';
     ctx.fillRect(bx + 2, by + 2, bw - 4, 16);
     setFont(11);
     ctx.fillStyle = '#f0c8c0';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText('B A T T L E', (bx + bw / 2) | 0, by + 4);
     ctx.textAlign = 'left';
     text('ATTACKER', bx + 8, by + 5, 'rgba(255,230,180,0.55)', 9, 'left');
@@ -949,6 +957,11 @@ export function createRenderer(canvas, opts = {}) {
     const defW = defImg ? defImg.width * 3 : 48;
     drawCombatant(battle.a, bx + 24, by + 28, false);
     drawCombatant(battle.d, bx + bw - 24 - defW, by + 28, true);
+    // VS with gold glow
+    { const vcx = bx + bw / 2, vcy = by + 44;
+      const vg = ctx.createRadialGradient(vcx, vcy, 0, vcx, vcy, 26);
+      vg.addColorStop(0, 'rgba(220,190,60,0.38)'); vg.addColorStop(1, 'transparent');
+      ctx.fillStyle = vg; ctx.fillRect(vcx - 26, vcy - 18, 52, 36); }
     text('VS', bx + bw / 2, by + 36, '#ffe98a', 16, 'center');
     if (battle.response) text(String(battle.response).toUpperCase(), bx + bw / 2, by + 60, '#9adfe8', 12, 'center');
     if (battle.escape) {
