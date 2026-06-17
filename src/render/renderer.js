@@ -461,6 +461,10 @@ export function createRenderer(canvas, opts = {}) {
           continue;
         }
         blitTile(`tile.${floors[(x * 7 + y * 13) % 3]}`, x, y);
+        { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
+          ctx.fillStyle = 'rgba(0,0,0,0.22)';
+          ctx.fillRect(fp.x, fp.y + ts - 1, ts, 1);
+          ctx.fillRect(fp.x + ts - 1, fp.y, 1, ts - 1); }
         if (y > 0 && !b.floor[y - 1]?.[x]) { // contact shadow where floor meets wall
           const p = worldToScreen(x, y, cam);
           ctx.fillStyle = 'rgba(10, 10, 18, 0.38)';
@@ -468,7 +472,13 @@ export function createRenderer(canvas, opts = {}) {
         }
       }
     }
-    if (b.exit) blitTile('tile.exit', b.exit.x, b.exit.y);
+    if (b.exit) {
+      blitTile('tile.exit', b.exit.x, b.exit.y);
+      const pulse = 0.3 + 0.3 * Math.sin(clock / 800);
+      const ep = worldToScreen(b.exit.x, b.exit.y, cam);
+      ctx.save(); ctx.globalAlpha = pulse * 0.35; ctx.fillStyle = '#7ee8a0';
+      ctx.fillRect(ep.x, ep.y, TILE * cam.scale, TILE * cam.scale); ctx.restore();
+    }
     if (state.debug) {
       for (const t of b.traps ?? []) drawTrap(t);
     } else {
@@ -577,6 +587,8 @@ export function createRenderer(canvas, opts = {}) {
     }
     for (const [k, g] of ghosts) list.push({ k, u: null, pos: g.pos, alpha: g.alpha });
     list.sort((a, b) => (a.pos?.y ?? 0) - (b.pos?.y ?? 0));
+    drawActiveRing();
+    for (const d of list) drawUnitShadow(d.k, d.pos, d.alpha);
     for (const d of list) drawUnit(d.k, d.u, d.pos, d.alpha);
   }
 
@@ -606,7 +618,12 @@ export function createRenderer(canvas, opts = {}) {
       if (f.icon && atlas[f.icon]) {
         blit(f.icon, p.x - 4 * cam.scale, p.y - rise * cam.scale - 10 * cam.scale);
       }
-      if (f.text) text(f.text, p.x, p.y - (rise + 10) * cam.scale, f.color, f.big ? 16 : 12, 'center');
+      if (f.text) {
+        const fy = p.y - (rise + 10) * cam.scale;
+        const fsz = f.big ? 16 : 12;
+        text(f.text, p.x + 1, fy + 1, 'rgba(0,0,0,0.55)', fsz, 'center');
+        text(f.text, p.x, fy, f.color, fsz, 'center');
+      }
       ctx.restore();
     }
     for (const sp of sparkles) {
@@ -627,29 +644,79 @@ export function createRenderer(canvas, opts = {}) {
     ctx.restore();
   }
 
+  function drawUnitShadow(k, pos, alpha) {
+    if (!pos) return;
+    const s = cam.scale;
+    const p = worldToScreen(pos.x, pos.y, cam);
+    const cx = p.x + TILE * s / 2;
+    const cy = p.y + (TILE - 1) * s;
+    ctx.save();
+    ctx.globalAlpha = 0.42 * alpha;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 5 * s, 1.5 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawActiveRing() {
+    const ak = activeKey();
+    if (!ak) return;
+    const pos = displayPos(ak);
+    if (!pos) return;
+    const u = findUnit(ak);
+    const s = cam.scale;
+    const p = worldToScreen(pos.x, pos.y, cam);
+    const cx = p.x + TILE * s / 2;
+    const cy = p.y + (TILE - 1) * s;
+    const pulse = 0.5 + 0.5 * Math.sin(clock / 380);
+    const color = ak[0] === 'h' && u ? (SLOT_COLORS[(u.slot ?? 0) % 4] ?? '#fff') : '#e05050';
+    ctx.save();
+    ctx.globalAlpha = 0.25 + pulse * 0.38;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = s;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 7 * s, 2 * s, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawVignette() {
+    const w = canvas.width;
+    const h = canvas.height - HUD_H;
+    const grad = ctx.createRadialGradient(w / 2, h / 2, h * 0.2, w / 2, h / 2, h * 0.9);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.48)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  }
+
   function drawHunterWindow(h, i, y) {
     const active = activeKey() === `h${h.id}`;
     const x = 2;
     const w = canvas.width - 4;
-    ctx.fillStyle = active ? 'rgba(240, 244, 255, 0.14)' : 'rgba(0, 0, 0, 0.25)';
+    ctx.fillStyle = active ? 'rgba(220, 228, 255, 0.10)' : 'rgba(0, 0, 0, 0.30)';
     ctx.fillRect(x, y, w, 16);
     ctx.fillStyle = SLOT_COLORS[h.slot % 4] ?? '#f0f4ff';
-    ctx.fillRect(x, y, 3, 16);
+    ctx.fillRect(x, y, active ? 4 : 2, 16);
     const icon = atlas[`hunter${h.spriteId}.${paletteName(h)}.icon`];
     if (icon) ctx.drawImage(icon, x + 6, y + 2, 12, 12);
     text((h.name ?? '').slice(0, 7).padEnd(7), x + 22, y + 3,
-      active ? '#ffe98a' : '#f0f4ff');
-    text(`L${h.level ?? 1}`, x + 86, y + 3, '#8d8d9e');
+      active ? '#ffe98a' : '#b8bccc');
+    text(`L${h.level ?? 1}`, x + 86, y + 3, active ? '#a8b0c4' : '#5e6278');
     // HP bar + number
     const ratio = h.maxHp ? clamp(h.hp / h.maxHp, 0, 1) : 0;
-    ctx.fillStyle = '#23232e';
+    ctx.fillStyle = '#1c1e28';
     ctx.fillRect(x + 112, y + 5, 52, 6);
     ctx.fillStyle = ratio > 0.5 ? '#3aa84a' : ratio > 0.25 ? '#d8b83a' : '#cc4a3a';
-    ctx.fillRect(x + 112, y + 5, Math.round(52 * ratio), 6);
-    text(`${h.hp}/${h.maxHp}`, x + 168, y + 3);
+    const bw = Math.round(52 * ratio);
+    ctx.fillRect(x + 112, y + 5, bw, 6);
+    if (bw > 2) { ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#fff';
+      ctx.fillRect(x + 112, y + 5, bw, 2); ctx.restore(); }
+    text(`${h.hp}/${h.maxHp}`, x + 168, y + 3, active ? '#c0c8d8' : '#8a90a0');
     const iv = h.internal ?? { mv: 0, at: 0, df: 0 };
     text(`MV+${Math.floor((iv.mv ?? 0) / 3)} AT${iv.at ?? 0} DF${Math.floor((iv.df ?? 0) / 2)}`,
-      x + 222, y + 3, '#8d8d9e');
+      x + 222, y + 3, active ? '#6e7890' : '#484c5e');
     // hand as mini card backs colored by card color
     let cx = x + 340;
     for (const cardId of h.hand ?? []) {
@@ -666,7 +733,9 @@ export function createRenderer(canvas, opts = {}) {
     const y0 = canvas.height - HUD_H;
     ctx.fillStyle = '#0d0e16';
     ctx.fillRect(0, y0, canvas.width, HUD_H);
-    ctx.fillStyle = '#2a2c3a';
+    const _ak = activeKey();
+    const _ah = _ak?.[0] === 'h' ? findUnit(_ak) : null;
+    ctx.fillStyle = _ah ? (SLOT_COLORS[(_ah.slot ?? 0) % 4] ?? '#2a2c3a') : '#2a2c3a';
     ctx.fillRect(0, y0, canvas.width, 1);
     (state.hunters ?? []).slice(0, 4).forEach((h, i) => drawHunterWindow(h, i, y0 + 3 + i * 18));
     // deck counter, top-right
@@ -684,6 +753,9 @@ export function createRenderer(canvas, opts = {}) {
     const sw = img.width * s3;
     const sh = img.height * s3;
     const cx = x + sw / 2;
+    ctx.save(); ctx.globalAlpha = 0.38; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(cx, y + sh + 3, sw * 0.38, 5, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.restore();
     ctx.save();
     if (flip) {
       ctx.translate(x + sw, y);
@@ -826,6 +898,7 @@ export function createRenderer(canvas, opts = {}) {
       drawFloats();
       drawCursor();
       ctx.restore();
+      drawVignette();
       drawHud();
       if (battle) drawBattle();
       if (banner) drawBanner();
