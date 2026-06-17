@@ -980,6 +980,17 @@ export function makeOptionsScreen(app) {
           text(ctx, 'BACK', 260, y, { size: 20, color: sel ? '#fff' : FG });
           return;
         }
+        if (row === 'aiSpeed') {
+          text(ctx, 'AI Speed', 260, y, { size: 20, color: sel ? '#fff' : FG });
+          const spd = opts.aiSpeed ?? 8;
+          const sv = (spd - 1) / 15;
+          ctx.fillStyle = '#23263a';
+          ctx.fillRect(500, y + 4, 200, 14);
+          ctx.fillStyle = sel ? GOLD : '#7e9fee';
+          ctx.fillRect(500, y + 4, 200 * sv, 14);
+          text(ctx, `${spd}x`, 712, y, { size: 15, color: DIM });
+          return;
+        }
         if (row === 'wallpaper') {
           text(ctx, 'Wallpaper', 260, y, { size: 20, color: sel ? '#fff' : FG });
           text(ctx, `< ${WALLPAPERS[opts.wallpaper].name} >`, 500, y, { size: 18, color: GOLD });
@@ -1014,7 +1025,8 @@ export function makeGameScreen(app, g) {
   let uiKey = null;        // phase signature the menus were built for
   let steering = false;
   let timing = null;       // { t } while a react.* minigame runs
-  let aiDelay = 0.2;
+  let aiSpeed = app.options().aiSpeed ?? 8;
+  let aiDelay = 0.2 / aiSpeed;
   let infoIndex = 0;
   let banner = null;       // { text, t }
   let inBattleMusic = false;
@@ -1227,7 +1239,7 @@ export function makeGameScreen(app, g) {
         host.clear(); steering = false; timing = null; uiKey = null;
         aiDelay -= dt;
         if (aiDelay > 0) return;
-        aiDelay = 0.3;
+        aiDelay = 0.3 / aiSpeed;
         try {
           act(A.aiAction(st));
         } catch (err) {
@@ -1250,6 +1262,8 @@ export function makeGameScreen(app, g) {
 
     onKey(k, e) {
       if (broken) { if (k === 'cancel') { app.music('hub'); app.stack.pop(); } return; }
+      if (k === 'speedDown') { aiSpeed = Math.max(1, Math.floor(aiSpeed / 2)); say(`AI speed: ${aiSpeed}x`, 1.2); return; }
+      if (k === 'speedUp') { aiSpeed = Math.min(16, aiSpeed * 2); say(`AI speed: ${aiSpeed}x`, 1.2); return; }
       if (A.rendererBusy(g.renderer)) { A.rendererSkip(g.renderer); return; } // any key skips animations
       if (timing) {
         if (k === 'confirm' && !e?.repeat) {

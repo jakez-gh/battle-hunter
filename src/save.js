@@ -8,7 +8,7 @@
 //   hunters: [{ id, name, spriteId, palette, level, internal: {mv,at,df,hp},
 //               maxHp, credits, items: [{itemId, identified}],
 //               storyProgress, record: {missions, wins} }],
-//   options: { volumes: {master, music, sfx}, wallpaper, wallpapersUnlocked } }
+//   options: { volumes: {master, music, sfx}, wallpaper, wallpapersUnlocked, aiSpeed } }
 
 export const SAVE_KEY = 'battle-hunter-save-v1';
 const VERSION = 1;
@@ -49,6 +49,7 @@ export function defaultOptions() {
     volumes: { master: 0.5, music: 0.55, sfx: 1.0 },
     wallpaper: 0,
     wallpapersUnlocked: [],
+    aiSpeed: 8,
   };
 }
 

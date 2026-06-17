@@ -14,6 +14,7 @@ export const KEY_MAP = {
   Enter: 'confirm', NumpadEnter: 'confirm', Space: 'confirm',
   Escape: 'cancel',
   Tab: 'info',
+  BracketLeft: 'speedDown', BracketRight: 'speedUp',
 };
 
 export function semanticKey(e) {
