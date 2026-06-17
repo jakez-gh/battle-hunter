@@ -54,6 +54,16 @@ const FG = '#e8e8f0', DIM = '#9aa0b4', GOLD = '#e8d87e', BAD = '#e06a5a', OK = '
 const SLOT_COLORS = ['#4a7dff', '#e05a4a', '#e0c63a', '#3aa84a']; // P1-P4 (§2.2)
 const CARD_HEX = { red: '#e05a4a', yellow: '#e0c63a', blue: '#4a7dff', green: '#3aa84a' };
 
+// Battle respond hints — exported so layout tests can verify these fit in the
+// 232px game menu at size 13 (≈0.6em/char Courier New → 212px available for
+// label+hint combined).
+export const RESPONSE_HINTS = {
+  counter: 'fight back',
+  guard: 'double DF',
+  escape: 'flee roll',
+  surrender: 'give item',
+};
+
 const font = (px, bold = true) => `${bold ? 'bold ' : ''}${px}px "Courier New", monospace`;
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
 
@@ -1120,13 +1130,6 @@ export function makeGameScreen(app, g) {
     }
   }
 
-  const RESPONSE_HINTS = {
-    counter: 'fight back',
-    guard: 'double DF',
-    escape: 'flee roll',
-    surrender: 'give item',
-  };
-
   function buildUi(st) {
     host.clear();
     steering = false;
@@ -1386,8 +1389,10 @@ export function makeGameScreen(app, g) {
       const d = displayStats(h.internal ?? { mv: 1, at: 1, df: 1, hp: 1 }, h.level ?? 1);
       text(ctx, `Lv${h.level}  MV+${d.mv} AT${d.at} DF${d.df}`, X + 10, 370, { size: 12 });
       const names = (h.items || []).map((s) => (s.identified ? ITEMS[s.itemId]?.name ?? s.itemId : '???'));
-      text(ctx, names.slice(0, 3).join(', ') || 'no items', X + 10, 386, { size: 11, color: DIM });
-      text(ctx, names.slice(3).join(', '), X + 10, 400, { size: 11, color: DIM });
+      // Clip to 30 chars: 3 longest names joined = 46 chars; at sz=11 that's 304px but box is 212px wide.
+      const clipLine = (s) => (s.length > 30 ? s.slice(0, 27) + '...' : s);
+      text(ctx, clipLine(names.slice(0, 3).join(', ') || 'no items'), X + 10, 386, { size: 11, color: DIM });
+      text(ctx, clipLine(names.slice(3).join(', ')), X + 10, 400, { size: 11, color: DIM });
     }
 
     // mission goal
