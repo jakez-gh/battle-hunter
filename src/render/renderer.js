@@ -304,6 +304,7 @@ export function createRenderer(canvas, opts = {}) {
         if (battle) battle.strike = { dice: flattenDice(ev.dice), totals: ev.totals,
           damage: ev.damage ?? 0, crit: !!ev.crit };
         if ((ev.damage ?? 0) > 0) addFloat(battle?.d ?? k, `-${ev.damage}`, '#ff6a5a', { big: true });
+        if (ev.crit) addSparkles(battle?.d ?? k, '#ffe98a');
         break;
       case 'statusInflicted':
         addFloat(k, '', '#f0f4ff', { icon: `status.${ev.kind}`, ttl: 700 });
@@ -338,6 +339,7 @@ export function createRenderer(canvas, opts = {}) {
         const gk = k != null && ghosts.has(k) ? k : ghosts.keys().next().value;
         if (gk != null) ghosts.get(gk).dyingKey = gk;
         addFloat(k ?? gk, ev.drop != null ? `DROP ${ev.drop}` : '', '#ffe98a');
+        addSparkles(k ?? gk, '#ff8866');
         break;
       }
       case 'healed':
