@@ -1,116 +1,160 @@
 #!/usr/bin/env bash
 # Deploy Battle Hunter to the internet.
-# Tries automated options first; falls back to step-by-step instructions.
+# Tries automated options first; if none succeed, builds the itch.io zip
+# and walks through every remaining manual step.
 
-set -e
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 echo "=== Battle Hunter Deploy ==="
 echo ""
 
-# No build step: pure static site — deploy source directly.
+# Push latest commits so every deploy path is current.
+echo "Pushing latest commits..."
+git push 2>/dev/null || echo "(Nothing new to push.)"
+echo ""
 
-# ─────────────────────────────────────────────────────────────
-# Option A: GitHub Pages via gh CLI (fully automated)
-# ─────────────────────────────────────────────────────────────
+# ── Option A: GitHub Pages via gh CLI ──────────────────────────────────────
 if command -v gh &>/dev/null; then
     if gh auth status &>/dev/null 2>&1; then
         REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || true)
         if [[ -n "$REPO" ]]; then
             echo "GitHub repo: $REPO"
 
-            # Push latest commits so the live site is current.
-            echo "Pushing latest commits..."
-            git push 2>/dev/null || echo "(Nothing new to push.)"
-
-            # Check if Pages is already enabled.
             PAGES_URL=$(gh api "repos/$REPO/pages" -q .html_url 2>/dev/null || true)
             if [[ -n "$PAGES_URL" ]]; then
-                echo ""
-                echo "GitHub Pages is already enabled."
-                echo "Your game is live at: $PAGES_URL"
+                echo "GitHub Pages already enabled."
+                echo "Live at: $PAGES_URL"
                 echo "(Changes just pushed will appear within 1-2 minutes.)"
                 exit 0
             fi
 
-            # Enable Pages for the first time.
-            echo "Enabling GitHub Pages..."
             BRANCH=$(git branch --show-current)
             if gh api "repos/$REPO/pages" -X POST \
                    -F "source[branch]=$BRANCH" -F "source[path]=/" &>/dev/null 2>&1; then
                 sleep 2
                 PAGES_URL=$(gh api "repos/$REPO/pages" -q .html_url 2>/dev/null || true)
-                echo ""
                 echo "GitHub Pages enabled!"
-                [[ -n "$PAGES_URL" ]] && echo "Your game will be live at: $PAGES_URL"
-                echo "(It may take 1-2 minutes to appear.)"
+                [[ -n "$PAGES_URL" ]] && echo "Live at: $PAGES_URL"
+                echo "(May take 1-2 minutes to appear.)"
                 exit 0
             else
-                echo "Could not enable Pages automatically (repo may be private or org-restricted)."
-                echo ""
+                VISIBILITY=$(gh repo view --json visibility -q .visibility 2>/dev/null || true)
+                if [[ "$VISIBILITY" == "PRIVATE" ]]; then
+                    echo "  GitHub Pages needs a public repo (or paid plan)."
+                    echo "  To make it public and retry:"
+                    echo "    gh repo edit --visibility public && ./deploy.sh"
+                    echo ""
+                else
+                    echo "  Could not enable GitHub Pages automatically."
+                    echo ""
+                fi
             fi
         fi
     else
-        echo "gh CLI found but not authenticated — run: gh auth login"
+        echo "gh CLI found but not authenticated."
+        echo "  Run: gh auth login   then re-run this script."
         echo ""
     fi
 fi
 
-# ─────────────────────────────────────────────────────────────
-# Option B: Netlify CLI
-# ─────────────────────────────────────────────────────────────
+# ── Option B: Netlify CLI ───────────────────────────────────────────────────
 if command -v netlify &>/dev/null; then
     echo "Netlify CLI found. Deploying..."
     netlify deploy --prod --dir .
     exit 0
 fi
 
-# ─────────────────────────────────────────────────────────────
-# Option C: Vercel CLI
-# ─────────────────────────────────────────────────────────────
+# ── Option C: Vercel CLI ────────────────────────────────────────────────────
 if command -v vercel &>/dev/null; then
     echo "Vercel CLI found. Deploying..."
     vercel --prod
     exit 0
 fi
 
-# ─────────────────────────────────────────────────────────────
-# No tool found — print manual instructions
-# ─────────────────────────────────────────────────────────────
-echo "No deployment tool found automatically. Pick one of the options below:"
+# ── Option D: itch.io — build zip + guided walkthrough ─────────────────────
+echo "No automated deployer available. Building itch.io upload package..."
+echo ""
+
+ZIP_DEST="$HOME/Desktop/battle-hunter-web.zip"
+rm -f "$ZIP_DEST"
+
+if command -v zip &>/dev/null; then
+    zip -r "$ZIP_DEST" index.html style.css src/ \
+        -x "*.DS_Store" -x "*/.git/*" > /dev/null
+elif command -v python3 &>/dev/null; then
+    python3 - "$ZIP_DEST" <<'PYEOF'
+import sys, zipfile, pathlib
+dest = sys.argv[1]
+with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as z:
+    for name in ('index.html', 'style.css'):
+        z.write(name)
+    for p in pathlib.Path('src').rglob('*'):
+        if p.is_file():
+            z.write(p)
+PYEOF
+else
+    echo "ERROR: Need 'zip' or 'python3' to build the upload package."
+    echo "Install either tool and re-run, or zip index.html style.css src/ manually."
+    exit 1
+fi
+
+ZIP_KB=$(du -k "$ZIP_DEST" | cut -f1)
+echo "  Created: $ZIP_DEST  (${ZIP_KB} KB)"
+echo ""
+
+# Open itch.io in the default browser (best-effort).
+ITCHIO_NEW="https://itch.io/game/new"
+if command -v xdg-open &>/dev/null; then
+    xdg-open "$ITCHIO_NEW" 2>/dev/null &
+elif command -v open &>/dev/null; then
+    open "$ITCHIO_NEW" 2>/dev/null &
+fi
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "ITCH.IO UPLOAD  (your browser should have opened https://itch.io/game/new)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "  If you don't have an itch.io account yet:"
+echo "    https://itch.io/register  (free, takes ~1 minute)"
+echo ""
+echo "  1. Go to:  $ITCHIO_NEW"
+echo ""
+echo "  2. Fill in the top of the form:"
+echo "       Title:             Battle Hunter"
+echo "       Kind of project:   HTML"
+echo "       Classification:    Games"
+echo ""
+echo "  3. Under 'Uploads', click 'Upload files' and select:"
+echo "       $ZIP_DEST"
+echo "     Then check:  [x] This file will be played in the browser"
+echo ""
+echo "  4. Under 'Embed options' set:"
+echo "       Viewport width:   960"
+echo "       Viewport height:  720"
+echo "     Uncheck 'Mobile friendly' (this is a desktop game)"
+echo ""
+echo "  5. Set Visibility to:"
+echo "       Public     — anyone can find and play it"
+echo "       Restricted — only people with your link can play"
+echo ""
+echo "  6. Click 'Save & view page'"
+echo "     URL: https://<your-username>.itch.io/battle-hunter"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "OPTION 1 — GitHub Pages (free, recommended)"
+echo "UPDATING AN EXISTING PAGE (re-deploy after changes):"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  1. Make sure this repo is pushed to GitHub:"
-echo "       git push -u origin master"
-echo "  2. On GitHub: Settings → Pages"
-echo "  3. Source: Deploy from a branch — branch: master, folder: / (root)"
-echo "  4. Click Save — your URL appears in ~2 minutes:"
-echo "       https://<your-username>.github.io/<repo-name>/"
 echo ""
-echo "  To automate this next time, install the GitHub CLI:"
-echo "    https://cli.github.com/  then: gh auth login  then re-run deploy.sh"
+echo "  1. Re-run this script — it will rebuild the zip."
+echo "  2. On itch.io: Edit page → Uploads → delete old zip → upload new zip."
+echo "     Tick 'This file will be played in the browser' again."
+echo "  3. Save. The live page updates immediately."
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "OPTION 2 — Netlify drag-and-drop (no login required)"
+echo "ALTERNATIVE: Netlify drag-and-drop (instant, no game-specific account)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
 echo "  1. Go to: https://app.netlify.com/drop"
-echo "  2. Drag this project folder onto the page"
-echo "  3. Get an instant public URL — shareable immediately"
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "OPTION 3 — Vercel CLI"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  1. Run:  npx vercel"
-echo "  2. Follow the prompts (creates a free account if needed)"
-echo "  3. Re-deploy any time:  npx vercel --prod"
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "OPTION 4 — itch.io (best for sharing as a game)"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  1. Zip this entire project folder"
-echo "  2. Go to: https://itch.io/games/new"
-echo "  3. Kind of project: HTML — upload the zip"
-echo "  4. Under Embed options, enable SharedArrayBuffer if prompted"
-echo "  5. Publish (free tier available)"
+echo "  2. Drag the battle-hunter project folder onto the page"
+echo "  3. Instant public URL — no account needed"
 echo ""
