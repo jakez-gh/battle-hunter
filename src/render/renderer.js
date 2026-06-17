@@ -316,7 +316,8 @@ export function createRenderer(canvas, opts = {}) {
         unitFlash = { key: k, t: 0, dur: EVENT_DURATIONS.hunterDefeated, color: '#f7f7ff' };
         break;
       case 'itemTaken':
-        addFloat(k, ev.itemId != null ? `GOT ${ev.itemId}` : 'TAKEN', '#ffe98a');
+        addFloat(k, ev.itemId != null ? `GOT ${ev.itemId}` : 'TAKEN', '#ffe98a', { big: true });
+        addSparkles(k, '#e8d87e');
         break;
       case 'surrendered':
         addFloat(k, 'SURRENDER', '#8d8d9e');
@@ -346,7 +347,8 @@ export function createRenderer(canvas, opts = {}) {
         addFloat(k, `+${ev.amount ?? ''}`, '#8fd17e');
         break;
       case 'actAgain':
-        addFloat(k, 'AGAIN!', '#ffe98a');
+        addFloat(k, 'AGAIN!', '#ffe98a', { big: true });
+        addSparkles(k, '#ffe98a');
         break;
       case 'missionWon':
         banner = { text: 'MISSION COMPLETE', color: '#ffe98a' };
