@@ -787,12 +787,11 @@ export function createRenderer(canvas, opts = {}) {
         const sp2 = worldToScreen(tx, ty, cam);
         const spx = sp2.x + ((h >> 4) & 13) * s;
         const spy = sp2.y + ((h >> 8) & 13) * s;
-        ctx.globalAlpha = t2 * 0.14;
+        ctx.save(); ctx.globalAlpha = t2 * 0.18;
         ctx.fillStyle = (h & 1) ? '#e8c87a' : '#9adfe8';
-        ctx.fillRect(spx, spy, s * 2, s * 2);
+        ctx.fillRect(spx, spy, s * 2, s * 2); ctx.restore();
       }
     }
-    ctx.globalAlpha = 1;
   }
 
   function drawUnitShadow(k, pos, alpha) {
@@ -1032,12 +1031,15 @@ export function createRenderer(canvas, opts = {}) {
     const by = (canvas.height - HUD_H) / 2 - 20;
     ctx.fillStyle = 'rgba(10, 10, 18, 0.88)';
     ctx.fillRect(0, by, bw, 40);
+    // Color wash — tints the banner strip with its own color
+    ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = banner.color;
+    ctx.fillRect(0, by, bw, 40); ctx.restore();
     // top & bottom accent lines in the banner's own color
     ctx.save();
-    ctx.globalAlpha = 0.55;
+    ctx.globalAlpha = 0.65;
     ctx.fillStyle = banner.color;
-    ctx.fillRect(0, by, bw, 1);
-    ctx.fillRect(0, by + 39, bw, 1);
+    ctx.fillRect(0, by, bw, 2);
+    ctx.fillRect(0, by + 38, bw, 2);
     ctx.restore();
     // drop-shadow + main text
     text(banner.text, bw / 2 + 1, by + 11, 'rgba(0,0,0,0.65)', 20, 'center');
