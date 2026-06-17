@@ -643,6 +643,68 @@ test('story mission 1 (First Descent, fetch, level 1) runs to completion', () =>
     `_missionEnd.win should be boolean, got ${typeof state._missionEnd.win}`);
 });
 
+test('rescue story mission (all-AI) terminates — rival claims NPC after hold-back', () => {
+  // In story mode with all AI hunters, the rivals rush the rescue NPC after round 2.
+  // The first rival to claim it causes an immediate missionLost('rival rescued…').
+  const mission = STORY_MISSIONS.find((m) => m.type === 'rescue');
+  assert.ok(mission, 'rescue story mission must exist');
+  const { state, steps } = runGame({
+    seed: 1, mode: 'story', mission,
+    hunters: [
+      fastHunter('h0', 0), fastHunter('h1', 1),
+      fastHunter('h2', 2), fastHunter('h3', 3),
+    ],
+  }, 5000);
+  assert.equal(state.phase, 'mission.over',
+    `rescue mission stuck in '${state.phase}' after ${steps} steps`);
+  assert.equal(state._missionEnd?.win, false,
+    'all-AI rescue should end as loss (rival reaches NPC first)');
+  assert.match(state._missionEnd?.reason ?? '', /rival/i,
+    '_missionEnd.reason should mention rival');
+});
+
+test('rescue story mission: human player claiming NPC can exit and win', () => {
+  // With human=true, claiming the NPC does NOT trigger a rival-rescue loss.
+  // The AI-controlled human then rushes to the exit with the target.
+  const mission = STORY_MISSIONS.find((m) => m.type === 'rescue');
+  assert.ok(mission, 'rescue story mission must exist');
+  // Try a few seeds to find one where human claims NPC before rivals.
+  let won = false;
+  for (const seed of [1, 3, 7, 10, 42]) {
+    const { state } = runGame({
+      seed, mode: 'story', mission,
+      hunters: [
+        fastHunter('h0', 0, { human: true }),  // slot 0 = player
+        fastHunter('h1', 1), fastHunter('h2', 2), fastHunter('h3', 3),
+      ],
+    }, 5000);
+    assert.equal(state.phase, 'mission.over',
+      `rescue mission stuck after 5000 steps (seed ${seed})`);
+    assert.ok(state._missionEnd, `_missionEnd not set (seed ${seed})`);
+    if (state._missionEnd?.win === true) { won = true; break; }
+  }
+  assert.ok(won, 'at least one seed among {1,3,7,10,42} must produce a rescue win');
+});
+
+test('resteal story mission (all-AI) terminates with a decisive result', () => {
+  // The carrier already holds the target; everyone else tries to steal it.
+  // Game should end when the target holder reaches the exit or WYRM fires.
+  const mission = STORY_MISSIONS.find((m) => m.type === 'resteal');
+  assert.ok(mission, 'resteal story mission must exist');
+  const { state, steps } = runGame({
+    seed: 3, mode: 'story', mission,
+    hunters: [
+      fastHunter('h0', 0), fastHunter('h1', 1),
+      fastHunter('h2', 2), fastHunter('h3', 3),
+    ],
+  }, 5000);
+  assert.equal(state.phase, 'mission.over',
+    `resteal mission stuck in '${state.phase}' after ${steps} steps`);
+  assert.ok(state._missionEnd, `_missionEnd not set after resteal`);
+  assert.equal(typeof state._missionEnd.win, 'boolean',
+    `_missionEnd.win should be boolean`);
+});
+
 test('same seed produces identical final state (full-game determinism)', () => {
   const config = {
     seed: 88, mode: 'normal',
