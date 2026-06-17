@@ -9,6 +9,23 @@
 <body>
   <!-- single 4:3 canvas, CSS-scaled; everything is drawn here -->
   <canvas id="game" width="960" height="720"></canvas>
-  <script type="module" src="src/main.js"></script>
+  <script>
+    // Game saves live in localStorage, which is scoped per browser origin.
+    // Opening index.html as a file:// URL creates a separate storage bucket
+    // from the server — hunters registered here disappear when using run.bat
+    // and vice versa. Block entirely so the user always uses the server.
+    if (location.protocol === 'file:') {
+      document.getElementById('game').style.display = 'none';
+      var e = document.createElement('div');
+      e.style.cssText = 'position:fixed;inset:0;background:#06060c;display:flex;align-items:center;justify-content:center;font-family:"Courier New",monospace;color:#e8e8f0;text-align:center';
+      e.innerHTML = '<div style="max-width:500px;padding:2em"><div style="font-size:1.8em;color:#e8d87e;margin-bottom:.8em">Use run.bat or run.sh</div><div style="color:#9aa0b4;line-height:1.8">You opened the game as a <span style="color:#e8e8f0">file://</span> URL by double-clicking index.html.<br>Hunter saves are stored per URL — opening this way creates a separate save that disappears next session.<br><br><span style="color:#e8e8f0">Double-click <b>run.bat</b> (Windows) or run <b>./run.sh</b> (Mac/Linux)</span><br>to start the local server. It opens the game automatically.</div></div>';
+      document.body.appendChild(e);
+    } else {
+      var s = document.createElement('script');
+      s.type = 'module';
+      s.src = 'src/main.js';
+      document.head.appendChild(s);
+    }
+  </script>
 </body>
 </html>

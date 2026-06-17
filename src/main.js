@@ -6,6 +6,7 @@
 // renderer.js contracts goes through `adapt` so integration drift is patched
 // in exactly one place. Engine modules that are already landed (rng, cards,
 // items, missions, board, combat, sprites, audio, save) are imported direct.
+
 import { interpolateInternal, RIVALS, rivalStats } from './engine/missions.js';
 import { buildAtlas } from './render/sprites.js';
 import { playMusic, stopMusic } from './audio/music.js';

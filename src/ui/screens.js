@@ -477,8 +477,7 @@ export function makeRosterScreen(app, opts = {}) {
       }
       if (!app.roster.hunters.length) {
         text(ctx, 'No hunters registered yet - create one!', 500, 120, { size: 16, color: DIM });
-        text(ctx, 'Hunters are stored per URL - always use run.bat / run.sh', 500, 148, { size: 12, color: DIM });
-        text(ctx, 'to serve the game. Options > Export/Import Save to transfer.', 500, 164, { size: 12, color: DIM });
+        text(ctx, 'Always open via run.bat / run.sh so saves persist.', 500, 146, { size: 12, color: DIM });
       }
     },
   };
