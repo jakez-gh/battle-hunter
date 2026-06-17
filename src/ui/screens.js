@@ -1664,9 +1664,33 @@ export function makeResultsScreen(app, g) {
     onClick() { this.onKey('confirm'); },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
-      text(ctx, win ? 'MISSION COMPLETE' : 'MISSION FAILED', app.W / 2, 26, { size: 34, align: 'center', color: win ? GOLD : BAD });
+      // Atmospheric bloom behind the result header
+      const rcx = app.W / 2;
+      const rbloom = ctx.createRadialGradient(rcx, 42, 8, rcx, 42, 200);
+      rbloom.addColorStop(0, win ? 'rgba(180, 140, 20, 0.38)' : 'rgba(140, 30, 30, 0.38)');
+      rbloom.addColorStop(1, 'transparent');
+      ctx.fillStyle = rbloom;
+      ctx.fillRect(rcx - 200, 10, 400, 130);
+      // Layered result header text
+      const rtext = win ? 'MISSION COMPLETE' : 'MISSION FAILED';
+      const rlay = win ? '#7a5400' : '#7a1010';
+      text(ctx, rtext, rcx + 3, 29, { size: 34, align: 'center', color: '#000', shadow: false });
+      text(ctx, rtext, rcx + 1, 27, { size: 34, align: 'center', color: rlay, shadow: false });
+      text(ctx, rtext, rcx, 26, { size: 34, align: 'center', color: win ? GOLD : BAD, shadow: false });
       if (!win && g.outcome.reason) text(ctx, String(g.outcome.reason), app.W / 2, 66, { size: 14, align: 'center', color: DIM });
+      // Separator + score table
+      ctx.save(); ctx.fillStyle = win ? GOLD : BAD; ctx.globalAlpha = 0.45;
+      ctx.fillRect(40, 92, app.W - 80, 1); ctx.restore();
       const x0 = 40, cw = 168, lx = x0 + 160;
+      // Subtle table area tint
+      ctx.save(); ctx.fillStyle = win ? GOLD : BAD; ctx.globalAlpha = 0.06;
+      ctx.fillRect(lx, 95, rows.length * cw, 435); ctx.restore();
+      // 1st-place column highlight on win
+      if (win && order.length > 0) {
+        const fi = rows.findIndex((r) => r.id === order[0].id);
+        if (fi >= 0) { ctx.save(); ctx.fillStyle = GOLD; ctx.globalAlpha = 0.09;
+          ctx.fillRect(lx + fi * cw, 95, cw, 435); ctx.restore(); }
+      }
       const labels = ['', 'Movement', 'Damage', 'Flags', 'Kills', 'Handicap', 'Items', 'TOTAL', 'Place', 'Credits'];
       labels.forEach((s, i) => text(ctx, s, x0, 130 + i * 40, { size: 16, color: i >= 7 ? GOLD : DIM }));
       rows.forEach((r, i) => {
