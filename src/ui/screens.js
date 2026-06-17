@@ -15,7 +15,7 @@ import { STORY_MISSIONS, makeNormalMission, applyResults, displayStats, LEVEL_UP
 import { PALETTE_NAMES, HUNTERS as HUNTER_SPRITES } from '../render/sprites.js';
 import { setVolumes } from '../audio/synth.js';
 import { sfx } from '../audio/sfx.js';
-import { makeHunterRecord } from '../save.js';
+import { makeHunterRecord, exportSave, importSave, loadRoster } from '../save.js';
 
 // ---------------------------------------------------------------------------
 // Screen stack
@@ -458,6 +458,8 @@ export function makeRosterScreen(app, opts = {}) {
       }
       if (!app.roster.hunters.length) {
         text(ctx, 'No hunters registered yet - create one!', 500, 120, { size: 16, color: DIM });
+        text(ctx, 'Hunters are stored per URL - always use run.bat / run.sh', 500, 148, { size: 12, color: DIM });
+        text(ctx, 'to serve the game. Options > Export/Import Save to transfer.', 500, 164, { size: 12, color: DIM });
       }
     },
   };
@@ -965,8 +967,9 @@ export function makeHospitalScreen(app) {
 // OPTIONS — volumes (synth.setVolumes) + wallpaper picker (§2.13).
 
 export function makeOptionsScreen(app) {
-  const rows = ['master', 'music', 'sfx', 'aiSpeed', 'wallpaper', 'back'];
+  const rows = ['master', 'music', 'sfx', 'aiSpeed', 'wallpaper', 'export', 'import', 'back'];
   let idx = 0;
+  let note = '';
   const opts = app.options();
   const unlocked = unlockedWallpapers(app.roster);
   // remember disc unlocks permanently, even if discs are later sold
@@ -982,11 +985,32 @@ export function makeOptionsScreen(app) {
     } else if (row === 'aiSpeed') {
       opts.aiSpeed = Math.max(1, Math.min(64, (opts.aiSpeed ?? 8) + dir));
       sfx.menuMove();
-    } else if (row !== 'back') {
+    } else if (row !== 'back' && row !== 'export' && row !== 'import') {
       opts.volumes[row] = Math.round(Math.max(0, Math.min(1, opts.volumes[row] + dir * 0.05)) * 100) / 100;
       setVolumes(opts.volumes);
       sfx.menuMove();
     }
+  }
+
+  function doExport() {
+    try {
+      const json = exportSave();
+      navigator.clipboard?.writeText(json)
+        .then(() => { note = 'Save copied to clipboard!'; sfx.menuConfirm(); })
+        .catch(() => { note = 'Could not copy — see console'; console.log(json); sfx.error(); });
+    } catch (e) { note = 'Export failed: ' + e.message; sfx.error(); }
+  }
+
+  function doImport() {
+    const json = prompt('Paste exported save JSON to restore hunters:\n(this REPLACES your current save)');
+    if (!json) return;
+    try {
+      importSave(json);
+      app.roster = loadRoster();
+      app.session.hunterId = null;
+      note = `Imported ${app.roster.hunters.length} hunter(s)!`;
+      sfx.menuConfirm();
+    } catch { note = 'Import failed — not a valid save'; sfx.error(); }
   }
 
   const leave = () => { app.save(); sfx.menuCancel(); app.stack.pop(); };
@@ -997,15 +1021,21 @@ export function makeOptionsScreen(app) {
       else if (k === 'down') { idx = (idx + 1) % rows.length; sfx.menuMove(); }
       else if (k === 'left') adjust(-1);
       else if (k === 'right') adjust(1);
-      else if (k === 'confirm' && rows[idx] === 'back') leave();
+      else if (k === 'confirm') {
+        if (rows[idx] === 'back') leave();
+        else if (rows[idx] === 'export') doExport();
+        else if (rows[idx] === 'import') doImport();
+      }
       else if (k === 'cancel') leave();
     },
     onClick(pos) {
       for (let i = 0; i < rows.length; i++) {
-        const r = { x: 240, y: 156 + i * 64, w: 480, h: 56 };
+        const r = { x: 240, y: 120 + i * 56, w: 480, h: 50 };
         if (inRect(pos, r)) {
           if (idx === i) {
             if (rows[i] === 'back') leave();
+            else if (rows[i] === 'export') doExport();
+            else if (rows[i] === 'import') doImport();
             else adjust(pos.x > r.x + r.w / 2 ? 1 : -1);
           } else { idx = i; sfx.menuMove(); }
           return;
@@ -1016,42 +1046,53 @@ export function makeOptionsScreen(app) {
       drawWallpaper(ctx, app.W, app.H, opts.wallpaper);
       text(ctx, 'OPTIONS', app.W / 2, 50, { size: 36, align: 'center', color: GOLD });
       rows.forEach((row, i) => {
-        const y = 160 + i * 64;
+        const y = 124 + i * 56;
         const sel = i === idx;
         if (sel) {
           ctx.fillStyle = 'rgba(80,100,200,0.3)';
-          ctx.fillRect(236, y - 10, 488, 52);
+          ctx.fillRect(236, y - 10, 488, 48);
         }
         if (row === 'back') {
-          text(ctx, 'BACK', 260, y, { size: 20, color: sel ? '#fff' : FG });
+          text(ctx, 'BACK', 260, y, { size: 18, color: sel ? '#fff' : FG });
+          return;
+        }
+        if (row === 'export') {
+          text(ctx, 'Export Save', 260, y, { size: 18, color: sel ? '#fff' : FG });
+          text(ctx, 'copies JSON to clipboard', 500, y, { size: 13, color: DIM });
+          return;
+        }
+        if (row === 'import') {
+          text(ctx, 'Import Save', 260, y, { size: 18, color: sel ? BAD : FG });
+          text(ctx, 'paste JSON — replaces current save', 500, y, { size: 13, color: DIM });
           return;
         }
         if (row === 'aiSpeed') {
-          text(ctx, 'AI Speed', 260, y, { size: 20, color: sel ? '#fff' : FG });
+          text(ctx, 'AI Speed', 260, y, { size: 18, color: sel ? '#fff' : FG });
           const spd = opts.aiSpeed ?? 8;
           const sv = (spd - 1) / 63;
           ctx.fillStyle = '#23263a';
-          ctx.fillRect(500, y + 4, 200, 14);
+          ctx.fillRect(500, y + 4, 200, 12);
           ctx.fillStyle = sel ? GOLD : '#7e9fee';
-          ctx.fillRect(500, y + 4, 200 * sv, 14);
-          text(ctx, `${spd}x`, 712, y, { size: 15, color: DIM });
+          ctx.fillRect(500, y + 4, 200 * sv, 12);
+          text(ctx, `${spd}x`, 712, y, { size: 14, color: DIM });
           return;
         }
         if (row === 'wallpaper') {
-          text(ctx, 'Wallpaper', 260, y, { size: 20, color: sel ? '#fff' : FG });
-          text(ctx, `< ${WALLPAPERS[opts.wallpaper].name} >`, 500, y, { size: 18, color: GOLD });
-          text(ctx, `${unlocked.length}/${WALLPAPERS.length} unlocked (find Discs)`, 500, y + 24, { size: 12, color: DIM });
+          text(ctx, 'Wallpaper', 260, y, { size: 18, color: sel ? '#fff' : FG });
+          text(ctx, `< ${WALLPAPERS[opts.wallpaper].name} >`, 500, y, { size: 16, color: GOLD });
+          text(ctx, `${unlocked.length}/${WALLPAPERS.length} unlocked (find Discs)`, 500, y + 22, { size: 11, color: DIM });
           return;
         }
-        text(ctx, cap(row), 260, y, { size: 20, color: sel ? '#fff' : FG });
+        text(ctx, cap(row), 260, y, { size: 18, color: sel ? '#fff' : FG });
         const v = opts.volumes[row];
         ctx.fillStyle = '#23263a';
-        ctx.fillRect(500, y + 4, 200, 14);
+        ctx.fillRect(500, y + 4, 200, 12);
         ctx.fillStyle = sel ? GOLD : '#7e9fee';
-        ctx.fillRect(500, y + 4, 200 * v, 14);
-        text(ctx, `${Math.round(v * 100)}%`, 712, y, { size: 15, color: DIM });
+        ctx.fillRect(500, y + 4, 200 * v, 12);
+        text(ctx, `${Math.round(v * 100)}%`, 712, y, { size: 14, color: DIM });
       });
-      text(ctx, 'left/right to adjust - Esc saves and exits', app.W / 2, 620, { size: 13, align: 'center', color: DIM });
+      if (note) text(ctx, note, app.W / 2, 590, { size: 14, align: 'center', color: OK });
+      text(ctx, 'left/right to adjust - Enter on export/import - Esc saves and exits', app.W / 2, 618, { size: 12, align: 'center', color: DIM });
     },
   };
 }
