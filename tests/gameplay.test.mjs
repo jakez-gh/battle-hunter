@@ -529,6 +529,120 @@ test('legalActions is never empty during active gameplay', () => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// 11. Phase Invariants (battle / steer never leave the player stranded)
+
+test('battle.response always has respond actions available', () => {
+  // Combat-heavy config: slow + high AT forces many fights.
+  let state = createGame({
+    seed: 17, mode: 'normal',
+    hunters: [
+      makeHunter('h0', 0, { internal: { mv: 2, at: 7, df: 2, hp: 4 } }),
+      makeHunter('h1', 1, { internal: { mv: 2, at: 7, df: 2, hp: 4 } }),
+      makeHunter('h2', 2, { internal: { mv: 2, at: 7, df: 2, hp: 4 } }),
+      makeHunter('h3', 3, { internal: { mv: 2, at: 7, df: 2, hp: 4 } }),
+    ],
+  });
+  let battleResponseCount = 0;
+  for (let i = 0; i < 5000 && state.phase !== 'mission.over'; i++) {
+    if (state.phase === 'battle.response') {
+      const acts = legalActions(state);
+      assert.ok(acts.length > 0,
+        `battle.response had empty actions at step ${i}`);
+      assert.ok(
+        acts.some((a) => a.type === 'respond'),
+        `battle.response must offer respond actions at step ${i}`,
+      );
+      battleResponseCount++;
+    }
+    const action = chooseAction({ ...state, legalActions: (s) => legalActions(s) });
+    if (!action) break;
+    state = applyAction(state, action).state;
+  }
+  assert.ok(battleResponseCount > 0,
+    'at least one battle.response phase must occur in a combat-heavy game');
+});
+
+test('turn.steer always has step or stop actions (movement is never deadlocked)', () => {
+  let state = createGame({
+    seed: 33, mode: 'normal',
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  });
+  let steerCount = 0;
+  for (let i = 0; i < 3000 && state.phase !== 'mission.over'; i++) {
+    if (state.phase === 'turn.steer') {
+      const acts = legalActions(state);
+      assert.ok(
+        acts.some((a) => a.type === 'step' || a.type === 'stop'),
+        `turn.steer had no step/stop at step ${i}: ${JSON.stringify(acts.map((a) => a.type))}`,
+      );
+      steerCount++;
+    }
+    const action = chooseAction({ ...state, legalActions: (s) => legalActions(s) });
+    if (!action) break;
+    state = applyAction(state, action).state;
+  }
+  assert.ok(steerCount > 0, 'at least one turn.steer phase must be encountered');
+});
+
+// ---------------------------------------------------------------------------
+// 12. Item and Flag Economy
+
+test('itemTaken events fire when hunters open non-target boxes', () => {
+  // 4-hunter game: multiple hunters open multiple boxes during exploration.
+  // At least one non-target box should yield an itemTaken event.
+  const { events } = runGame({
+    seed: 10, mode: 'normal',
+    hunters: [
+      fastHunter('h0', 0), fastHunter('h1', 1),
+      fastHunter('h2', 2), fastHunter('h3', 3),
+    ],
+  }, 5000);
+  assert.ok(
+    events.some((e) => e.type === 'itemTaken'),
+    'expected at least one itemTaken event in a 4-hunter game; ' +
+    'event types seen: ' + [...new Set(events.map((e) => e.type))].join(', '),
+  );
+});
+
+test('flagClaimed events fire when hunters traverse flag tiles', () => {
+  // Balanced hunters that explore more slowly produce more flag interactions.
+  const { events } = runGame({
+    seed: 5, mode: 'normal',
+    hunters: [
+      makeHunter('h0', 0), makeHunter('h1', 1),
+      makeHunter('h2', 2), makeHunter('h3', 3),
+    ],
+  }, 5000);
+  assert.ok(
+    events.some((e) => e.type === 'flagClaimed'),
+    'expected at least one flagClaimed event; ' +
+    'event types seen: ' + [...new Set(events.map((e) => e.type))].join(', '),
+  );
+});
+
+// ---------------------------------------------------------------------------
+// 13. Story Mode Simulation
+
+test('story mission 1 (First Descent, fetch, level 1) runs to completion', () => {
+  // The simplest story mission: fetch at level 1 with Normal opponents.
+  // Running it with 4 fast all-AI hunters should terminate like a normal game.
+  const mission = STORY_MISSIONS.find((m) => m.id === 1);
+  assert.ok(mission, 'story mission id=1 must exist');
+  const { state, steps } = runGame({
+    seed: 42, mode: 'story', mission,
+    hunters: [
+      fastHunter('h0', 0), fastHunter('h1', 1),
+      fastHunter('h2', 2), fastHunter('h3', 3),
+    ],
+  }, 5000);
+  assert.equal(state.phase, 'mission.over',
+    `story mission "${mission.title}" stuck in '${state.phase}' after ${steps} steps`);
+  assert.ok(state._missionEnd, `_missionEnd not set after story mission completed`);
+  assert.equal(typeof state._missionEnd.win, 'boolean',
+    `_missionEnd.win should be boolean, got ${typeof state._missionEnd.win}`);
+});
+
 test('same seed produces identical final state (full-game determinism)', () => {
   const config = {
     seed: 88, mode: 'normal',
