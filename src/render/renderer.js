@@ -476,10 +476,15 @@ export function createRenderer(canvas, opts = {}) {
     }
     if (b.exit) {
       blitTile('tile.exit', b.exit.x, b.exit.y);
-      const pulse = 0.3 + 0.3 * Math.sin(clock / 800);
       const ep = worldToScreen(b.exit.x, b.exit.y, cam);
-      ctx.save(); ctx.globalAlpha = pulse * 0.35; ctx.fillStyle = '#7ee8a0';
-      ctx.fillRect(ep.x, ep.y, TILE * cam.scale, TILE * cam.scale); ctx.restore();
+      const es = TILE * cam.scale;
+      const ecx = ep.x + es / 2, ecy = ep.y + es / 2;
+      const pulse = 0.4 + 0.6 * Math.sin(clock / 700);
+      const eg = ctx.createRadialGradient(ecx, ecy, 0, ecx, ecy, es * 0.7);
+      eg.addColorStop(0, 'rgba(126,232,160,0.55)');
+      eg.addColorStop(1, 'rgba(126,232,160,0.0)');
+      ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = eg;
+      ctx.fillRect(ep.x, ep.y, es, es); ctx.restore();
     }
     if (state.debug) {
       for (const t of b.traps ?? []) drawTrap(t);
@@ -664,6 +669,18 @@ export function createRenderer(canvas, opts = {}) {
     }
     for (const [k, g] of ghosts) list.push({ k, u: null, pos: g.pos, alpha: g.alpha });
     list.sort((a, b) => (a.pos?.y ?? 0) - (b.pos?.y ?? 0));
+    // Soft team-color glow beneath each hunter
+    for (const d of list) {
+      if (d.k[0] !== 'h' || !d.pos) continue;
+      const hslot = d.u?.slot ?? 0;
+      const sc = SLOT_COLORS[hslot % 4] ?? '#3a6ee0';
+      const sp = worldToScreen(d.pos.x, d.pos.y, cam);
+      const hcx = sp.x + TILE * cam.scale / 2, hcy = sp.y + (TILE - 1) * cam.scale;
+      const hg = ctx.createRadialGradient(hcx, hcy, 0, hcx, hcy, 7 * cam.scale);
+      hg.addColorStop(0, sc); hg.addColorStop(1, 'transparent');
+      ctx.save(); ctx.globalAlpha = 0.22 * d.alpha; ctx.fillStyle = hg;
+      ctx.fillRect(sp.x, sp.y, TILE * cam.scale, TILE * cam.scale); ctx.restore();
+    }
     drawMonsterAuras();
     drawActiveRing();
     for (const d of list) drawUnitShadow(d.k, d.pos, d.alpha);
