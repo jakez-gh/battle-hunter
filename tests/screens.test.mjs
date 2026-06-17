@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as Screens from '../src/ui/screens.js';
 import { ITEMS } from '../src/engine/items.js';
+import { STORY_MISSIONS } from '../src/engine/missions.js';
 
 // ---------------------------------------------------------------------------
 // Structural: verify all expected exports exist and are the right type.
@@ -73,6 +74,32 @@ test('unlockedWallpapers: hunter with a disc item unlocks corresponding wallpape
   const unlocked = Screens.unlockedWallpapers(roster);
   assert.ok(unlocked.includes(0), 'index 0 always included');
   assert.ok(unlocked.includes(3), 'disc3 unlocks wallpaper 3');
+});
+
+// ---------------------------------------------------------------------------
+// Mission goal HUD: verify STORY_MISSIONS have all fields the HUD relies on.
+
+test('all STORY_MISSIONS have title and type for HUD goal box', () => {
+  const validTypes = new Set(['fetch', 'rescue', 'resteal']);
+  for (const m of STORY_MISSIONS) {
+    assert.ok(typeof m.title === 'string' && m.title.length > 0, `M${m.id} has a non-empty title`);
+    assert.ok(validTypes.has(m.type), `M${m.id} has a valid type (${m.type})`);
+  }
+});
+
+test('targetItemId missions reference items that exist in ITEMS', () => {
+  for (const m of STORY_MISSIONS) {
+    if (m.targetItemId != null) {
+      assert.ok(ITEMS[m.targetItemId], `M${m.id} targetItemId '${m.targetItemId}' exists in ITEMS`);
+    }
+  }
+});
+
+test('resteal missions have a valid carrierIndex', () => {
+  for (const m of STORY_MISSIONS.filter((m) => m.type === 'resteal')) {
+    assert.ok(typeof m.carrierIndex === 'number' && m.carrierIndex >= 0,
+      `M${m.id} resteal has numeric carrierIndex`);
+  }
 });
 
 // ---------------------------------------------------------------------------

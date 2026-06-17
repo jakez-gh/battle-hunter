@@ -728,3 +728,34 @@ test('game terminates when someone exits with the target (smoke)', () => {
   }
   assert.ok(state.phase === 'completed' || state.phase === 'mission.over', `ended in ${state.phase} after ${steps} steps`);
 });
+
+// ---------------------------------------------------------------------------
+// Mission goal HUD state: missionTitle, targetItemId, rescueHoldRounds
+
+const FOUR_HUNTERS = [
+  hunter('h0', 0), hunter('h1', 1), hunter('h2', 2), hunter('h3', 3),
+];
+
+test('createGame stores missionTitle and sets rescueHoldRounds=2 for rescue mission', () => {
+  const m2 = STORY_MISSIONS.find((m) => m.type === 'rescue');
+  assert.ok(m2, 'at least one rescue story mission exists');
+  const s = createGame({ seed: 1, mode: 'story', mission: m2, hunters: FOUR_HUNTERS });
+  assert.equal(s.missionTitle, m2.title, 'missionTitle stored from mission.title');
+  assert.equal(s.missionType, 'rescue');
+  assert.equal(s.rescueHoldRounds, 2, 'rescue missions hold rivals for 2 rounds');
+});
+
+test('createGame stores targetItemId for targeted fetch missions', () => {
+  const m7 = STORY_MISSIONS.find((m) => m.targetItemId != null);
+  assert.ok(m7, 'at least one mission has a specific targetItemId');
+  const s = createGame({ seed: 1, mode: 'story', mission: m7, hunters: FOUR_HUNTERS });
+  assert.equal(s.targetItemId, m7.targetItemId, 'targetItemId stored in state');
+  assert.equal(s.missionTitle, m7.title, 'missionTitle stored');
+});
+
+test('createGame with no mission has null missionTitle and rescueHoldRounds=0', () => {
+  const s = makeGame(1);
+  assert.equal(s.missionTitle, null);
+  assert.equal(s.missionType, 'fetch');
+  assert.equal(s.rescueHoldRounds, 0);
+});
