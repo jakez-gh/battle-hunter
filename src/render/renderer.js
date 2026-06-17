@@ -507,13 +507,31 @@ export function createRenderer(canvas, opts = {}) {
     const s = cam.scale;
     const cx = p.x + 8 * s;
     const cy = p.y + 8 * s;
-    ctx.fillStyle = TRAP_COLORS[t.kind] ?? '#f0f4ff';
+    const col = TRAP_COLORS[t.kind] ?? '#f0f4ff';
+    // pulsing glow spread across the tile
+    const pulse = 0.5 + 0.5 * Math.sin(clock / 420 + t.x * 1.3 + t.y * 1.7);
+    const gr = ctx.createRadialGradient(cx, cy, 0, cx, cy, 6 * s);
+    gr.addColorStop(0, col);
+    gr.addColorStop(1, 'transparent');
+    ctx.save();
+    ctx.globalAlpha = pulse * 0.32;
+    ctx.fillStyle = gr;
+    ctx.fillRect(p.x, p.y, TILE * s, TILE * s);
+    ctx.restore();
+    // diamond shape
+    ctx.fillStyle = col;
     ctx.beginPath();
     ctx.moveTo(cx, cy - 4 * s);
     ctx.lineTo(cx + 4 * s, cy);
     ctx.lineTo(cx, cy + 4 * s);
     ctx.lineTo(cx - 4 * s, cy);
     ctx.fill();
+    // bright center flash
+    ctx.save();
+    ctx.globalAlpha = pulse * 0.55;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(cx - s, cy - s, 2 * s, 2 * s);
+    ctx.restore();
   }
 
   function drawOverlays() {
@@ -582,6 +600,29 @@ export function createRenderer(canvas, opts = {}) {
     }
   }
 
+  function drawMonsterAuras() {
+    if (!state?.monsters?.length) return;
+    const s = cam.scale;
+    for (const m of state.monsters ?? []) {
+      const k = `m${m.id}`;
+      if (hiddenUnits.has(k)) continue;
+      const pos = displayPos(k);
+      if (!pos) continue;
+      const p = worldToScreen(pos.x, pos.y, cam);
+      const cx = p.x + TILE * s / 2;
+      const cy = p.y + TILE * s / 2;
+      const pulse = 0.14 + 0.10 * Math.sin(clock / 680 + m.id * 1.7);
+      const gr = ctx.createRadialGradient(cx, cy, 0, cx, cy, 9 * s);
+      gr.addColorStop(0, 'rgba(210, 55, 35, 0.55)');
+      gr.addColorStop(1, 'transparent');
+      ctx.save();
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = gr;
+      ctx.fillRect(p.x - s, p.y - s, TILE * s + 2 * s, TILE * s + 2 * s);
+      ctx.restore();
+    }
+  }
+
   function drawUnits() {
     const list = [];
     for (const h of state.hunters ?? []) {
@@ -600,6 +641,7 @@ export function createRenderer(canvas, opts = {}) {
     }
     for (const [k, g] of ghosts) list.push({ k, u: null, pos: g.pos, alpha: g.alpha });
     list.sort((a, b) => (a.pos?.y ?? 0) - (b.pos?.y ?? 0));
+    drawMonsterAuras();
     drawActiveRing();
     for (const d of list) drawUnitShadow(d.k, d.pos, d.alpha);
     for (const d of list) drawUnit(d.k, d.u, d.pos, d.alpha);
@@ -883,10 +925,20 @@ export function createRenderer(canvas, opts = {}) {
   }
 
   function drawBanner() {
-    const y = (canvas.height - HUD_H) / 2 - 20;
-    ctx.fillStyle = 'rgba(10, 10, 18, 0.82)';
-    ctx.fillRect(0, y, canvas.width, 40);
-    text(banner.text, canvas.width / 2, y + 10, banner.color, 20, 'center');
+    const bw = canvas.width;
+    const by = (canvas.height - HUD_H) / 2 - 20;
+    ctx.fillStyle = 'rgba(10, 10, 18, 0.88)';
+    ctx.fillRect(0, by, bw, 40);
+    // top & bottom accent lines in the banner's own color
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = banner.color;
+    ctx.fillRect(0, by, bw, 1);
+    ctx.fillRect(0, by + 39, bw, 1);
+    ctx.restore();
+    // drop-shadow + main text
+    text(banner.text, bw / 2 + 1, by + 11, 'rgba(0,0,0,0.65)', 20, 'center');
+    text(banner.text, bw / 2, by + 10, banner.color, 20, 'center');
   }
 
   // --- public API --------------------------------------------------------------
