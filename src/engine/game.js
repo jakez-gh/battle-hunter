@@ -535,7 +535,10 @@ function defeatHunter(state, victim, rng) {
   victim.hp = 1;
   victim.healNextTurn = true;
   victim.pos = randomFreeTile(state, rng);
-  if (victim.status) victim.status.stun = (victim.status.stun || 0) + 1;
+  if (victim.status) {
+    victim.status.stun = (victim.status.stun || 0) + 1;
+    victim.status.panic = 0;
+  }
   if (victim.tally) victim.tally.defeats = (victim.tally.defeats || 0) + 1;
   addEvent(state, { type: 'hunterDefeated', unit: victim.id });
 }
