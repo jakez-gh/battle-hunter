@@ -580,8 +580,7 @@ export function makeCreationScreen(app) {
       sprite(app, `hunter${state.spriteId}.${pal}.${frame}`, 660, 150, 11);
       text(ctx, state.name || '-------', 750, 350, { size: 22, align: 'center', color: GOLD });
       text(ctx, fmtStats(d), 750, 385, { size: 14, align: 'center' });
-      text(ctx, 'displayed: MV=iMV/3  DF=iDF/2', 750, 420, { size: 12, align: 'center', color: DIM });
-      text(ctx, 'HP = 7 + 3*iHP', 750, 440, { size: 12, align: 'center', color: DIM });
+      text(ctx, `displayed: MV ${d.mv}  DF ${d.df}  HP ${d.maxHp}`, 750, 420, { size: 12, align: 'center', color: DIM });
       text(ctx, 'type to name - arrows to adjust - Enter on BEGIN', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
     },
   };
