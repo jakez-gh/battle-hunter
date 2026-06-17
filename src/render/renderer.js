@@ -68,6 +68,7 @@ const SLOT_COLORS = ['#3a6ee0', '#cc4a3a', '#e0c63a', '#3aa84a']; // P1..P4
 const CARD_MINI = { R: '#cc4a3a', Y: '#d8b83a', B: '#3a6ee0', G: '#3aa84a' };
 const TRAP_COLORS = { damage: '#cc4a3a', stun: '#d8b83a', leg: '#3a6ee0', empty: '#8d8d9e' };
 const STATUS_GLOW = { stun: '#d8b83a', leg: '#3a6ee0', panic: '#cc4a3a', empty: '#8d8d9e' };
+const MONSTER_AURA = { VAC: 'rgba(80,170,220,0.55)', OOZ: 'rgba(60,200,80,0.50)', FNG: 'rgba(220,130,40,0.52)', WYRM: 'rgba(140,60,220,0.55)' };
 const MONSTER_KINDS = new Set(['VAC', 'OOZ', 'FNG', 'WYRM']);
 const BATTLE_EVENTS = new Set([
   'battleStarted', 'responseChosen', 'escapeRolled', 'strikeRolled',
@@ -633,8 +634,9 @@ export function createRenderer(canvas, opts = {}) {
       const cx = p.x + TILE * s / 2;
       const cy = p.y + TILE * s / 2;
       const pulse = 0.14 + 0.10 * Math.sin(clock / 680 + m.id * 1.7);
+      const auraCol = MONSTER_AURA[m.kind] ?? 'rgba(210,55,35,0.55)';
       const gr = ctx.createRadialGradient(cx, cy, 0, cx, cy, 9 * s);
-      gr.addColorStop(0, 'rgba(210, 55, 35, 0.55)');
+      gr.addColorStop(0, auraCol);
       gr.addColorStop(1, 'transparent');
       ctx.save();
       ctx.globalAlpha = pulse;
