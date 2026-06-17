@@ -919,7 +919,7 @@ export function makeHospitalScreen(app) {
 // OPTIONS — volumes (synth.setVolumes) + wallpaper picker (§2.13).
 
 export function makeOptionsScreen(app) {
-  const rows = ['master', 'music', 'sfx', 'wallpaper', 'back'];
+  const rows = ['master', 'music', 'sfx', 'aiSpeed', 'wallpaper', 'back'];
   let idx = 0;
   const opts = app.options();
   const unlocked = unlockedWallpapers(app.roster);
@@ -932,6 +932,9 @@ export function makeOptionsScreen(app) {
     if (row === 'wallpaper') {
       const at = unlocked.indexOf(opts.wallpaper);
       opts.wallpaper = unlocked[(at + dir + unlocked.length) % unlocked.length];
+      sfx.menuMove();
+    } else if (row === 'aiSpeed') {
+      opts.aiSpeed = Math.max(1, Math.min(16, (opts.aiSpeed ?? 8) + dir));
       sfx.menuMove();
     } else if (row !== 'back') {
       opts.volumes[row] = Math.round(Math.max(0, Math.min(1, opts.volumes[row] + dir * 0.05)) * 100) / 100;

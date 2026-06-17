@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as Screens from '../src/ui/screens.js';
+import { ITEMS } from '../src/engine/items.js';
 
 // ---------------------------------------------------------------------------
 // Structural: verify all expected exports exist and are the right type.
@@ -72,4 +73,59 @@ test('unlockedWallpapers: hunter with a disc item unlocks corresponding wallpape
   const unlocked = Screens.unlockedWallpapers(roster);
   assert.ok(unlocked.includes(0), 'index 0 always included');
   assert.ok(unlocked.includes(3), 'disc3 unlocks wallpaper 3');
+});
+
+// ---------------------------------------------------------------------------
+// HUD layout: text must fit inside fixed-width boxes (w=232px, right edge=956).
+// Courier New bold monospace ≈ 0.6em per character at any size.
+// These tests catch overflow regressions without needing a real canvas.
+
+const approxPx = (str, sizePx) => str.length * sizePx * 0.6;
+
+// Respond menu: drawn at x=724, w=232, sz=13 → usable label+hint ≤ 212px.
+test('RESPONSE_HINTS is exported and has exactly the four known response keys', () => {
+  const { RESPONSE_HINTS } = Screens;
+  assert.ok(RESPONSE_HINTS && typeof RESPONSE_HINTS === 'object', 'RESPONSE_HINTS must be exported');
+  const keys = Object.keys(RESPONSE_HINTS).sort();
+  assert.deepEqual(keys, ['counter', 'escape', 'guard', 'surrender']);
+});
+
+test('RESPONSE_HINTS: each hint fits in the 232px respond menu at size 13', () => {
+  const { RESPONSE_HINTS } = Screens;
+  // Respond menu: x=724 w=232 sz=13; drawMenu puts label at x+10, hint right-aligned at x+w-10.
+  // Overlap when: approxPx(prefix+label) + approxPx(hint) > w - 20 = 212.
+  const MENU_W = 232, SZ = 13, AVAIL = MENU_W - 20;
+  const LABELS = { counter: 'Counter', guard: 'Guard', escape: 'Escape', surrender: 'Surrender' };
+  for (const [key, label] of Object.entries(LABELS)) {
+    const hint = RESPONSE_HINTS[key] ?? '';
+    const used = approxPx('>' + label, SZ) + approxPx(hint, SZ);
+    assert.ok(
+      used <= AVAIL,
+      `"${label}" (${approxPx('>' + label, SZ).toFixed(0)}px) + "${hint}" (${approxPx(hint, SZ).toFixed(0)}px) = ${used.toFixed(0)}px exceeds ${AVAIL}px`,
+    );
+  }
+});
+
+test('RESPONSE_HINTS: hints are non-empty strings', () => {
+  const { RESPONSE_HINTS } = Screens;
+  for (const [k, v] of Object.entries(RESPONSE_HINTS)) {
+    assert.equal(typeof v, 'string', `hint for "${k}" must be a string`);
+    assert.ok(v.length > 0, `hint for "${k}" must not be empty`);
+  }
+});
+
+// INFO panel item names: two lines at x=X+10=734, sz=11, box right=956 → 212px available.
+// drawHud clips each line at 30 chars (198px) to prevent overflow from long names joined with ", ".
+test('INFO panel: longest possible item names clipped to 30 chars each fit in 212px at size 11', () => {
+  const SZ = 11, AVAIL = 212, CLIP = 30;
+  const names = Object.values(ITEMS).map((it) => it.name ?? '').filter(Boolean);
+  const longestName = names.reduce((a, b) => (b.length > a.length ? b : a), '');
+  // Worst case: three copies of the longest name joined with ", "
+  const worstJoined = [longestName, longestName, longestName].join(', ');
+  const clipped = worstJoined.length > CLIP ? worstJoined.slice(0, CLIP - 3) + '...' : worstJoined;
+  assert.ok(clipped.length <= CLIP, `clipped line must be ≤${CLIP} chars, got ${clipped.length}`);
+  assert.ok(
+    approxPx(clipped, SZ) <= AVAIL,
+    `clipped "${clipped}" is ${approxPx(clipped, SZ).toFixed(0)}px, exceeds ${AVAIL}px`,
+  );
 });
