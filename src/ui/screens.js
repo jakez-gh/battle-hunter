@@ -1121,10 +1121,10 @@ export function makeGameScreen(app, g) {
   }
 
   const RESPONSE_HINTS = {
-    counter: 'Strike back after defending',
-    guard: 'DF doubled, no counter',
-    escape: 'Roll to flee (2d6+MV+blue)',
-    surrender: 'Give 1 item, warp away unhurt',
+    counter: 'fight back',
+    guard: 'double DF',
+    escape: 'flee roll',
+    surrender: 'give item',
   };
 
   function buildUi(st) {
