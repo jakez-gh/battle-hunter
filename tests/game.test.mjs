@@ -875,3 +875,37 @@ test('non-WYRM monster defeating target holder does not end mission', () => {
     assert.notEqual(r.state.phase, 'mission.over', `${kind} killing target holder should NOT end mission`);
   }
 });
+
+// ---------------------------------------------------------------------------
+// Escape bonus: Slick Boots / Jumpsuit / Longcoat add to escape roll
+
+function runEscape(seed, defItems) {
+  // Escape skips the defender card phase; only the attacker plays a card.
+  // Sequence: respond → battle.atkCard; ONE battleCard → resolves (escapeRolled fires here).
+  const state = makeGame(seed);
+  const s = JSON.parse(JSON.stringify(state));
+  s.hunters[0].items = [];
+  s.hunters[1].items = defItems;
+  s.phase = 'battle.response';
+  s.battle = { attacker: { kind: 'hunter', index: 0 }, defender: { kind: 'hunter', index: 1 },
+    stage: 'response', response: null, defCard: null, atkCard: null };
+  let r = applyAction(s, { type: 'respond', response: 'escape' });
+  r = applyAction(r.state, { type: 'battleCard', card: null }); // attacker's pursuit card
+  return (r.state.events || []).find((e) => e.type === 'escapeRolled') ?? null;
+}
+
+test('Jumpsuit (+2) raises escape dTotal vs bare defender on same seed', () => {
+  const bareEv = runEscape(7, []);
+  const suitedEv = runEscape(7, [{ itemId: 'jumpsuit', identified: true }]);
+  assert.ok(bareEv, 'escape event emitted without items');
+  assert.ok(suitedEv, 'escape event emitted with Jumpsuit');
+  // Same seed → same dDice; Jumpsuit adds +2 to dTotal.
+  assert.equal(suitedEv.dTotal, bareEv.dTotal + 2, 'Jumpsuit adds +2 to escape dTotal');
+});
+
+test('Longcoat (+3) raises escape dTotal more than Slick Boots (+1)', () => {
+  const bootsEv = runEscape(9, [{ itemId: 'slickboots', identified: true }]);
+  const coatEv = runEscape(9, [{ itemId: 'longcoat', identified: true }]);
+  assert.ok(bootsEv && coatEv, 'escape events emitted');
+  assert.equal(coatEv.dTotal, bootsEv.dTotal + 2, 'Longcoat (+3) beats Slick Boots (+1) by +2');
+});

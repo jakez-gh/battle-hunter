@@ -173,8 +173,9 @@ function buildBattleSide(state, unit, kind) {
     if (unit.kind === 'WYRM') side.effects.generator = true;
   } else {
     const stats = combatStat(unit);
-    side.at = stats.at + (effectiveStats(unit).at || 0);
-    side.df = stats.df + (effectiveStats(unit).df || 0);
+    const estats = effectiveStats(unit);
+    side.at = stats.at + (estats.at || 0);
+    side.df = stats.df + (estats.df || 0);
     side.mv = stats.mv;
     const effects = side.effects;
     if (hunterHasEffect(unit, 'warbanner')) effects.warbanner = true;
@@ -184,11 +185,8 @@ function buildBattleSide(state, unit, kind) {
     if (hunterHasEffect(unit, 'generator')) effects.generator = true;
     if (hunterHasEffect(unit, 'blackgem')) effects.blackgem = true;
     if (hunterHasEffect(unit, 'amulet')) effects.amulet = true;
-    if (hunterHasEffect(unit, 'voyager')) effects.escapeBonus = 0;
-    const escapeItem = ['slickboots', 'jumpsuit', 'longcoat'].find((id) => hunterHasEffect(unit, id));
-    if (escapeItem) {
-      effects.escapeBonus = Math.max(effects.escapeBonus || 0, effectiveStats(unit).escape || 0);
-    }
+    const escapeBonus = estats.escape || 0;
+    if (escapeBonus > 0) effects.escapeBonus = escapeBonus;
   }
   return side;
 }
