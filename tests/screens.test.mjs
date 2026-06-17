@@ -5,6 +5,114 @@ import { ITEMS } from '../src/engine/items.js';
 import { STORY_MISSIONS } from '../src/engine/missions.js';
 
 // ---------------------------------------------------------------------------
+// Pause menu (game screen) — DOM-free: makeGameScreen only needs app.adapt,
+// app.options, app.music, and app.stack; sfx is a no-op in Node.
+
+function makeTestApp({ busy = false, onPop = () => {}, onMusic = () => {} } = {}) {
+  return {
+    adapt: {
+      rendererBusy: () => busy,
+      rendererSkip: () => {},
+      isHumanTurn: () => true,
+      legalActions: () => [],
+      apply: (s) => ({ state: s, events: [] }),
+      rendererFeed: () => {},
+      resolveUnit: () => null,
+    },
+    music: onMusic,
+    options: () => ({ aiSpeed: 8 }),
+    stack: { pop: onPop, replace: () => {} },
+    W: 960, H: 640, atlas: {}, ctx: null,
+    roster: { hunters: [] },
+    session: { hunterId: null, mode: 'normal' },
+    save: () => {},
+  };
+}
+
+function makeTestG() {
+  return {
+    renderer: {},
+    state: { hunters: [], phase: 'move', result: null, relicLevel: 0 },
+    mission: null,
+    outcome: {},
+    songBase: 'dungeon1',
+  };
+}
+
+test('game screen: Escape opens pause menu (cancel when no menu open)', () => {
+  let popCalled = false;
+  const musicLog = [];
+  const app = makeTestApp({ onPop: () => { popCalled = true; }, onMusic: (m) => musicLog.push(m) });
+  const screen = Screens.makeGameScreen(app, makeTestG());
+  // Press Escape → menu opens. Down selects "Return to Hub". Confirm picks it.
+  screen.onKey('cancel');
+  screen.onKey('down');
+  screen.onKey('confirm');
+  assert.ok(popCalled, 'Return to Hub should pop the screen stack');
+  assert.ok(musicLog.includes('hub'), 'Return to Hub should switch to hub music');
+});
+
+test('game screen: Escape again dismisses pause menu without popping stack', () => {
+  let popCalled = false;
+  const app = makeTestApp({ onPop: () => { popCalled = true; } });
+  const screen = Screens.makeGameScreen(app, makeTestG());
+  screen.onKey('cancel'); // open
+  screen.onKey('cancel'); // dismiss
+  assert.ok(!popCalled, 'Dismissing the pause menu must not pop the screen stack');
+});
+
+test('game screen: Resume pick closes menu without popping stack', () => {
+  let popCalled = false;
+  const app = makeTestApp({ onPop: () => { popCalled = true; } });
+  const screen = Screens.makeGameScreen(app, makeTestG());
+  screen.onKey('cancel'); // open (cursor on Resume)
+  screen.onKey('confirm'); // pick Resume
+  assert.ok(!popCalled, 'Resume must not pop the screen stack');
+});
+
+test('game screen: Escape opens menu even when renderer is busy (regression)', () => {
+  // Before the fix, rendererBusy() caused any key to be consumed by the
+  // animation-skip guard before reaching the cancel/pause check.
+  let popCalled = false;
+  const musicLog = [];
+  const app = makeTestApp({ busy: true, onPop: () => { popCalled = true; }, onMusic: (m) => musicLog.push(m) });
+  const screen = Screens.makeGameScreen(app, makeTestG());
+  screen.onKey('cancel'); // must open menu despite busy renderer
+  screen.onKey('down');   // navigate to "Return to Hub"
+  screen.onKey('confirm');
+  assert.ok(popCalled, 'Escape must open pause menu when renderer is animating');
+});
+
+test('game screen: non-cancel keys do not open the pause menu', () => {
+  // Confirm, directional, and info keys must not open the menu.
+  let popCalled = false;
+  const app = makeTestApp({ onPop: () => { popCalled = true; } });
+  const screen = Screens.makeGameScreen(app, makeTestG());
+  for (const k of ['confirm', 'up', 'down', 'left', 'right', 'info']) {
+    screen.onKey(k);
+  }
+  // Menu is not open — next cancel should open it (first press), second confirm exits.
+  screen.onKey('cancel');
+  screen.onKey('down');
+  screen.onKey('confirm');
+  assert.ok(popCalled, 'Pause menu still openable after non-cancel keys (menu was not spuriously opened)');
+});
+
+test('game screen: keys route to open pause menu, not game logic', () => {
+  // When the menu is open, Up/Down navigate it; Confirm picks the current item.
+  // Verify by: open, navigate down to "Return to Hub" via two downs (wraps), confirm.
+  let popCalled = false;
+  const app = makeTestApp({ onPop: () => { popCalled = true; } });
+  const screen = Screens.makeGameScreen(app, makeTestG());
+  screen.onKey('cancel'); // open — cursor on Resume (idx 0)
+  screen.onKey('down');   // move to Return to Hub (idx 1)
+  screen.onKey('down');   // wrap back to Resume (idx 0)
+  screen.onKey('down');   // Return to Hub again
+  screen.onKey('confirm');
+  assert.ok(popCalled, 'Menu navigation routes keys away from game logic to the menu');
+});
+
+// ---------------------------------------------------------------------------
 // Structural: verify all expected exports exist and are the right type.
 // Screen factory functions require a DOM `app` context; we only verify they
 // are exported as functions without calling them (no JSDOM in this suite).
