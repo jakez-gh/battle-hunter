@@ -1413,13 +1413,21 @@ export function makeGameScreen(app, g) {
     }
 
     // mission goal
+    const targetName = st.targetItemId ? (ITEMS[st.targetItemId]?.name ?? st.targetItemId) : 'Target';
     const GOAL_TEXT = {
-      fetch: 'Grab Target → EXIT',
+      fetch: 'Grab ' + targetName + ' → EXIT',
       rescue: 'Reach survivor first',
       resteal: 'Steal Target from carrier → EXIT',
     };
-    box(ctx, X, 424, W, 44, { title: st.missionTitle ?? 'GOAL' });
-    text(ctx, GOAL_TEXT[st.missionType] ?? 'Grab Target → EXIT', X + 10, 450, { size: 11, color: DIM });
+    const goalLine = GOAL_TEXT[st.missionType] ?? ('Grab ' + targetName + ' → EXIT');
+    const rivalHold = st.missionType === 'rescue' && (st.rescueHoldRounds ?? 0) > 0;
+    box(ctx, X, 424, W, rivalHold ? 60 : 44, { title: st.missionTitle ?? 'GOAL' });
+    text(ctx, goalLine, X + 10, 450, { size: 11, color: DIM });
+    if (rivalHold) {
+      const rivalsFree = st.round > (st.rescueHoldRounds ?? 0);
+      const holdText = rivalsFree ? 'rivals active!' : ('rivals hold R1-R' + st.rescueHoldRounds);
+      text(ctx, holdText, X + 10, 466, { size: 10, color: rivalsFree ? BAD : DIM });
+    }
 
     // the human's hand, mini cards
     const me = (st.hunters || []).find((x) => x.human);
