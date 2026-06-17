@@ -296,6 +296,14 @@ const itemName = (slot) => {
   return '??? (cursed)';
 };
 
+function drawGoldBloom(ctx, cx) {
+  const bl = ctx.createRadialGradient(cx, 60, 8, cx, 60, 130);
+  bl.addColorStop(0, 'rgba(200, 160, 30, 0.28)');
+  bl.addColorStop(1, 'transparent');
+  ctx.fillStyle = bl;
+  ctx.fillRect(cx - 130, 10, 260, 100);
+}
+
 function drawHunterCard(app, rec, x, y, w) {
   const ctx = app.ctx;
   const accent = PALETTE_ACCENT[rec.palette] ?? '#3c4364';
@@ -455,6 +463,7 @@ export function makeRosterScreen(app, opts = {}) {
     onClick(pos) { host.click(pos); },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      drawGoldBloom(ctx, app.W / 2);
       text(ctx, 'HUNTER ROSTER', app.W / 2, 30, { size: 36, align: 'center', color: GOLD });
       if (!host.menus[0]) return;
       drawMenu(ctx, host.menus[0], 60, 100, 380, { lineH: 28, size: 16 });
@@ -576,6 +585,7 @@ export function makeCreationScreen(app) {
     },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      drawGoldBloom(ctx, app.W / 2);
       text(ctx, 'REGISTER HUNTER', app.W / 2, 26, { size: 32, align: 'center', color: GOLD });
       const d = displayStats(state.internal, 1);
       const labels = {
@@ -601,9 +611,16 @@ export function makeCreationScreen(app) {
       });
       text(ctx, `Points left: ${left()} / ${POOL}`, 70, 80, { size: 18, color: left() ? GOLD : OK });
       // live preview
-      box(ctx, 600, 100, 300, 420, { title: 'PREVIEW' });
       const pal = PALETTE_NAMES[state.palette];
       const frame = Math.floor(state.t * 3) % 2 ? 'step' : 'idle';
+      const prevAccent = PALETTE_ACCENT[pal] ?? '#3c4364';
+      box(ctx, 600, 100, 300, 420, { title: 'PREVIEW', stroke: prevAccent });
+      // palette-colored inner glow behind the preview sprite
+      const pglow = ctx.createRadialGradient(750, 265, 15, 750, 265, 115);
+      pglow.addColorStop(0, prevAccent + '30');
+      pglow.addColorStop(1, 'transparent');
+      ctx.fillStyle = pglow;
+      ctx.fillRect(610, 110, 280, 400);
       sprite(app, `hunter${state.spriteId}.${pal}.${frame}`, 660, 150, 11);
       text(ctx, state.name || '-------', 750, 350, { size: 22, align: 'center', color: GOLD });
       text(ctx, fmtStats(d), 750, 385, { size: 14, align: 'center' });
@@ -902,6 +919,7 @@ export function makeClientScreen(app) {
     onClick(pos) { host.click(pos); },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      drawGoldBloom(ctx, app.W / 2);
       text(ctx, 'CLIENT DESK', app.W / 2, 30, { size: 34, align: 'center', color: GOLD });
       const rec = currentHunter(app);
       if (rec) drawHunterCard(app, rec, 540, 90, 380);
@@ -997,6 +1015,7 @@ export function makeHospitalScreen(app) {
     onClick(pos) { host.click(pos); },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      drawGoldBloom(ctx, app.W / 2);
       text(ctx, 'HOSPITAL', app.W / 2, 30, { size: 34, align: 'center', color: GOLD });
       const rec = currentHunter(app);
       if (rec) drawHunterCard(app, rec, 540, 90, 380);
