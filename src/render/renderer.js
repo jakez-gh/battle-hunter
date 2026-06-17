@@ -681,19 +681,22 @@ export function createRenderer(canvas, opts = {}) {
     const img = spriteFor(k);
     if (!img) return;
     const s3 = 3;
+    const sw = img.width * s3;
+    const sh = img.height * s3;
+    const cx = x + sw / 2;
     ctx.save();
     if (flip) {
-      ctx.translate(x + img.width * s3, y);
+      ctx.translate(x + sw, y);
       ctx.scale(-1, 1);
-      ctx.drawImage(img, 0, 0, img.width * s3, img.height * s3);
+      ctx.drawImage(img, 0, 0, sw, sh);
     } else {
-      ctx.drawImage(img, x, y, img.width * s3, img.height * s3);
+      ctx.drawImage(img, x, y, sw, sh);
     }
     ctx.restore();
     const u = findUnit(k);
     if (u) {
-      text(u.name ?? u.kind ?? '', x + 24, y + img.height * s3 + 4, '#f0f4ff', 12, 'center');
-      text(`HP ${u.hp}`, x + 24, y + img.height * s3 + 18, '#8fd17e', 12, 'center');
+      text(u.name ?? u.kind ?? '', cx, y + sh + 4, '#f0f4ff', 12, 'center');
+      text(`HP ${u.hp}`, cx, y + sh + 18, '#8fd17e', 12, 'center');
     }
   }
 
@@ -721,8 +724,12 @@ export function createRenderer(canvas, opts = {}) {
     ctx.textBaseline = 'top';
     ctx.fillText('B A T T L E', (bx + bw / 2) | 0, by + 4);
     ctx.textAlign = 'left';
+    text('ATTACKER', bx + 8, by + 5, 'rgba(255,230,180,0.55)', 9, 'left');
+    text('DEFENDER', bx + bw - 8, by + 5, 'rgba(154,223,232,0.55)', 9, 'right');
+    const defImg = spriteFor(battle.d);
+    const defW = defImg ? defImg.width * 3 : 48;
     drawCombatant(battle.a, bx + 24, by + 28, false);
-    drawCombatant(battle.d, bx + bw - 24 - 48, by + 28, true);
+    drawCombatant(battle.d, bx + bw - 24 - defW, by + 28, true);
     text('VS', bx + bw / 2, by + 36, '#ffe98a', 16, 'center');
     if (battle.response) text(String(battle.response).toUpperCase(), bx + bw / 2, by + 60, '#9adfe8', 12, 'center');
     if (battle.escape) {
