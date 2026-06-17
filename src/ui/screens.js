@@ -1285,6 +1285,23 @@ export function makeGameScreen(app, g) {
         }
         return;
       }
+      if (k === 'cancel' && !host.top()) {
+        host.push(makeMenu(
+          [
+            { label: 'Resume', value: 'resume' },
+            { label: 'Return to Hub', value: 'hub' },
+          ],
+          {
+            title: 'Paused',
+            onPick(v) {
+              if (v === 'resume') host.pop();
+              else if (v === 'hub') { app.music('hub'); app.stack.pop(); }
+            },
+            onCancel() { host.pop(); },
+          }
+        ));
+        return;
+      }
       if (k === 'info') { infoIndex = (infoIndex + 1) % (g.state.hunters?.length || 1); return; }
       host.key(k);
     },
