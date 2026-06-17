@@ -561,13 +561,15 @@ export function createRenderer(canvas, opts = {}) {
           ? { x: +step.split(',')[0], y: +step.split(',')[1] } : step;
         const p = worldToScreen(c.x, c.y, cam);
         const dcx = p.x + 8 * s, dcy = p.y + 8 * s;
+        const flow = 0.55 + 0.45 * Math.sin(clock / 340 - (c.x + c.y) * 0.9);
         const gr = ctx.createRadialGradient(dcx, dcy, 0, dcx, dcy, 5 * s);
-        gr.addColorStop(0, '#ffe98a');
-        gr.addColorStop(1, 'transparent');
+        gr.addColorStop(0, '#ffe98a'); gr.addColorStop(1, 'transparent');
+        ctx.save(); ctx.globalAlpha = flow;
         ctx.fillStyle = gr;
         ctx.fillRect(dcx - 5 * s, dcy - 5 * s, 10 * s, 10 * s);
         ctx.fillStyle = '#ffe98a';
         ctx.fillRect(p.x + 7 * s, p.y + 7 * s, 2 * s, 2 * s);
+        ctx.restore();
       }
     }
   }
@@ -699,9 +701,11 @@ export function createRenderer(canvas, opts = {}) {
         blit(f.icon, p.x - 4 * cam.scale, p.y - rise * cam.scale - 10 * cam.scale);
       }
       if (f.text) {
+        const phase = f.t / f.ttl;
+        const pop = phase < 0.25 ? 1 + (1 - phase / 0.25) * 0.6 : 1;
         const fy = p.y - (rise + 10) * cam.scale;
-        const fsz = f.big ? 16 : 12;
-        text(f.text, p.x + 1, fy + 1, 'rgba(0,0,0,0.55)', fsz, 'center');
+        const fsz = Math.round((f.big ? 16 : 12) * pop);
+        text(f.text, p.x + 1, fy + 1, 'rgba(0,0,0,0.65)', fsz, 'center');
         text(f.text, p.x, fy, f.color, fsz, 'center');
       }
       ctx.restore();

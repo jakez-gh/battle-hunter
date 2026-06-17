@@ -9,47 +9,54 @@ Agents: mark your task `IN_PROGRESS` in a commit before starting — prevents co
 
 1. `git log --oneline -5` — see what just landed
 2. `node --test` — confirm baseline green
-3. Find the top `[ ]` item below, change it to `[~]`, commit "chore: claim <task>"
+3. Find the top `[ ]` item below, change it to `[~]`, commit "chore: claim NAME"
 4. Do the work, tests green, commit with SHA, mark `[x]`
 
 ---
 
-## Sprint: Harness & Project-Tracking Setup
+## Sprint: Project Scaffolding (enterprise-ready tracking)
 
-Goal: make the workflow scale from one-off bug fixes to enterprise-scale efforts
-without losing the big or small picture. Sequenced by unblock-value, then speed.
-Durable *why* is in the `harness-operating-model` memory.
+Goal: give every agent — including agents months from now — enough context to
+orient, pick up the right work, and make sound decisions without re-reading the
+entire codebase. The ladder: `CLAUDE.md` (orientation) → `ARCHITECTURE.md` (why
+it's shaped this way) → `WORK.md` (what to do right now) → `docs/decisions/`
+(load-bearing choices). For multi-slice initiatives, promote items to `ROADMAP.md`.
 
 ### Done (2026-06-17)
 
-- [x] **Two-lane operating model + fresh-agent bootstrap + research convention** —
-  initiative vs ad-hoc routing, bootstrap order, ADR/research gate. Added to
-  `CLAUDE.md` (## Operating model, ## Research & decisions) and
-  `docs/decisions/TEMPLATE.md`.
+- [x] **CLAUDE.md** — quick-start, file ownership tables, sprite system docs,
+  operating model (ad-hoc vs initiative lanes), fresh-agent bootstrap order,
+  research & ADR convention. `436b06e`
 
-### Decided 2026-06-17 — stay on the lightweight manual ladder
+- [x] **WORK.md** — sprint board with claim-before-start convention, pending/done
+  separation, backlog. `436b06e`
 
-Battle Hunter is in a polish phase of small, independent tasks. Adopting Context
-Forge now would add a second tracking system to keep in sync for no payoff, so the
-manual `WORK.md` + `DESIGN.md` ladder stays. **Nothing here needs Jake's input.**
-**Trigger to revisit:** a backlog item that genuinely needs architecture +
-multiple slices — network play or replay/spectate mode are the likely first ones.
-When one lands, run the parked recipe below; until then it stays parked.
+- [x] **.claude/settings.json** — PostToolUse hook: runs `node --test` after every
+  file edit so regressions surface immediately. `436b06e`
 
-#### Parked recipe — adopt Context Forge (only when a multi-slice initiative lands)
+- [x] **ARCHITECTURE.md** — module boundary rules, state model, screen stack, board
+  generation, rendering pipeline, gotchas. Living doc.
 
-1. `cf init battle-hunter` in repo root
-2. Point cf artifacts at existing docs: `cf set concept README.md`,
-   `cf set arch DESIGN.md` (or author a dedicated arch doc)
-3. Migrate the relevant WORK.md items → a cf slice plan (`fileSlicePlan`) + tasks
-   (`fileTasks`); keep WORK.md as the human-readable mirror
-4. Verify `cf next` / `cf build` return scoped context
-5. Optional enforcement hooks in `~/.claude/settings.json` (verify schema via
-   claude-code-guide first): SessionStart → `cf next`, Stop → `cf check`
+- [x] **docs/decisions/TEMPLATE.md** — ADR template: question / options / research /
+  decision / why / consequences.
 
-Note: the `/bug`, `/feature`, `/research` skills assume a cf layout
-(`project-documents/user/…`). Until cf is adopted, they map here as: tracked-task
-escalations → this WORK.md backlog; research artifacts → `docs/decisions/`.
+- [x] **ADR-001** — no build step (why static ES modules, not Vite/esbuild).
+
+- [x] **ADR-002** — deterministic engine + seeded RNG (why, what it enables, constraints).
+
+- [x] **ADR-003** — string-grid sprites + IP constraint (why not PNGs, trade-offs).
+
+### Pending
+
+- [ ] **ROADMAP.md** — needed when the backlog grows beyond ~5 independent items.
+  Currently unnecessary; promote this item if a multi-slice initiative (network
+  play, replay mode) is greenlit. Format: epics with goal + acceptance criteria +
+  phase breakdown.
+
+- [ ] **ADR-004: hunter record vs ref** — document the `.kind` field gotcha:
+  `state.hunters[i]` has no `.kind`; only `state.current` / `battle.attacker` /
+  `battle.defender` refs do. Currently in ARCHITECTURE.md; should be an ADR so
+  the decision (and its context) is discoverable by search.
 
 ---
 
@@ -57,16 +64,9 @@ escalations → this WORK.md backlog; research artifacts → `docs/decisions/`.
 
 ### In Progress
 
-*(none — claim one below)*
+none — claim one from the next section
 
-### Pending
-
-- [ ] **Floor tile variety** — FLOOR_B and FLOOR_C are nearly identical to FLOOR_A
-  (same grey hues, barely distinguishable). Design 3 visually distinct variants:
-  FLOOR_A (current baseline — keep), FLOOR_B redesign (subtle crack pattern),
-  FLOOR_C redesign (worn groove / stone joint), FLOOR_D new (mossy/stained corner dot).
-  Change tile selection formula from `% 3` to `% 4` in `renderer.js drawBoard()`.
-  Files: `src/render/sprites.js`, `src/render/renderer.js`
+### Visual polish pending
 
 - [ ] **Pit tile** — `tile.pit` currently falls through to a missing-sprite blank.
   Design a 16×16 void/abyss tile (near-black with faint depth gradient suggestion).
@@ -97,9 +97,10 @@ escalations → this WORK.md backlog; research artifacts → `docs/decisions/`.
   ATTACKER/DEFENDER labels. `renderer.js drawBattle`.
   Commit: `6f14fba`
 
-- [x] **UI box() polish** — inner highlight, corner accent squares, consistent
-  border color. `screens.js box()`.
-  Commit: (session 2026-06-17)
+- [x] **Modern UI pass** — font swapped from Courier New → Consolas stack; box()
+  redesigned with gradient fill + single top-edge highlight, no corner squares;
+  HP bars use top-to-bottom gradient (bright→dim per health tier).
+  Commit: (this session)
 
 - [x] **Title screen parade** — 8 hunters (was 4), diamond decorations on separator.
   `screens.js drawTitle`.

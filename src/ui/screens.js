@@ -64,7 +64,7 @@ export const RESPONSE_HINTS = {
   surrender: 'give item',
 };
 
-const font = (px, bold = true) => `${bold ? 'bold ' : ''}${px}px "Courier New", monospace`;
+const font = (px, bold = true) => `${bold ? 'bold ' : ''}${px}px "Consolas", "Cascadia Mono", "Monaco", monospace`;
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
 
 function text(ctx, s, x, y, opt = {}) {
@@ -98,25 +98,28 @@ function wrapText(ctx, str, x, y, maxW, lineH, opt = {}) {
 }
 
 function box(ctx, x, y, w, h, opt = {}) {
-  ctx.fillStyle = opt.fill ?? 'rgba(10,12,24,0.92)';
-  ctx.fillRect(x, y, w, h);
-  const bdr = opt.stroke ?? '#3c4364';
+  if (opt.fill) {
+    ctx.fillStyle = opt.fill;
+    ctx.fillRect(x, y, w, h);
+  } else {
+    const grad = ctx.createLinearGradient(x, y, x, y + h);
+    grad.addColorStop(0, 'rgba(22,24,44,0.97)');
+    grad.addColorStop(1, 'rgba(10,12,24,0.97)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, w, h);
+  }
+  const bdr = opt.stroke ?? '#4a5280';
   ctx.strokeStyle = bdr;
   ctx.lineWidth = 2;
   ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
-  // Subtle inner highlight on top and left edges (lit from upper-left)
+  // Single top-edge highlight (frosted glass suggestion)
   ctx.save();
-  ctx.strokeStyle = 'rgba(160,170,215,0.16)';
+  ctx.strokeStyle = 'rgba(160,170,220,0.22)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(x + 3, y + h - 4);
-  ctx.lineTo(x + 3, y + 3);
-  ctx.lineTo(x + w - 4, y + 3);
+  ctx.moveTo(x + 3, y + 3);
+  ctx.lineTo(x + w - 3, y + 3);
   ctx.stroke();
-  // Corner accent squares
-  ctx.fillStyle = bdr;
-  [[x + 1, y + 1], [x + w - 4, y + 1], [x + 1, y + h - 4], [x + w - 4, y + h - 4]]
-    .forEach(([cx, cy]) => ctx.fillRect(cx, cy, 3, 3));
   ctx.restore();
   if (opt.title) text(ctx, opt.title, x + 10, y + 8, { size: 14, color: GOLD });
 }
@@ -1555,10 +1558,15 @@ export function makeGameScreen(app, g) {
       if (h.hasTarget) sprite(app, 'ui.targetMark', X + W - 24, y + 6, 2);
       // HP bar
       const ratio = Math.max(0, (h.hp ?? 0) / (h.maxHp || 1));
-      ctx.fillStyle = '#23263a';
+      ctx.fillStyle = '#1a1c2e';
       ctx.fillRect(X + 60, y + 26, 120, 10);
-      ctx.fillStyle = ratio > 0.5 ? '#3aa84a' : ratio > 0.25 ? '#e0c63a' : '#e05a4a';
-      ctx.fillRect(X + 60, y + 26, 120 * ratio, 10);
+      if (ratio > 0) {
+        const [c0, c1] = ratio > 0.5 ? ['#52da68', '#2d8f40'] : ratio > 0.25 ? ['#f2df4a', '#b89818'] : ['#f07060', '#a83028'];
+        const hg = ctx.createLinearGradient(X + 60, y + 26, X + 60, y + 36);
+        hg.addColorStop(0, c0); hg.addColorStop(1, c1);
+        ctx.fillStyle = hg;
+        ctx.fillRect(X + 60, y + 26, 120 * ratio, 10);
+      }
       text(ctx, `${h.hp}/${h.maxHp}`, X + 186, y + 22, { size: 11, color: DIM });
       text(ctx, `hand ${h.hand?.length ?? 0}  bag ${h.items?.length ?? 0}`, X + 60, y + 40, { size: 11, color: DIM });
       // status glyphs
