@@ -1309,6 +1309,24 @@ export function makeGameScreen(app, g) {
 
     onKey(k, e) {
       if (broken) { if (k === 'cancel') { app.music('hub'); app.stack.pop(); } return; }
+      if (k === 'cancel' && !host.top()) {
+        host.push(makeMenu(
+          [
+            { label: 'Resume', value: 'resume' },
+            { label: 'Return to Hub', value: 'hub' },
+          ],
+          {
+            title: 'Paused',
+            onPick(v) {
+              if (v === 'resume') host.pop();
+              else if (v === 'hub') { app.music('hub'); app.stack.pop(); }
+            },
+            onCancel() { host.pop(); },
+          }
+        ));
+        return;
+      }
+      if (host.top()) { host.key(k); return; }
       if (k === 'speedDown') { aiSpeed = Math.max(1, Math.floor(aiSpeed / 2)); say(`AI speed: ${aiSpeed}x`, 1.2); return; }
       if (k === 'speedUp') { aiSpeed = Math.min(64, aiSpeed * 2); say(`AI speed: ${aiSpeed}x`, 1.2); return; }
       if (A.rendererBusy(g.renderer)) { A.rendererSkip(g.renderer); return; } // any key skips animations
@@ -1330,23 +1348,6 @@ export function makeGameScreen(app, g) {
           const stop = acts.find((a) => a.type === 'stop');
           if (stop) act(stop); else sfx.error();
         }
-        return;
-      }
-      if (k === 'cancel' && !host.top()) {
-        host.push(makeMenu(
-          [
-            { label: 'Resume', value: 'resume' },
-            { label: 'Return to Hub', value: 'hub' },
-          ],
-          {
-            title: 'Paused',
-            onPick(v) {
-              if (v === 'resume') host.pop();
-              else if (v === 'hub') { app.music('hub'); app.stack.pop(); }
-            },
-            onCancel() { host.pop(); },
-          }
-        ));
         return;
       }
       if (k === 'info') { infoIndex = (infoIndex + 1) % (g.state.hunters?.length || 1); return; }
