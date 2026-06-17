@@ -367,14 +367,14 @@ const RANGE_DOT = [
 
 const WALL = [ // stone-block face — front face of a wall, viewed from corridor below
   'XXXXXXXXXXXXXXXX',  // top: ceiling cap shadow
-  'XGGGGGGGGGGGGGgX',  // upper block row — right edge darker (shadow side)
+  'XcGGGGGGGGGGGGgX',  // upper block row — lit top-left corner, right edge darker
   'XGgGGGGGGGGGGGGX',  // stone texture fleck top-left
   'XGGGGGGGGGGGGGGX',
   'XGGGGGGGGGGGGGGX',
   'XGGGGGGGGGGGGGGX',
   'XgGGGGGGGGGGGGgX',  // base shadow on both sides
   'XXXXXXXXXXXXXXXX',  // horizontal mortar joint
-  'XGGGGGGGXGGGGGgX',  // lower block row — staggered, mortar at x=8
+  'XcGGGGGGXcGGGGgX',  // lower block row — lit corners on both sub-blocks
   'XGgGGGGGXGGGGGGX',  // stone texture fleck
   'XGGGGGGGXGGGGGGX',
   'XGGGGGGGXGGGGGGX',

@@ -693,8 +693,20 @@ export function createRenderer(canvas, opts = {}) {
 
   function drawCursor() {
     if (!cursor) return;
+    const pulse = 0.6 + 0.4 * Math.sin(clock / 160);
+    const p = worldToScreen(cursor.x, cursor.y, cam);
+    const s = cam.scale;
+    // team-color fill under the cursor brackets
+    const ak = activeKey();
+    const u = ak ? findUnit(ak) : null;
+    const col = ak && ak[0] === 'h' && u ? (SLOT_COLORS[(u.slot ?? 0) % 4] ?? '#e0e8f8') : '#e0e8f8';
     ctx.save();
-    ctx.globalAlpha = 0.6 + 0.4 * Math.sin(clock / 160);
+    ctx.globalAlpha = pulse * 0.15;
+    ctx.fillStyle = col;
+    ctx.fillRect(p.x, p.y, TILE * s, TILE * s);
+    ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = pulse;
     blitTile('tile.cursor', cursor.x, cursor.y);
     ctx.restore();
   }
