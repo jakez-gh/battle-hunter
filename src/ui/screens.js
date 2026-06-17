@@ -1791,6 +1791,11 @@ export function makeMissionBriefingScreen(app, mission) {
     draw(ctx) {
       const BX = 60, BY = 44, BW = 840, BH = 596;
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      // Mission-type colored atmospheric bloom behind the box header
+      const tcol = { fetch: 'rgba(200,160,30,', rescue: 'rgba(30,200,80,', resteal: 'rgba(200,50,50,' }[mission.type] ?? 'rgba(200,160,30,';
+      const mbloom = ctx.createRadialGradient(app.W / 2, BY + 30, 10, app.W / 2, BY + 30, 200);
+      mbloom.addColorStop(0, tcol + '0.32)'); mbloom.addColorStop(1, tcol + '0.0)');
+      ctx.fillStyle = mbloom; ctx.fillRect(BX, BY - 20, BW, 120);
       box(ctx, BX, BY, BW, BH, { title: 'MISSION BRIEFING' });
 
       text(ctx, 'M' + String(mission.id).padStart(2, '0') + '  ' + mission.title,
@@ -1826,11 +1831,13 @@ export function makeMissionBriefingScreen(app, mission) {
       text(ctx, oppNames.join(',  '), BX + 20, oppY + 28, { size: 14, color: DIM });
 
       const depY = BY + BH - 54;
-      ctx.fillStyle = 'rgba(20,50,20,0.55)';
+      ctx.fillStyle = 'rgba(20,50,20,0.60)';
       ctx.fillRect(BX + 20, depY, BW - 40, 44);
-      ctx.strokeStyle = '#3a8a3a';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#3a8a3a'; ctx.lineWidth = 1;
       ctx.strokeRect(BX + 21, depY, BW - 42, 44);
+      // Subtle green glow along the top edge of the deploy button
+      ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = '#3aa84a';
+      ctx.fillRect(BX + 20, depY, BW - 40, 2); ctx.restore();
       text(ctx, 'Enter: DEPLOY', app.W / 2, depY + 6, { size: 17, align: 'center', color: OK });
       text(ctx, 'Esc: back', app.W / 2, depY + 26, { size: 12, align: 'center', color: DIM });
     },
