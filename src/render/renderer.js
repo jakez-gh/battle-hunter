@@ -548,14 +548,17 @@ export function createRenderer(canvas, opts = {}) {
   function drawOverlays() {
     const s = cam.scale;
     if (overlays.range) {
+      const ak = activeKey();
+      const au = ak ? findUnit(ak) : null;
+      const rangeCol = ak && ak[0] === 'h' && au ? (SLOT_COLORS[(au.slot ?? 0) % 4] ?? '#d2e1ff') : '#d2e1ff';
       for (const cell of overlays.range) {
         const [x, y] = String(cell).split(',').map(Number);
         const p = worldToScreen(x, y, cam);
         const ts = TILE * s;
-        ctx.fillStyle = 'rgba(240, 244, 255, 0.12)';
-        ctx.fillRect(p.x, p.y, ts, ts);
+        ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = rangeCol;
+        ctx.fillRect(p.x, p.y, ts, ts); ctx.restore();
         const L = 3 * s, W = s;
-        ctx.fillStyle = 'rgba(210, 225, 255, 0.82)';
+        ctx.fillStyle = rangeCol;
         ctx.fillRect(p.x + 1, p.y + 1, L, W); ctx.fillRect(p.x + 1, p.y + 1, W, L);
         ctx.fillRect(p.x + ts - L - 1, p.y + 1, L, W); ctx.fillRect(p.x + ts - W - 1, p.y + 1, W, L);
         ctx.fillRect(p.x + 1, p.y + ts - W - 1, L, W); ctx.fillRect(p.x + 1, p.y + ts - L - 1, W, L);
