@@ -63,7 +63,7 @@ export function screenToWorld(px, py, cam) {
 }
 
 // ---------------------------------------------------------------------------
-const FONT = '"Courier New", monospace';
+const FONT = '"Consolas", "Cascadia Mono", "Monaco", monospace';
 const SLOT_COLORS = ['#3a6ee0', '#cc4a3a', '#e0c63a', '#3aa84a']; // P1..P4
 const CARD_MINI = { R: '#cc4a3a', Y: '#d8b83a', B: '#3a6ee0', G: '#3aa84a' };
 const TRAP_COLORS = { damage: '#cc4a3a', stun: '#d8b83a', leg: '#3a6ee0', empty: '#8d8d9e' };
@@ -491,9 +491,8 @@ export function createRenderer(canvas, opts = {}) {
       if (closed) {
         const bp = worldToScreen(box.x, box.y, cam);
         const pulse = 0.10 + 0.08 * Math.sin(clock / 1100 + box.x * 3.7 + box.y * 2.3);
-        ctx.globalAlpha = pulse; ctx.fillStyle = '#e8d87e';
-        ctx.fillRect(bp.x, bp.y, TILE * cam.scale, TILE * cam.scale);
-        ctx.globalAlpha = 1;
+        ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = '#e8d87e';
+        ctx.fillRect(bp.x, bp.y, TILE * cam.scale, TILE * cam.scale); ctx.restore();
       }
     }
     for (const f of b.flags ?? []) {
@@ -793,6 +792,13 @@ export function createRenderer(canvas, opts = {}) {
     const pulse = 0.5 + 0.5 * Math.sin(clock / 380);
     const color = ak[0] === 'h' && u ? (SLOT_COLORS[(u.slot ?? 0) % 4] ?? '#fff') : '#e05050';
     ctx.save();
+    ctx.globalAlpha = pulse * 0.12;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 7 * s, 2 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.save();
     ctx.globalAlpha = 0.25 + pulse * 0.38;
     ctx.strokeStyle = color;
     ctx.lineWidth = s;
@@ -818,6 +824,12 @@ export function createRenderer(canvas, opts = {}) {
     const w = canvas.width - 4;
     ctx.fillStyle = active ? 'rgba(220, 228, 255, 0.10)' : 'rgba(0, 0, 0, 0.30)';
     ctx.fillRect(x, y, w, 16);
+    if (active) {
+      const sc = SLOT_COLORS[h.slot % 4] ?? '#3a6ee0';
+      const rg = ctx.createLinearGradient(x, y, x + 110, y);
+      rg.addColorStop(0, sc + '30'); rg.addColorStop(1, sc + '00');
+      ctx.fillStyle = rg; ctx.fillRect(x, y, w, 16);
+    }
     ctx.fillStyle = SLOT_COLORS[h.slot % 4] ?? '#f0f4ff';
     ctx.fillRect(x, y, active ? 4 : 2, 16);
     const icon = atlas[`hunter${h.spriteId}.${paletteName(h)}.icon`];
@@ -834,6 +846,11 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillRect(x + 112, y + 5, bw, 6);
     if (bw > 2) { ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#fff';
       ctx.fillRect(x + 112, y + 5, bw, 2); ctx.restore(); }
+    if (ratio <= 0.25 && bw > 0) {
+      const urgency = 0.5 + 0.5 * Math.sin(clock / 240);
+      ctx.save(); ctx.globalAlpha = urgency * 0.45; ctx.fillStyle = '#ff9a7e';
+      ctx.fillRect(x + 112, y + 5, bw, 6); ctx.restore();
+    }
     text(`${h.hp}/${h.maxHp}`, x + 168, y + 3, active ? '#c0c8d8' : '#8a90a0');
     const iv = h.internal ?? { mv: 0, at: 0, df: 0 };
     text(`MV+${Math.floor((iv.mv ?? 0) / 3)} AT${iv.at ?? 0} DF${Math.floor((iv.df ?? 0) / 2)}`,
@@ -852,7 +869,9 @@ export function createRenderer(canvas, opts = {}) {
 
   function drawHud() {
     const y0 = canvas.height - HUD_H;
-    ctx.fillStyle = '#0d0e16';
+    const hudGrad = ctx.createLinearGradient(0, y0, 0, y0 + HUD_H);
+    hudGrad.addColorStop(0, '#141520'); hudGrad.addColorStop(1, '#09090f');
+    ctx.fillStyle = hudGrad;
     ctx.fillRect(0, y0, canvas.width, HUD_H);
     const _ak = activeKey();
     const _ah = _ak?.[0] === 'h' ? findUnit(_ak) : null;
