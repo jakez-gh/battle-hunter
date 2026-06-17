@@ -28,9 +28,9 @@ test('EVENT_DURATIONS covers exactly the DESIGN 3.3 event set', () => {
   assert.deepEqual(Object.keys(EVENT_DURATIONS).sort(), [...EVENT_TYPES].sort());
   for (const [name, ms] of Object.entries(EVENT_DURATIONS)) {
     assert.ok(Number.isInteger(ms), `${name} duration is an integer`);
-    assert.ok(ms >= 120 && ms <= 600, `${name} duration ${ms} in 120..600ms`);
+    assert.ok(ms >= 60 && ms <= 600, `${name} duration ${ms} in 60..600ms`);
   }
-  assert.equal(EVENT_DURATIONS.stepped, 120, 'per-tile slide is 120ms');
+  assert.equal(EVENT_DURATIONS.stepped, 75, 'per-tile slide is 75ms');
 });
 
 test('worldToScreen/screenToWorld round-trip across scales and cameras', () => {

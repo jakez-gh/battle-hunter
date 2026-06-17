@@ -249,6 +249,73 @@ test('RESPONSE_HINTS: hints are non-empty strings', () => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// AI turn update loop — renderer-busy regression (commits 7417067 / 36d6f66)
+//
+// Before the fix, rendererBusy() gated the entire update() loop, so the AI
+// waited for every animation to finish before taking its next action.  Now
+// AI actions fire at aiDelay rate regardless of renderer state; human turns
+// and the results transition still wait for the queue to drain.
+
+function makeAiTestApp({ rendererBusy = () => false, onReplace = () => {} } = {}) {
+  let aiActionCount = 0;
+  return {
+    app: {
+      adapt: {
+        rendererBusy,
+        rendererSkip: () => {},
+        isHumanTurn: () => false,
+        legalActions: () => [],
+        apply: (s) => ({ state: s, events: [] }),
+        rendererFeed: () => {},
+        resolveUnit: () => null,
+        aiAction: () => { aiActionCount++; return { type: 'noop' }; },
+      },
+      music: () => {},
+      options: () => ({ aiSpeed: 8 }),
+      stack: { pop: () => {}, replace: onReplace },
+      W: 960, H: 640, atlas: {}, ctx: null,
+      roster: { hunters: [] },
+      session: { hunterId: null, mode: 'normal' },
+      save: () => {},
+    },
+    aiActionCount: () => aiActionCount,
+  };
+}
+
+test('game screen: AI fires actions while renderer is busy (regression)', () => {
+  // Renderer always busy — AI must NOT stall waiting for it.
+  const { app, aiActionCount } = makeAiTestApp({ rendererBusy: () => true });
+  const screen = Screens.makeGameScreen(app, makeTestG());
+  screen.update(1); // 1s >> aiDelay of 0.025s at default speed-8
+  assert.ok(aiActionCount() > 0, 'AI action must fire even while renderer is animating');
+});
+
+test('game screen: results transition is deferred while renderer is busy', () => {
+  let replaced = false;
+  const { app } = makeAiTestApp({ rendererBusy: () => true, onReplace: () => { replaced = true; } });
+  const g = makeTestG();
+  g.state.result = 'won';
+  const screen = Screens.makeGameScreen(app, g);
+  screen.update(0.1);
+  assert.equal(replaced, false, 'results screen must not open while renderer is still animating');
+});
+
+test('game screen: results transition fires once renderer finishes animating', () => {
+  let replaced = false;
+  let busy = true;
+  const { app } = makeAiTestApp({ rendererBusy: () => busy, onReplace: () => { replaced = true; } });
+  const g = makeTestG();
+  g.state.result = 'won';
+  const screen = Screens.makeGameScreen(app, g);
+  screen.update(0.1);
+  assert.equal(replaced, false, 'not yet — renderer still busy');
+  busy = false;
+  screen.update(0.1);
+  assert.equal(replaced, true, 'results must open once renderer queue is drained');
+});
+
+// ---------------------------------------------------------------------------
 // Mission briefing: all story missions that have a briefing field provide
 // a non-empty string; the wrapText utility will word-wrap at runtime.
 test('STORY_MISSIONS briefings are non-empty strings when present', () => {
