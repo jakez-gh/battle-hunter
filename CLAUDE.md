@@ -168,6 +168,13 @@ If multiple agent sessions may be running simultaneously:
 
 ## Operating model: initiative vs ad-hoc lanes
 
+**Discipline scales with the work.** Use the lightest lane that does the job —
+ceremony is a cost, not a virtue. Jake is the only human and his attention is the
+scarcest resource: handle what you can autonomously, make reversible calls
+yourself and report them, and spend his attention only on decisions genuinely
+his (and then offer a recommendation he can approve in one word). When unsure
+which lane fits, pick the lighter one and escalate only if the work proves bigger.
+
 Work arrives in two shapes. Route it before starting.
 
 **Ad-hoc lane** — a bug report or one focused task. Do NOT spin up planning
@@ -178,14 +185,22 @@ docs. Bootstrap, fix, verify, commit:
 4. If the task reveals a bigger effort, stop and write it into the `WORK.md`
    backlog instead of scope-creeping the fix.
 
-**Initiative lane** — anything bigger than a single-file change climbs a
+The `/bug` and `/feature` skills are the ad-hoc entry points; `/research` files a
+research artifact. They assume a Context Forge layout (`project-documents/user/…`)
+that this repo does not use — substitute: tracked-task escalations → the `WORK.md`
+backlog; research artifacts → `docs/decisions/`.
+
+**Initiative lane** — a change big enough to need design before code climbs a
 breakdown ladder so no piece exceeds a fraction of one context:
 concept → architecture → slices → tasks. Each level is a durable doc, and later
 levels are re-derived as earlier ones change — the plan evolves alongside the
-work, it is not write-once. For this repo the ladder lives in `DESIGN.md`
-(spec/architecture) + `WORK.md` (sprints → tasks). For larger projects use
-Context Forge (`cf init`, then `cf next` / `cf build` to scope context to one
-slice); see the "Harness & Project-Tracking Setup" sprint in `WORK.md`.
+work, it is not write-once. This repo runs the ladder lightweight: `DESIGN.md`
+(spec/architecture) + `WORK.md` (sprints → tasks). That is a deliberate choice —
+Battle Hunter is in a polish phase of small, independent tasks, where heavier
+tooling would be ceremony without payoff. Adopt Context Forge (`cf init`) only
+when an initiative actually needs architecture + multiple slices (network play
+or replay mode in the backlog are the likely first ones); the recipe is parked
+in the "Harness & Project-Tracking Setup" sprint in `WORK.md`.
 
 ### Fresh-agent bootstrap (every new conversation/agent)
 

@@ -27,39 +27,29 @@ Durable *why* is in the `harness-operating-model` memory.
   `CLAUDE.md` (## Operating model, ## Research & decisions) and
   `docs/decisions/TEMPLATE.md`.
 
-### Pending — ready for any future conversation to pick up
+### Decided 2026-06-17 — stay on the lightweight manual ladder
 
-- [ ] **Register Battle Hunter as a Context Forge project** (keystone — unblocks
-  the hooks item). DECISION NEEDED FIRST: `cf init` installs AI-guide scaffolding
-  + IDE files into this repo, changing its character. Confirm with Jake that's
-  wanted here (vs keeping DESIGN.md/WORK.md as the manual ladder). If yes:
-    1. `cf init battle-hunter` in repo root
-    2. Point cf artifacts at existing docs: `cf set concept README.md`,
-       `cf set arch DESIGN.md` (or author a dedicated arch doc)
-    3. Migrate WORK.md pending items → a cf slice plan (`fileSlicePlan`) + tasks
-       (`fileTasks`); keep WORK.md as the human-readable mirror or retire it
-    4. Verify `cf next` / `cf build` return this project's scoped context
-  Why: `cf build` scopes context to one slice/task (the "fraction of a context"
-  goal); `cf future` + `cf check` preserve the big picture and detect drift.
+Battle Hunter is in a polish phase of small, independent tasks. Adopting Context
+Forge now would add a second tracking system to keep in sync for no payoff, so the
+manual `WORK.md` + `DESIGN.md` ladder stays. **Nothing here needs Jake's input.**
+**Trigger to revisit:** a backlog item that genuinely needs architecture +
+multiple slices — network play or replay/spectate mode are the likely first ones.
+When one lands, run the parked recipe below; until then it stays parked.
 
-- [ ] **Enforcement hooks** (depends on cf-register above). Make the ladder
-  binding, not advisory, via `~/.claude/settings.json` `"hooks"`:
-    - SessionStart hook → `cf next` so every new agent sees its place
-    - Stop hook → `cf check` to surface artifact drift
-  Starting point (VERIFY exact hook schema via claude-code-guide before saving):
-    ```json
-    "hooks": {
-      "SessionStart": [{ "hooks": [{ "type": "command", "command": "cf next" }] }],
-      "Stop":         [{ "hooks": [{ "type": "command", "command": "cf check" }] }]
-    }
-    ```
-  Until cf is registered for a repo, `cf next` / `cf check` no-op harmlessly.
+#### Parked recipe — adopt Context Forge (only when a multi-slice initiative lands)
 
-### Deferred to Jake
+1. `cf init battle-hunter` in repo root
+2. Point cf artifacts at existing docs: `cf set concept README.md`,
+   `cf set arch DESIGN.md` (or author a dedicated arch doc)
+3. Migrate the relevant WORK.md items → a cf slice plan (`fileSlicePlan`) + tasks
+   (`fileTasks`); keep WORK.md as the human-readable mirror
+4. Verify `cf next` / `cf build` return scoped context
+5. Optional enforcement hooks in `~/.claude/settings.json` (verify schema via
+   claude-code-guide first): SessionStart → `cf next`, Stop → `cf check`
 
-- Whether to promote the two-lane model + research convention from this repo's
-  `CLAUDE.md` to user-global `~/.claude/CLAUDE.md` (cross-project). Held back to
-  avoid global-CLAUDE.md bloat until proven here.
+Note: the `/bug`, `/feature`, `/research` skills assume a cf layout
+(`project-documents/user/…`). Until cf is adopted, they map here as: tracked-task
+escalations → this WORK.md backlog; research artifacts → `docs/decisions/`.
 
 ---
 
