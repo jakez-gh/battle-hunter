@@ -285,6 +285,10 @@ function makeMenuHost() {
 const baseMaxHp = (rec) => 7 + 3 * rec.internal.hp + (rec.level - 1);
 const fmtStats = (d) => `MV+${d.mv}  AT ${d.at}  DF ${d.df}  HP ${d.maxHp}`;
 const currentHunter = (app) => app.roster.hunters.find((h) => h.id === app.session.hunterId) ?? null;
+const PALETTE_ACCENT = {
+  cobalt: '#2d5bd1', ember: '#c8372d', citrine: '#d1a52d', moss: '#3d8f3a',
+  orchid: '#8b3dc1', rust: '#b4642a', glacier: '#3aa9b8', onyx: '#3c3c46',
+};
 const itemName = (slot) => {
   const it = ITEMS[slot.itemId];
   if (!it) return slot.itemId;
@@ -294,7 +298,10 @@ const itemName = (slot) => {
 
 function drawHunterCard(app, rec, x, y, w) {
   const ctx = app.ctx;
-  box(ctx, x, y, w, 76);
+  const accent = PALETTE_ACCENT[rec.palette] ?? '#3c4364';
+  box(ctx, x, y, w, 76, { stroke: accent });
+  ctx.fillStyle = accent;
+  ctx.fillRect(x + 2, y + 2, 3, 72);
   sprite(app, `hunter${rec.spriteId}.${rec.palette}.icon`, x + 8, y + 8, 5);
   const d = displayStats(rec.internal, rec.level);
   text(ctx, rec.name, x + 76, y + 8, { size: 18, color: GOLD });
@@ -647,10 +654,30 @@ export function makeHubScreen(app) {
     },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      // Gold bloom behind hub header
+      const hcx = app.W / 2;
+      const hbloom = ctx.createRadialGradient(hcx, 60, 8, hcx, 60, 130);
+      hbloom.addColorStop(0, 'rgba(200, 160, 30, 0.30)');
+      hbloom.addColorStop(1, 'transparent');
+      ctx.fillStyle = hbloom;
+      ctx.fillRect(hcx - 130, 10, 260, 100);
       text(ctx, 'GUILD HUB', app.W / 2, 40, { size: 40, align: 'center', color: GOLD });
       ICONS.forEach((ic, i) => {
         const r = iconRect(i);
         const sel = i === idx;
+        // pulsing gold glow behind selected icon
+        if (sel) {
+          const gpulse = 0.16 + 0.10 * Math.sin(t * 2.8);
+          const gcx = r.x + r.w / 2, gcy = r.y + r.h / 2;
+          ctx.save();
+          ctx.globalAlpha = gpulse;
+          const gr = ctx.createRadialGradient(gcx, gcy, 0, gcx, gcy, 88);
+          gr.addColorStop(0, GOLD);
+          gr.addColorStop(1, 'transparent');
+          ctx.fillStyle = gr;
+          ctx.fillRect(r.x - 22, r.y - 22, r.w + 44, r.h + 44);
+          ctx.restore();
+        }
         box(ctx, r.x, r.y, r.w, r.h, { stroke: sel ? GOLD : '#3c4364', fill: sel ? 'rgba(40,44,80,0.95)' : 'rgba(10,12,24,0.92)' });
         sprite(app, ic.icon, r.x + r.w / 2 - 30, r.y + 16 + (sel ? Math.sin(t * 5) * 3 : 0), 5);
         text(ctx, ic.label, r.x + r.w / 2, r.y + 96, { size: 16, align: 'center', color: sel ? GOLD : FG });
