@@ -61,8 +61,13 @@ test('createRenderer throws cleanly without a DOM (atlas needs canvas)', () => {
 // --- behavioral checks via a canvas-free mock 2d context --------------------
 function mockCanvas() {
   const noop = () => {};
+  const gradStub = { addColorStop: noop };
   const ctx = new Proxy({}, {
-    get: (t, p) => (p in t ? t[p] : noop),
+    get: (t, p) => {
+      if (p in t) return t[p];
+      if (p === 'createRadialGradient' || p === 'createLinearGradient') return () => gradStub;
+      return noop;
+    },
     set: (t, p, v) => { t[p] = v; return true; },
   });
   return { width: 416, height: 400, getContext: () => ctx };
