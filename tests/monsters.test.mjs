@@ -1,12 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MONSTERS, monsterStats } from '../src/engine/monsters.js';
+import { MONSTERS, monsterStats, SPAWN_CHANCE, DROP_CHANCE, MAX_REGULAR_MONSTERS } from '../src/engine/monsters.js';
 import {
   STORY_MISSIONS, RIVALS, rivalStats, interpolateInternal, displayStats,
   makeNormalMission, applyResults, storyClearReward, LEVEL_UP_FEES,
 } from '../src/engine/missions.js';
 
 const KINDS = ['VAC', 'OOZ', 'FNG', 'WYRM'];
+
+test('spawn/drop constants match DESIGN.md §2.10 values', () => {
+  assert.equal(SPAWN_CHANCE, 0.2);
+  assert.equal(DROP_CHANCE, 0.5);
+  assert.equal(MAX_REGULAR_MONSTERS, 2);
+});
 
 // DESIGN.md §2.10 spot values: [mv, at, df, hp] at levels 1/5/8/10/15.
 const SPOT = {

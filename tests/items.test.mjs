@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { makeRng } from '../src/engine/rng.js';
 import {
-  ITEMS, rollBoxItem, effectiveStats, hunterHasEffect, sellPrice,
+  ITEMS, rollBoxItem, effectiveStats, hunterHasEffect, hunterHasCounter, sellPrice,
 } from '../src/engine/items.js';
 
 const all = Object.values(ITEMS);
@@ -158,6 +158,27 @@ test('hunterHasEffect: cursed items work unidentified, others only identified', 
   assert.equal(hunterHasEffect(hunter(slot('override')), 'counter-VAC'), true);
   assert.equal(hunterHasEffect(hunter(slot('wardstone')), 'amulet'), false);
   assert.equal(hunterHasEffect(hunter(), 'wardstone'), false);
+});
+
+test('hunterHasCounter: returns true for identified counter matching monster kind', () => {
+  // counter item 'override' has effect 'counter-VAC'
+  assert.equal(hunterHasCounter({ items: [{ itemId: 'override', identified: true }] }, 'VAC'), true);
+  assert.equal(hunterHasCounter({ items: [{ itemId: 'repellent', identified: true }] }, 'OOZ'), true);
+  assert.equal(hunterHasCounter({ items: [{ itemId: 'patch', identified: true }] }, 'FNG'), true);
+  assert.equal(hunterHasCounter({ items: [{ itemId: 'tamer', identified: true }] }, 'WYRM'), true);
+});
+
+test('hunterHasCounter: returns false for unidentified counter item', () => {
+  // Counters are not cursed, so they must be identified to be active.
+  assert.equal(hunterHasCounter({ items: [{ itemId: 'override', identified: false }] }, 'VAC'), false);
+  assert.equal(hunterHasCounter({ items: [{ itemId: 'tamer', identified: false }] }, 'WYRM'), false);
+});
+
+test('hunterHasCounter: returns false for wrong monster kind or empty inventory', () => {
+  assert.equal(hunterHasCounter({ items: [{ itemId: 'override', identified: true }] }, 'OOZ'), false);
+  assert.equal(hunterHasCounter({ items: [{ itemId: 'tamer', identified: true }] }, 'FNG'), false);
+  assert.equal(hunterHasCounter({ items: [] }, 'VAC'), false);
+  assert.equal(hunterHasCounter({}, 'VAC'), false);
 });
 
 test('sellPrice: xL items scale with relic level, others do not', () => {

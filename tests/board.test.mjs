@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { makeRng } from '../src/engine/rng.js';
 import {
   SECTIONS, assembleFloor, generateBoard, neighbors,
-  pathDistance, reachableTiles, randomFreeTile,
+  pathDistance, reachableTiles, randomFreeTile, occupiedSet,
 } from '../src/engine/board.js';
 
 const key = (x, y) => `${x},${y}`;
@@ -160,4 +160,28 @@ test('randomFreeTile: on floor, never exit, never occupied', () => {
     assert.ok(!(t.x === board.exit.x && t.y === board.exit.y));
     assert.ok(!(t.x === state.hunters[0].pos.x && t.y === state.hunters[0].pos.y));
   }
+});
+
+test('occupiedSet includes all units with a pos, excludes units without a pos', () => {
+  // board.js occupiedSet is a navigation blocker: includes ALL positioned units
+  // (dead or alive) so pathfinding treats them as impassable. The ai.js copy
+  // separately excludes dead units — this function does not.
+  const state = {
+    hunters: [
+      { pos: { x: 1, y: 1 }, hp: 10 },  // alive with pos → included
+      { pos: { x: 2, y: 2 }, hp: 0 },   // dead with pos → included (blocks nav)
+      { pos: null, hp: 5 },              // no pos → excluded
+    ],
+    monsters: [
+      { pos: { x: 3, y: 3 }, hp: 5 },   // alive → included
+      { pos: { x: 4, y: 4 }, hp: 0 },   // dead with pos → included
+    ],
+  };
+  const s = occupiedSet(state);
+  assert.ok(s.has('1,1'), 'alive hunter included');
+  assert.ok(s.has('2,2'), 'dead hunter still blocks navigation');
+  assert.ok(!s.has('null,null'), 'no-pos unit excluded');
+  assert.ok(s.has('3,3'), 'alive monster included');
+  assert.ok(s.has('4,4'), 'dead monster still blocks navigation');
+  assert.equal(s.size, 4);
 });
