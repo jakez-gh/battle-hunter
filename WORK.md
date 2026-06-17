@@ -14,6 +14,55 @@ Agents: mark your task `IN_PROGRESS` in a commit before starting — prevents co
 
 ---
 
+## Sprint: Harness & Project-Tracking Setup
+
+Goal: make the workflow scale from one-off bug fixes to enterprise-scale efforts
+without losing the big or small picture. Sequenced by unblock-value, then speed.
+Durable *why* is in the `harness-operating-model` memory.
+
+### Done (2026-06-17)
+
+- [x] **Two-lane operating model + fresh-agent bootstrap + research convention** —
+  initiative vs ad-hoc routing, bootstrap order, ADR/research gate. Added to
+  `CLAUDE.md` (## Operating model, ## Research & decisions) and
+  `docs/decisions/TEMPLATE.md`.
+
+### Pending — ready for any future conversation to pick up
+
+- [ ] **Register Battle Hunter as a Context Forge project** (keystone — unblocks
+  the hooks item). DECISION NEEDED FIRST: `cf init` installs AI-guide scaffolding
+  + IDE files into this repo, changing its character. Confirm with Jake that's
+  wanted here (vs keeping DESIGN.md/WORK.md as the manual ladder). If yes:
+    1. `cf init battle-hunter` in repo root
+    2. Point cf artifacts at existing docs: `cf set concept README.md`,
+       `cf set arch DESIGN.md` (or author a dedicated arch doc)
+    3. Migrate WORK.md pending items → a cf slice plan (`fileSlicePlan`) + tasks
+       (`fileTasks`); keep WORK.md as the human-readable mirror or retire it
+    4. Verify `cf next` / `cf build` return this project's scoped context
+  Why: `cf build` scopes context to one slice/task (the "fraction of a context"
+  goal); `cf future` + `cf check` preserve the big picture and detect drift.
+
+- [ ] **Enforcement hooks** (depends on cf-register above). Make the ladder
+  binding, not advisory, via `~/.claude/settings.json` `"hooks"`:
+    - SessionStart hook → `cf next` so every new agent sees its place
+    - Stop hook → `cf check` to surface artifact drift
+  Starting point (VERIFY exact hook schema via claude-code-guide before saving):
+    ```json
+    "hooks": {
+      "SessionStart": [{ "hooks": [{ "type": "command", "command": "cf next" }] }],
+      "Stop":         [{ "hooks": [{ "type": "command", "command": "cf check" }] }]
+    }
+    ```
+  Until cf is registered for a repo, `cf next` / `cf check` no-op harmlessly.
+
+### Deferred to Jake
+
+- Whether to promote the two-lane model + research convention from this repo's
+  `CLAUDE.md` to user-global `~/.claude/CLAUDE.md` (cross-project). Held back to
+  avoid global-CLAUDE.md bloat until proven here.
+
+---
+
 ## Sprint: Visual Polish
 
 ### In Progress

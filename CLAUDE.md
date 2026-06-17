@@ -166,6 +166,51 @@ If multiple agent sessions may be running simultaneously:
 
 ---
 
+## Operating model: initiative vs ad-hoc lanes
+
+Work arrives in two shapes. Route it before starting.
+
+**Ad-hoc lane** — a bug report or one focused task. Do NOT spin up planning
+docs. Bootstrap, fix, verify, commit:
+1. Read this file + `WORK.md`; check `git log --oneline -10`
+2. Read only the files the task touches (see ownership tables above)
+3. `node --test` green → make the change → tests green → commit with SHA
+4. If the task reveals a bigger effort, stop and write it into the `WORK.md`
+   backlog instead of scope-creeping the fix.
+
+**Initiative lane** — anything bigger than a single-file change climbs a
+breakdown ladder so no piece exceeds a fraction of one context:
+concept → architecture → slices → tasks. Each level is a durable doc, and later
+levels are re-derived as earlier ones change — the plan evolves alongside the
+work, it is not write-once. For this repo the ladder lives in `DESIGN.md`
+(spec/architecture) + `WORK.md` (sprints → tasks). For larger projects use
+Context Forge (`cf init`, then `cf next` / `cf build` to scope context to one
+slice); see the "Harness & Project-Tracking Setup" sprint in `WORK.md`.
+
+### Fresh-agent bootstrap (every new conversation/agent)
+
+A new agent must orient and pick up the next unblocked task without re-reading
+the whole repo:
+1. Read this file (architecture + conventions)
+2. `WORK.md` → top unclaimed `[ ]` item; mark `[~]` + commit to claim it
+3. Recalled memory (auto-loaded) for durable *why* and gotchas
+4. `git log --oneline -10`; `node --test` to confirm a green baseline
+
+Pick the task that unblocks the most other work first, then the quickest.
+
+## Research & decisions
+
+Don't guess on load-bearing unknowns — research them, and record the outcome so
+the next agent doesn't re-investigate:
+- For a multi-source external question, use the `deep-research` skill or fan out
+  Explore/Plan agents (cheap tier to gather, top tier to synthesize).
+- Record any non-obvious decision as a short ADR in `docs/decisions/` (copy
+  `docs/decisions/TEMPLATE.md`): question, options, finding, choice, why.
+- An architecture or initiative step is not "done" while it still has an open
+  research question that would change the design.
+
+---
+
 ## Key design decisions (don't re-litigate)
 
 - **No build step** — serves as static files; ES modules in the browser directly
