@@ -1273,16 +1273,19 @@ export function makeGameScreen(app, g) {
       frameDt = dt;
       if (banner && (banner.t -= dt) <= 0) banner = null;
       if (broken || finished) return;
-      if (A.rendererBusy(g.renderer)) return;
       const st = g.state;
 
       if (st.result) {
-        finished = true;
-        app.stack.replace(makeResultsScreen(app, g));
+        // Wait for animations to finish before transitioning to results
+        if (!A.rendererBusy(g.renderer)) {
+          finished = true;
+          app.stack.replace(makeResultsScreen(app, g));
+        }
         return;
       }
 
       if (!A.isHumanTurn(st)) {
+        // AI actions fire immediately without waiting for renderer animations
         host.clear(); steering = false; timing = null; uiKey = null;
         aiDelay -= dt;
         if (aiDelay > 0) return;
@@ -1297,7 +1300,8 @@ export function makeGameScreen(app, g) {
         return;
       }
 
-      // human's decision
+      // human's decision — wait for animations before showing UI
+      if (A.rendererBusy(g.renderer)) return;
       if (timing) {
         timing.t += dt;
         if (timing.t >= TIMING.timeout) act({ type: 'timing', hit: false });
