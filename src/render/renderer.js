@@ -493,14 +493,33 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'healed':
-        addFloat(k, `+${ev.amount ?? ''}`, '#8fd17e');
-        addSparkles(k, '#8fd17e');
+      case 'healed': {
+        addFloat(k, `+${ev.amount ?? ''}`, '#8fd17e', { big: true });
+        // Rising green cross-sparks (upward only, slight spread) — suggests HP lifting
+        const hp = displayPos(k);
+        if (hp) {
+          for (let i = 0; i < 8; i++) {
+            sparkles.push({ wx: hp.x + 0.3 + (i % 4) * 0.12, wy: hp.y + 0.5,
+              vx: (i % 3 - 1) * 0.22, vy: -1.4 - (i % 3) * 0.35,
+              t: 0, ttl: 600, color: i % 3 === 0 ? '#ffffff' : '#8fd17e' });
+          }
+        }
         break;
-      case 'actAgain':
-        addFloat(k, 'AGAIN!', '#ffe98a', { big: true });
-        addSparkles(k, '#ffe98a');
+      }
+      case 'actAgain': {
+        addFloat(k, 'AGAIN!', '#ffe98a', { big: true, ttl: 900 });
+        // Gold ring burst (same as targetFound but smaller)
+        const ap2 = displayPos(k);
+        if (ap2) {
+          for (let i = 0; i < 10; i++) {
+            const a = (i / 10) * Math.PI * 2;
+            const spd = 1.4 + (i % 3) * 0.5;
+            sparkles.push({ wx: ap2.x + 0.5, wy: ap2.y + 0.5, vx: Math.cos(a) * spd,
+              vy: Math.sin(a) * spd - 0.6, t: 0, ttl: 550, color: i % 2 === 0 ? '#fff' : '#ffe98a' });
+          }
+        }
         break;
+      }
       case 'missionWon':
         banner = { text: 'MISSION COMPLETE', color: '#ffe98a', startMs: clock };
         turnFlash = { color: '#7ee8a0', t: 0, dur: 900 };
