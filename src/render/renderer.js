@@ -643,16 +643,27 @@ export function createRenderer(canvas, opts = {}) {
             }
             // Ember/torch wisps: ~6% of wall faces that don't have drips
             if ((wh & 0xFF) >= 20 && ((wh >> 8) & 0xFF) < 16) {
+              const ewp = worldToScreen(x, y, cam);
+              const cs = cam.scale;
+              const etx = ewp.x + (((wh >> 4) & 0xF) + 1) * cs;
+              const ety = ewp.y + 9 * cs;
+              // Iron torch bracket: vertical stem + horizontal arm
+              ctx.fillStyle = '#6e4e22';
+              ctx.fillRect(etx | 0, ety | 0, cs, cs * 3);
+              ctx.fillRect((etx - cs) | 0, (ety + cs) | 0, cs * 2, cs);
+              // Amber torch cup at bracket top
+              ctx.save(); ctx.globalAlpha = 0.80; ctx.fillStyle = '#9a6c28';
+              ctx.fillRect((etx - cs) | 0, (ety - cs) | 0, cs * 3, cs); ctx.restore();
+              // Animated flame
               const eper = 1600 + (wh & 3) * 400;
               const eph = ((clock + wh * 41) % eper) / eper;
               if (eph < 0.40) {
-                const ewp = worldToScreen(x, y, cam);
-                const ex = ewp.x + (((wh >> 4) & 0xF) + 1) * cam.scale;
-                const ey = ewp.y + (1 - eph / 0.40) * 7 * cam.scale + 4 * cam.scale;
-                const ea = Math.min(eph, 0.40 - eph) / 0.20 * 0.45;
+                const ex = etx;
+                const ey = ety - eph / 0.40 * cs * 4 - cs;
+                const ea = Math.min(eph, 0.40 - eph) / 0.20 * 0.55;
                 ctx.save(); ctx.globalAlpha = ea;
                 ctx.fillStyle = eph < 0.20 ? '#ffb040' : '#cc5020';
-                ctx.fillRect(ex | 0, ey | 0, cam.scale, cam.scale);
+                ctx.fillRect(ex | 0, ey | 0, cs, cs);
                 ctx.restore();
               }
             }
