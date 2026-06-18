@@ -22,15 +22,19 @@ import { makeHunterRecord, exportSave, importSave, loadRoster } from '../save.js
 
 export function createScreenStack() {
   const stack = [];
+  const FADE_DUR = 0.22;
+  let fadeAlpha = 0;
   const top = () => stack[stack.length - 1] ?? null;
+  const triggerFade = () => { fadeAlpha = 1.0; };
   return {
     top,
     depth: () => stack.length,
-    push(s) { stack.push(s); s.enter?.(); },
+    push(s) { stack.push(s); s.enter?.(); triggerFade(); },
     pop() {
       const s = stack.pop();
       s?.exit?.();
       top()?.resume?.();
+      triggerFade();
       return s;
     },
     replace(s) {
@@ -38,9 +42,22 @@ export function createScreenStack() {
       old?.exit?.();
       stack.push(s);
       s.enter?.();
+      triggerFade();
     },
-    update(dt) { top()?.update?.(dt); },
-    draw(ctx) { top()?.draw?.(ctx); },
+    update(dt) {
+      top()?.update?.(dt);
+      if (fadeAlpha > 0) fadeAlpha = Math.max(0, fadeAlpha - dt / FADE_DUR);
+    },
+    draw(ctx) {
+      top()?.draw?.(ctx);
+      if (fadeAlpha > 0) {
+        ctx.save();
+        ctx.globalAlpha = fadeAlpha;
+        ctx.fillStyle = '#06060c';
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.restore();
+      }
+    },
     onKey(k, e) { top()?.onKey?.(k, e); },
     onClick(pos, e) { top()?.onClick?.(pos, e); },
     onHover(pos, e) { top()?.onHover?.(pos, e); },
