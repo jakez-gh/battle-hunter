@@ -416,8 +416,10 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       case 'statusInflicted': {
-        addFloat(k, '', '#f0f4ff', { icon: `status.${ev.kind}`, ttl: 700 });
         const STATUS_COL = { stun: '#3ab8e8', panic: '#e87020', leg: '#cc3a40', empty: '#7a7a8e' };
+        const STATUS_NAME = { stun: 'STUN', panic: 'PANIC', leg: 'LEG WOUND', empty: 'DRAINED' };
+        addFloat(k, STATUS_NAME[ev.kind] ?? String(ev.kind ?? '?').toUpperCase(), STATUS_COL[ev.kind] ?? '#c0c8e0',
+          { icon: `status.${ev.kind}`, ttl: 900 });
         addSparkles(k, STATUS_COL[ev.kind] ?? '#c0c8e0');
         break;
       }
@@ -656,7 +658,7 @@ export function createRenderer(canvas, opts = {}) {
           }
           continue;
         }
-        blitTile(`tile.${floors[(x * 7 + y * 13) % 4]}`, x, y);
+        blitTile(`tile.${floors[(x * 7 + y * 13) % 6]}`, x, y);
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
           // Puddle: ~12% of floor tiles get a subtle wet reflection shimmer
           const ph = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;
@@ -861,12 +863,23 @@ export function createRenderer(canvas, opts = {}) {
         const p = worldToScreen(c.x, c.y, cam);
         return { c, cx: p.x + 8 * s, cy: p.y + 8 * s };
       });
-      // Connecting lines between consecutive steps
+      // Connecting lines + directional chevron arrows between consecutive steps
       for (let i = 1; i < pathPts.length; i++) {
         const a = pathPts[i - 1], b = pathPts[i];
         const la = 0.22 + 0.12 * Math.sin(clock / 340 - i * 0.9);
         ctx.save(); ctx.globalAlpha = la; ctx.strokeStyle = pathCol; ctx.lineWidth = s;
         ctx.beginPath(); ctx.moveTo(a.cx, a.cy); ctx.lineTo(b.cx, b.cy); ctx.stroke();
+        ctx.restore();
+        // Chevron arrow pointing in the direction of travel
+        const mx = (a.cx + b.cx) / 2;
+        const my = (a.cy + b.cy) / 2;
+        const angle = Math.atan2(b.cy - a.cy, b.cx - a.cx);
+        const ar = 3 * s, aw = 1.5 * s;
+        ctx.save(); ctx.globalAlpha = la * 0.9; ctx.fillStyle = pathCol;
+        ctx.translate(mx, my); ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(ar, 0); ctx.lineTo(-ar, aw); ctx.lineTo(-ar * 0.4, 0); ctx.lineTo(-ar, -aw);
+        ctx.closePath(); ctx.fill();
         ctx.restore();
       }
       for (const { c, cx: dcx, cy: dcy } of pathPts) {
