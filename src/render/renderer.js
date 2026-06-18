@@ -552,6 +552,16 @@ export function createRenderer(canvas, opts = {}) {
       ctx.strokeStyle = '#7ee8a0'; ctx.lineWidth = cam.scale;
       ctx.strokeRect(ep.x + cam.scale, ep.y + cam.scale, es - 2 * cam.scale, es - 2 * cam.scale);
       ctx.restore();
+      // Four sparkle particles orbiting the exit in an elliptical path
+      for (let j = 0; j < 4; j++) {
+        const angle = clock / 1100 + j * Math.PI / 2;
+        const orx = ecx + Math.cos(angle) * es * 0.48;
+        const ory = ecy + Math.sin(angle) * es * 0.28;
+        const oa = 0.35 + 0.35 * Math.sin(clock / 480 + j * 1.5);
+        ctx.save(); ctx.globalAlpha = oa; ctx.fillStyle = '#7ee8a0';
+        ctx.fillRect((orx - cam.scale) | 0, (ory - cam.scale) | 0, cam.scale * 2, cam.scale * 2);
+        ctx.restore();
+      }
     }
     // Warm torch-light bloom centered on the active unit
     { const ak = activeKey();
@@ -580,16 +590,25 @@ export function createRenderer(canvas, opts = {}) {
         const pulse = 0.10 + 0.08 * Math.sin(clock / 1100 + box.x * 3.7 + box.y * 2.3);
         ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = '#e8d87e';
         ctx.fillRect(bp.x, bp.y, TILE * cam.scale, TILE * cam.scale); ctx.restore();
+        // Occasional white gleam glint above the box (treasure chest twinkle)
+        const gleamPhase = ((clock * 0.5 + box.x * 417 + box.y * 293) % 2800) / 2800;
+        if (gleamPhase < 0.12) {
+          const ga = Math.min(gleamPhase, 0.12 - gleamPhase) / 0.06;
+          ctx.save(); ctx.globalAlpha = ga * 0.85; ctx.fillStyle = '#fff';
+          ctx.fillRect((bp.x + 6 * cam.scale) | 0, (bp.y - 3 * cam.scale) | 0, cam.scale * 2, cam.scale * 2);
+          ctx.restore();
+        }
       }
     }
     for (const f of b.flags ?? []) {
       if (f.taken && !standingFlags.has(key(f.x, f.y))) continue;
       const cap = f.color[0].toUpperCase() + f.color.slice(1);
-      // gentle sway — each flag offset by position for phase variety
+      // gentle two-axis sway — vertical bob + horizontal drift simulate wind
       const sway = Math.sin(clock / 900 + f.x * 1.4 + f.y * 0.9) * 0.4;
+      const swayH = Math.cos(clock / 700 + f.x * 1.1 + f.y * 1.3) * 0.25;
       const fp = worldToScreen(f.x, f.y, cam);
       const img = atlas[`tile.flag${cap}`];
-      if (img) ctx.drawImage(img, fp.x | 0, (fp.y + sway * cam.scale) | 0, img.width * cam.scale, img.height * cam.scale);
+      if (img) ctx.drawImage(img, (fp.x + swayH * cam.scale) | 0, (fp.y + sway * cam.scale) | 0, img.width * cam.scale, img.height * cam.scale);
     }
   }
 

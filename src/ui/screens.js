@@ -1861,7 +1861,16 @@ export function makeResultsScreen(app, g) {
         const vals = [r.moved, r.damage, r.flagPts, r.killPts, r.handicap, r.itemPts];
         vals.forEach((v, j) => text(ctx, String(v), x + 84, 170 + j * 40, { size: 15, align: 'center' }));
         text(ctx, String(r.total), x + 84, 410, { size: 18, align: 'center', color: GOLD });
-        text(ctx, PLACE[placeOf(r.id)] ?? '-', x + 84, 450, { size: 16, align: 'center', color: placeOf(r.id) === 0 ? OK : FG });
+        { const pl = placeOf(r.id);
+          const BADGE = ['#c8a020', '#9abce0', '#c87040', null];
+          const bc = BADGE[pl] ?? null;
+          if (bc) {
+            ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = bc;
+            ctx.fillRect(x + 66, 446, 36, 22); ctx.restore();
+            ctx.strokeStyle = bc; ctx.lineWidth = 1;
+            ctx.strokeRect(x + 66.5, 446.5, 35, 21);
+          }
+          text(ctx, PLACE[pl] ?? '-', x + 84, 450, { size: 16, align: 'center', color: pl === 0 ? GOLD : pl === 1 ? '#c0d8f0' : pl === 2 ? '#e09050' : DIM }); }
         text(ctx, String(r.credits), x + 84, 490, { size: 15, align: 'center', color: OK });
       });
       text(ctx, 'Enter: collect and return to the hub', app.W / 2, 600, { size: 15, align: 'center', color: DIM });
