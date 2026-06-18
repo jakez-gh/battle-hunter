@@ -358,6 +358,16 @@ export function createRenderer(canvas, opts = {}) {
         addSparkles(k);
         addFloat(k, 'TARGET!', '#ffe98a', { big: true, ttl: 1100 });
         turnFlash = { color: '#ffe98a', t: 0, dur: 700 };
+        // Gold burst: 12 fast-moving particles in a ring
+        { const tp = displayPos(k);
+          if (tp) {
+            for (let i = 0; i < 12; i++) {
+              const a = (i / 12) * Math.PI * 2;
+              const spd = 1.8 + (i % 3) * 0.8;
+              sparkles.push({ wx: tp.x + 0.5, wy: tp.y + 0.5, vx: Math.cos(a) * spd,
+                vy: Math.sin(a) * spd - 0.8, t: 0, ttl: 700, color: i % 3 === 0 ? '#fff' : '#ffe98a' });
+            }
+          } }
         break;
       case 'flagClaimed':
         popOverride(standingFlags, ev.pos ? key(ev.pos.x, ev.pos.y) : null);
@@ -594,7 +604,7 @@ export function createRenderer(canvas, opts = {}) {
     const y0 = Math.max(0, Math.floor(cam.y / TILE));
     const x1 = Math.min(b.w - 1, Math.ceil((cam.x + vw) / TILE));
     const y1 = Math.min(b.h - 1, Math.ceil((cam.y + vh) / TILE));
-    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE'];
+    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF'];
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
