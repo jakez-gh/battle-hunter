@@ -807,11 +807,22 @@ export function createRenderer(canvas, opts = {}) {
       const ak = activeKey();
       const au = ak ? findUnit(ak) : null;
       const pathCol = ak && ak[0] === 'h' && au ? (SLOT_COLORS[(au.slot ?? 0) % 4] ?? '#ffe98a') : '#ffe98a';
-      for (const step of overlays.path) {
+      const pathPts = overlays.path.map((step) => {
         const c = typeof step === 'string'
           ? { x: +step.split(',')[0], y: +step.split(',')[1] } : step;
         const p = worldToScreen(c.x, c.y, cam);
-        const dcx = p.x + 8 * s, dcy = p.y + 8 * s;
+        return { c, cx: p.x + 8 * s, cy: p.y + 8 * s };
+      });
+      // Connecting lines between consecutive steps
+      for (let i = 1; i < pathPts.length; i++) {
+        const a = pathPts[i - 1], b = pathPts[i];
+        const la = 0.22 + 0.12 * Math.sin(clock / 340 - i * 0.9);
+        ctx.save(); ctx.globalAlpha = la; ctx.strokeStyle = pathCol; ctx.lineWidth = s;
+        ctx.beginPath(); ctx.moveTo(a.cx, a.cy); ctx.lineTo(b.cx, b.cy); ctx.stroke();
+        ctx.restore();
+      }
+      for (const { c, cx: dcx, cy: dcy } of pathPts) {
+        const p = worldToScreen(c.x, c.y, cam);
         const flow = 0.55 + 0.45 * Math.sin(clock / 340 - (c.x + c.y) * 0.9);
         const gr = ctx.createRadialGradient(dcx, dcy, 0, dcx, dcy, 5 * s);
         gr.addColorStop(0, pathCol); gr.addColorStop(1, 'transparent');
@@ -867,11 +878,13 @@ export function createRenderer(canvas, opts = {}) {
       const active = Object.entries(u.status ?? {}).filter(([, v]) => v).map(([n]) => n);
       let ix = p.x + (TILE * s - active.length * 8 * s) / 2;
       const statusY = p.y - bobPx;
+      const STATUS_PULSE_SPEED = { panic: 280, stun: 520, leg: 620, empty: 800 };
       for (const st of active) {
         if (atlas[`status.${st}`]) {
           if (STATUS_GLOW[st]) {
+            const sgAlpha = 0.28 + 0.20 * Math.sin(clock / (STATUS_PULSE_SPEED[st] ?? 450));
             ctx.save();
-            ctx.globalAlpha = 0.42;
+            ctx.globalAlpha = sgAlpha;
             ctx.fillStyle = STATUS_GLOW[st];
             ctx.fillRect(ix - s, statusY - 9 * s, 8 * s + 2 * s, 8 * s + 2 * s);
             ctx.restore();
