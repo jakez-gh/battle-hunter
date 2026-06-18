@@ -1470,6 +1470,15 @@ export function createRenderer(canvas, opts = {}) {
       ctx.drawImage(img, dx | 0, dy | 0, w, h);
     }
     ctx.restore();
+    // Torch warmth: units standing directly below a torch wall get a warm amber tint
+    if (state?.board && !state.board.floor[pos.y - 1]?.[pos.x]) {
+      const twh = ((pos.x * 1637 + (pos.y - 1) * 3571) ^ 997) & 0xFFFF;
+      if ((twh & 0xFF) >= 20 && ((twh >> 8) & 0xFF) < 16) {
+        const twGlow = 0.10 + 0.06 * Math.sin(clock / 850 + twh * 0.031);
+        ctx.save(); ctx.globalAlpha = twGlow * alpha; ctx.fillStyle = '#ffa040';
+        ctx.fillRect(p.x | 0, dy | 0, TILE * s, h); ctx.restore();
+      }
+    }
     if (unitFlash && unitFlash.key === k) {
       const ft = unitFlash.t / unitFlash.dur;
       ctx.save();
