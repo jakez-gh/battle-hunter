@@ -2279,10 +2279,25 @@ export function makeResultsScreen(app, g) {
             }
           }); }
         vals.forEach((v, j) => text(ctx, String(cnt(v)), x + 84, 170 + j * 40, { size: 15, align: 'center' }));
-        text(ctx, String(cnt(r.total)), x + 84, 410, { size: 18, align: 'center', color: GOLD });
+        // Winner total score: glowing gold text
+        if (isFirst) {
+          ctx.save(); ctx.shadowBlur = 18 + 8 * Math.sin(t * 1.8); ctx.shadowColor = '#c8960a';
+          text(ctx, String(cnt(r.total)), x + 84, 410, { size: 18, align: 'center', color: GOLD, shadow: false });
+          ctx.restore();
+        } else {
+          text(ctx, String(cnt(r.total)), x + 84, 410, { size: 18, align: 'center', color: GOLD });
+        }
         { const pl = placeOf(r.id);
           const BADGE = ['#c8a020', '#9abce0', '#c87040', null];
           const bc = BADGE[pl] ?? null;
+          // 1st place badge gets a pulsing glow
+          if (pl === 0 && win) {
+            const bgp = 0.22 + 0.18 * Math.sin(t * 2.2);
+            const bgg = ctx.createRadialGradient(x + 84, 457, 2, x + 84, 457, 26);
+            bgg.addColorStop(0, GOLD); bgg.addColorStop(1, 'transparent');
+            ctx.save(); ctx.globalAlpha = bgp; ctx.fillStyle = bgg;
+            ctx.fillRect(x + 58, 432, 52, 44); ctx.restore();
+          }
           if (bc) {
             ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = bc;
             ctx.fillRect(x + 66, 446, 36, 22); ctx.restore();
