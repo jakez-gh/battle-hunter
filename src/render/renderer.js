@@ -520,6 +520,20 @@ export function createRenderer(canvas, opts = {}) {
       ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = eg;
       ctx.fillRect(ep.x, ep.y, es, es); ctx.restore();
     }
+    // Warm torch-light bloom centered on the active unit
+    { const ak = activeKey();
+      const ap = ak ? displayPos(ak) : null;
+      const lightPos = ap
+        ? worldToScreen(ap.x + 0.5, ap.y + 0.5, cam)
+        : { x: canvas.width / 2, y: (canvas.height - HUD_H) / 2 };
+      const lr = Math.max(canvas.width, canvas.height) * 0.65;
+      const flicker = 0.08 + 0.04 * Math.sin(clock / 170) + 0.02 * Math.sin(clock / 73);
+      const tg = ctx.createRadialGradient(lightPos.x, lightPos.y, 0, lightPos.x, lightPos.y, lr);
+      tg.addColorStop(0, `rgba(255,200,100,${flicker.toFixed(3)})`);
+      tg.addColorStop(0.35, `rgba(255,160,60,${(flicker * 0.3).toFixed(3)})`);
+      tg.addColorStop(1, 'transparent');
+      ctx.fillStyle = tg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height - HUD_H); }
     if (state.debug) {
       for (const t of b.traps ?? []) drawTrap(t);
     } else {
