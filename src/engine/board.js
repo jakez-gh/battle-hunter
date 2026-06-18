@@ -162,6 +162,30 @@ export const SECTIONS = [
     '#..#.#...#',
     '####.#####',
   ],
+  [ // cloister — outer ring corridor with archway walls framing a central courtyard
+    '####.#####',
+    '#........#',
+    '#.##.###.#',
+    '#.#....#.#',
+    '..#....#..',
+    '#.#....#.#',
+    '#.##.###.#',
+    '#........#',
+    '#........#',
+    '####.#####',
+  ],
+  [ // ambush — two flanking rooms joined only through a narrow central lane
+    '####.#####',
+    '##.#.#.###',
+    '#..#.#..##',
+    '#..#.#..##',
+    '..........',
+    '#..#.#..##',
+    '#..#.#..##',
+    '##.#.#.###',
+    '#.......##',
+    '####.#####',
+  ],
 ];
 
 function inBounds(floor, x, y) {
