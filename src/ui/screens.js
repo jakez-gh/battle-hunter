@@ -1535,6 +1535,10 @@ export function makeGameScreen(app, g) {
       ctx.fillRect(0, 0, app.W, app.H);
       const st = g.state;
       A.rendererDraw(g.renderer, st, frameDt);
+      // Soft vertical shadow at dungeon/HUD boundary (x=720)
+      { const sg = ctx.createLinearGradient(706, 0, 724, 0);
+        sg.addColorStop(0, 'transparent'); sg.addColorStop(1, 'rgba(0,0,0,0.55)');
+        ctx.fillStyle = sg; ctx.fillRect(706, 0, 18, app.H); }
       drawHud(ctx, st);
       const m = host.top();
       if (m) drawMenu(ctx, m, 724, 420, 232, { lineH: 22, size: 13 });
@@ -1613,6 +1617,11 @@ export function makeGameScreen(app, g) {
   function drawHud(ctx, st) {
     const X = 724, W = 232;
     box(ctx, X, 6, W, 30);
+    // Active-unit slot-color dot on left edge of round info bar
+    { const cur = st.current;
+      const ci = cur?.kind === 'hunter' ? (st.hunters?.[cur.index]?.slot ?? cur.index) : -1;
+      if (ci >= 0) { ctx.fillStyle = SLOT_COLORS[ci % 4]; ctx.fillRect(X + 3, 9, 3, 22); }
+      else { ctx.fillStyle = '#cc4a3a'; ctx.fillRect(X + 3, 9, 3, 22); } }
     text(ctx, `R${st.round ?? '?'}  deck ${st.deck?.length ?? '?'}  relic L${st.relicLevel ?? '?'}`, X + 10, 13, { size: 13 });
 
     (st.hunters || []).forEach((h, i) => {
@@ -1697,6 +1706,8 @@ export function makeGameScreen(app, g) {
         const cx = X + 10 + (i % 5) * 43, cy = 604 + Math.floor(i / 5) * 50;
         let color = 'red';
         try { color = cardColor(cid); } catch { /* unknown id */ }
+        ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = '#000';
+        ctx.fillRect(cx + 3, cy + 3, 42, 60); ctx.restore();
         sprite(app, `card.${color}`, cx, cy, 3);
         text(ctx, String(cid).slice(1), cx + 21, cy + 22, { size: 14, align: 'center', color: CARD_HEX[color] ?? FG });
       });
@@ -1858,9 +1869,11 @@ export function makeResultsScreen(app, g) {
           ctx.fillRect(x + 2, 95, cw - 2, 48); ctx.restore();
         }
         text(ctx, r.name, x + 84, 130, { size: 15, align: 'center', color: SLOT_COLORS[h.slot ?? i] });
+        // Score count-up animation: values tick from 0 to final over 1.8s
+        const cnt = (v) => Math.round(v * Math.min(1, t / 1.8));
         const vals = [r.moved, r.damage, r.flagPts, r.killPts, r.handicap, r.itemPts];
-        vals.forEach((v, j) => text(ctx, String(v), x + 84, 170 + j * 40, { size: 15, align: 'center' }));
-        text(ctx, String(r.total), x + 84, 410, { size: 18, align: 'center', color: GOLD });
+        vals.forEach((v, j) => text(ctx, String(cnt(v)), x + 84, 170 + j * 40, { size: 15, align: 'center' }));
+        text(ctx, String(cnt(r.total)), x + 84, 410, { size: 18, align: 'center', color: GOLD });
         { const pl = placeOf(r.id);
           const BADGE = ['#c8a020', '#9abce0', '#c87040', null];
           const bc = BADGE[pl] ?? null;
@@ -1871,7 +1884,7 @@ export function makeResultsScreen(app, g) {
             ctx.strokeRect(x + 66.5, 446.5, 35, 21);
           }
           text(ctx, PLACE[pl] ?? '-', x + 84, 450, { size: 16, align: 'center', color: pl === 0 ? GOLD : pl === 1 ? '#c0d8f0' : pl === 2 ? '#e09050' : DIM }); }
-        text(ctx, String(r.credits), x + 84, 490, { size: 15, align: 'center', color: OK });
+        text(ctx, String(cnt(r.credits)), x + 84, 490, { size: 15, align: 'center', color: OK });
       });
       text(ctx, 'Enter: collect and return to the hub', app.W / 2, 600, { size: 15, align: 'center', color: DIM });
     },
