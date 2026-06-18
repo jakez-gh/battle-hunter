@@ -729,7 +729,8 @@ export function makeCreationScreen(app) {
         ctx.globalAlpha = Math.max(0, ma);
         ctx.fillStyle = (i % 3 === 0) ? GOLD : prevAccent;
         const ms = (i & 1) ? 2 : 3;
-        ctx.fillRect((mx - ms / 2) | 0, (my - ms / 2) | 0, ms, ms);
+        ctx.fillRect((mx - ms * 0.25) | 0, (my - ms) | 0, Math.max(1, ms * 0.5) | 0, ms * 2);
+        ctx.fillRect((mx - ms) | 0, (my - ms * 0.25) | 0, ms * 2, Math.max(1, ms * 0.5) | 0);
         ctx.restore();
       }
       sprite(app, `hunter${state.spriteId}.${pal}.${frame}`, 660, 150, 11);
