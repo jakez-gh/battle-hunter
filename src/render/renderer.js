@@ -253,9 +253,19 @@ export function createRenderer(canvas, opts = {}) {
       case 'turnStarted':
         manualPan = null;
         break;
-      case 'stepped':
-        beginSlide(k, ev.from ?? null, ev.to ?? ev.pos ?? null);
+      case 'stepped': {
+        const fromPos = ev.from ?? null;
+        beginSlide(k, fromPos, ev.to ?? ev.pos ?? null);
+        if (fromPos && k?.[0] === 'h') {
+          for (let i = 0; i < 5; i++) {
+            const a = (i / 5) * Math.PI * 2;
+            sparkles.push({ wx: fromPos.x + 0.5, wy: fromPos.y + 0.5,
+              vx: Math.cos(a) * 0.5, vy: Math.sin(a) * 0.5 - 0.3,
+              t: 0, ttl: 280, color: '#9aa0b0' });
+          }
+        }
         break;
+      }
       case 'monsterMoved':
         beginSlide(k, ev.from ?? null,
           ev.to ?? ev.pos ?? (Array.isArray(ev.path) ? ev.path[ev.path.length - 1] : null));
