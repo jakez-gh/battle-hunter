@@ -2418,9 +2418,11 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillStyle = 'rgba(180, 50, 40, 0.22)';
     ctx.fillRect(bx + 2, by + 2, bw - 4, 16);
     setFont(11);
+    ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = '#cc3a3a';
     ctx.fillStyle = '#f0c8c0';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText('B A T T L E', (bx + bw / 2) | 0, by + 4);
+    ctx.restore();
     ctx.textAlign = 'left';
     text('ATTACKER', bx + 8, by + 5, 'rgba(255,230,180,0.55)', 9, 'left');
     text('DEFENDER', bx + bw - 8, by + 5, 'rgba(154,223,232,0.55)', 9, 'right');

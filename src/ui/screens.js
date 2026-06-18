@@ -431,7 +431,13 @@ function drawHunterCard(app, rec, x, y, w) {
   ctx.save(); ctx.shadowBlur = 9; ctx.shadowColor = '#b07a08';
   text(ctx, rec.name, x + 76, y + 8, { size: 18, color: GOLD, shadow: false });
   ctx.restore();
-  text(ctx, `Lv ${rec.level}   ${rec.credits} cr`, x + 76, y + 30, { size: 14 });
+  { const lvStr = `Lv ${rec.level}   `;
+    ctx.font = '14px Consolas, "Courier New", monospace';
+    const lvW = Math.round(ctx.measureText(lvStr).width);
+    text(ctx, lvStr, x + 76, y + 30, { size: 14 });
+    ctx.save(); ctx.shadowBlur = 4; ctx.shadowColor = '#906000';
+    text(ctx, `${rec.credits} cr`, x + 76 + lvW, y + 30, { size: 14, color: GOLD, shadow: false });
+    ctx.restore(); }
   text(ctx, fmtStats({ ...d, maxHp: rec.maxHp }) + (rec.maxHp < baseMaxHp(rec) ? `/${baseMaxHp(rec)}` : ''), x + 76, y + 50, { size: 13, color: DIM });
 }
 
