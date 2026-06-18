@@ -300,6 +300,36 @@ export function createRenderer(canvas, opts = {}) {
                 t: 0, ttl: 420, color: i % 3 === 0 ? '#fff' : '#50b0e8' });
             }
           }
+          // OOZ slime splatter: 8 viscous droplets biased downward
+          if (mu?.kind === 'OOZ') {
+            for (let i = 0; i < 8; i++) {
+              const a = (i / 8) * Math.PI * 2;
+              const spd = 0.9 + (i % 3) * 0.4;
+              sparkles.push({ wx: mfrom.x + 0.5, wy: mfrom.y + 0.7,
+                vx: Math.cos(a) * spd * 0.7, vy: Math.abs(Math.sin(a)) * spd + 0.3,
+                t: 0, ttl: 500, color: i % 4 === 0 ? '#a0f0a8' : '#2ea840' });
+            }
+          }
+          // FNG ember spray: 8 sparks kicked upward from exhaust during movement
+          if (mu?.kind === 'FNG') {
+            for (let i = 0; i < 8; i++) {
+              const a = -Math.PI * 0.5 + (i - 3.5) * 0.35;
+              const spd = 1.4 + (i % 3) * 0.6;
+              sparkles.push({ wx: mfrom.x + 0.5, wy: mfrom.y + 0.5,
+                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+                t: 0, ttl: 380, color: i % 3 === 0 ? '#fff880' : i % 3 === 1 ? '#ff8820' : '#cc3010' });
+            }
+          }
+          // WYRM void burst: 10 dark-purple particles with 2 bright white flares
+          if (mu?.kind === 'WYRM') {
+            for (let i = 0; i < 10; i++) {
+              const a = (i / 10) * Math.PI * 2;
+              const spd = 1.8 + (i % 4) * 0.7;
+              sparkles.push({ wx: mfrom.x + 0.5, wy: mfrom.y + 0.5,
+                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+                t: 0, ttl: 460, color: i % 5 === 0 ? '#e8c8ff' : i % 5 === 4 ? '#fff' : '#8030c8' });
+            }
+          }
         }
         break;
       }
@@ -818,7 +848,7 @@ export function createRenderer(canvas, opts = {}) {
       }
     }
     ctx.restore();
-    // Wet stone shimmer: 1-in-20 floor tiles get a brief bright reflective glint
+    // Mineral gleam: 1-in-20 floor tiles briefly shine white — quartz embedded in stone
     for (let sy = y0; sy <= y1; sy++) {
       for (let sx = x0; sx <= x1; sx++) {
         if (!b.floor[sy]?.[sx]) continue;
@@ -826,14 +856,13 @@ export function createRenderer(canvas, opts = {}) {
         if (sh % 20 !== 0) continue;
         const speriod = 9000 + (sh & 0x1FFF);
         const sphase = ((clock + sh * 37) % speriod) / speriod;
-        if (sphase > 0.018) continue;
-        const sa = Math.sin(sphase / 0.018 * Math.PI) * 0.52;
+        if (sphase > 0.014) continue;
+        const sa = Math.sin(sphase / 0.014 * Math.PI) * 0.70;
         const soffx = ((sh & 0xF) + 1) * cam.scale;
         const soffy = ((sh >> 4 & 0xF) + 1) * cam.scale;
         const sp = worldToScreen(sx, sy, cam);
-        ctx.save(); ctx.globalAlpha = sa; ctx.fillStyle = '#e8f0ff';
-        ctx.fillRect((sp.x + soffx - cam.scale) | 0, (sp.y + soffy - cam.scale * 0.5) | 0, cam.scale * 2, cam.scale);
-        ctx.fillRect((sp.x + soffx - cam.scale * 0.5) | 0, (sp.y + soffy - cam.scale) | 0, cam.scale, cam.scale * 2);
+        ctx.save(); ctx.globalAlpha = sa; ctx.fillStyle = '#f8faff';
+        ctx.fillRect((sp.x + soffx) | 0, (sp.y + soffy) | 0, cam.scale, cam.scale);
         ctx.restore();
       }
     }
