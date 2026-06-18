@@ -441,10 +441,27 @@ export function createRenderer(canvas, opts = {}) {
             }
           } }
         break;
-      case 'flagClaimed':
+      case 'flagClaimed': {
         popOverride(standingFlags, ev.pos ? key(ev.pos.x, ev.pos.y) : null);
-        if (ev.pos) addSparklesAt(ev.pos.x, ev.pos.y, '#e8c040');
+        const FLAG_BURST_COLS = { red: ['#ff7060', '#ff3030', '#ff9080', '#fff'],
+          blue: ['#6080f0', '#3050d8', '#90b0ff', '#fff'],
+          green: ['#50d870', '#289848', '#90f0a8', '#fff'],
+          yellow: ['#ffe060', '#d8a820', '#fff880', '#fff'] };
+        const flagBurstCols = FLAG_BURST_COLS[ev.color] ?? ['#e8c040', '#fff88a', '#fff', '#ffe98a'];
+        const fcp = ev.pos ?? (k ? displayPos(k) : null);
+        if (fcp) {
+          for (let i = 0; i < 16; i++) {
+            const a = (i / 16) * Math.PI * 2;
+            const spd = 1.4 + (i % 4) * 0.6;
+            sparkles.push({ wx: fcp.x + 0.5, wy: fcp.y + 0.5, vx: Math.cos(a) * spd,
+              vy: Math.sin(a) * spd - 0.6, t: 0, ttl: 600,
+              color: flagBurstCols[i % flagBurstCols.length] });
+          }
+        }
+        addFloat(k, ev.color ? ev.color.toUpperCase() + ' FLAG!' : 'FLAG!', flagBurstCols[0], { big: true });
+        turnFlash = { color: flagBurstCols[0], t: 0, dur: 480 };
         break;
+      }
       case 'exitWarpedAway': {
         unitFlash = { key: k, t: 0, dur: EVENT_DURATIONS.exitWarpedAway, color: '#f7f7ff' };
         addSparkles(k, '#7ee8a0');
