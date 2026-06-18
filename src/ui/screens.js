@@ -70,6 +70,7 @@ export function createScreenStack() {
 const FG = '#e8e8f0', DIM = '#9aa0b4', GOLD = '#e8d87e', BAD = '#e06a5a', OK = '#7ee8a0';
 const SLOT_COLORS = ['#4a7dff', '#e05a4a', '#e0c63a', '#3aa84a']; // P1-P4 (§2.2)
 const CARD_HEX = { red: '#e05a4a', yellow: '#e0c63a', blue: '#4a7dff', green: '#3aa84a' };
+const MONSTER_KIND_COLOR = { VAC: '#50b0e8', OOZ: '#50c84a', FNG: '#e09040', WYRM: '#9870d8' };
 
 // Battle respond hints — exported so layout tests can verify these fit in the
 // 232px game menu at size 13 (≈0.6em/char Courier New → 212px available for
@@ -1848,9 +1849,14 @@ export function makeGameScreen(app, g) {
       }
     });
 
+    if ((st.monsters || []).length > 0) {
+      ctx.save(); ctx.globalAlpha = 0.30; ctx.fillStyle = BAD;
+      ctx.fillRect(X + 4, 286, W - 8, 1); ctx.restore();
+    }
     (st.monsters || []).forEach((mo, i) => {
       const my = 290 + i * 22;
-      text(ctx, mo.kind, X + 10, my, { size: 11, color: BAD });
+      const mkc = MONSTER_KIND_COLOR[mo.kind] ?? BAD;
+      text(ctx, mo.kind, X + 10, my, { size: 11, color: mkc });
       const mr = Math.max(0, mo.maxHp ? mo.hp / mo.maxHp : 0);
       const mfill = Math.round(88 * mr);
       ctx.fillStyle = '#151828'; ctx.fillRect(X + 52, my + 2, 88, 7);
@@ -1866,7 +1872,7 @@ export function makeGameScreen(app, g) {
           ctx.fillStyle = '#ff2020'; ctx.fillRect(X + 52, my, 88, 11); ctx.restore();
         }
       }
-      text(ctx, `${mo.hp}/${mo.maxHp}`, X + W - 8, my, { size: 10, align: 'right', color: '#8d4040' });
+      text(ctx, `${mo.hp}/${mo.maxHp}`, X + W - 8, my, { size: 10, align: 'right', color: mkc });
     });
 
     // info panel (Tab cycles)
