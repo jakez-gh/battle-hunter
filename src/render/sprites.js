@@ -530,6 +530,44 @@ const FLOOR_K = [ // paired vertical grooves — stone panel joint running top t
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_M = [ // horizontal ashlar seams — two full-width mortar lines splitting tile into slabs
+  'GGGGGGGGGGGGGGGG',
+  'GgGGGGGGGGGGGGgG',
+  'GGGGGGGGGGGGGGGG',
+  'GGdddddddddddddG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGgGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGgGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGdddddddddddddG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGdG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGgG',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const FLOOR_N = [ // V-chevron herringbone — two stacked V-grooves across the tile
+  'GGGGGGGGGGGGGGGG',
+  'GgGGGGGGGGGGGGgG',
+  'GGGGGGGGdGGGGGGG',
+  'GGGGGGGdGGGGGGGG',
+  'GGGGGGdGGdGGGGGG',
+  'GGGGGdGGGGdGGGGG',
+  'GGGGdGGGGGGdGGGG',
+  'GGGdGGGGGGGGdGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGdGGGGGGGGdGGG',
+  'GGGGdGGGGGGdGGGG',
+  'GGGGGdGGGGdGGGGG',
+  'GGGGGGdGGdGGGGGG',
+  'GGGGGGGdGGGGGGGG',
+  'GGGGGGGGgGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const FLOOR_L = [ // corner bracket marks — layout survey marks at each quadrant corner
   'GGGGGGGGGGGGGGGG',
   'GgGGGGGGGGGGGGgG',
@@ -562,6 +600,8 @@ export const TILES = {
   floorJ: { grid: FLOOR_J, palette: TILE_PALETTE },
   floorK: { grid: FLOOR_K, palette: TILE_PALETTE },
   floorL: { grid: FLOOR_L, palette: TILE_PALETTE },
+  floorM: { grid: FLOOR_M, palette: TILE_PALETTE },
+  floorN: { grid: FLOOR_N, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
