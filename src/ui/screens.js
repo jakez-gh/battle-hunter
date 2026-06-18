@@ -363,8 +363,9 @@ export function makeTitleScreen(app) {
       const cx = app.W / 2;
       const bob = Math.sin(t * 2) * 4;
       // Purple atmospheric bloom behind the title
+      const titlePulse = 0.38 + 0.10 * Math.sin(t * 1.4);
       const bloom = ctx.createRadialGradient(cx, 160, 15, cx, 160, 190);
-      bloom.addColorStop(0, 'rgba(55, 12, 92, 0.48)');
+      bloom.addColorStop(0, `rgba(55, 12, 92, ${titlePulse.toFixed(2)})`);
       bloom.addColorStop(1, 'transparent');
       ctx.fillStyle = bloom;
       ctx.fillRect(cx - 190, 55, 380, 210);
@@ -374,6 +375,14 @@ export function makeTitleScreen(app) {
       for (const [dx, dy, c] of [[8, 8, '#000'], [4, 4, '#8f6f1d'], [0, 0, GOLD]]) {
         text(ctx, 'HUNTER', cx + dx, 200 + dy + bob, { size: 84, align: 'center', shadow: false, color: c });
       }
+      // Horizontal shimmer sweep over the title area (repeats every 3.2s)
+      { const scanX = cx - 260 + ((t % 3.2) / 3.2) * (520 + 80) - 40;
+        const scan = ctx.createLinearGradient(scanX - 50, 0, scanX + 50, 0);
+        scan.addColorStop(0, 'transparent');
+        scan.addColorStop(0.5, 'rgba(255,255,255,0.15)');
+        scan.addColorStop(1, 'transparent');
+        ctx.save(); ctx.fillStyle = scan;
+        ctx.fillRect(cx - 260, 55 + bob, 520, 230); ctx.restore(); }
       // Decorative separator line + flanking diamonds
       ctx.fillStyle = GOLD;
       ctx.fillRect(cx - 260, 300, 520, 3);
