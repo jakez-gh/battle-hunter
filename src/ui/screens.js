@@ -392,8 +392,10 @@ const itemName = (slot) => {
 };
 
 function drawGoldBloom(ctx, cx) {
+  const bt = typeof performance !== 'undefined' ? performance.now() / 1000 : 0;
+  const breathe = 0.04 * Math.sin(bt * 0.85);
   const bl = ctx.createRadialGradient(cx, 60, 8, cx, 60, 130);
-  bl.addColorStop(0, 'rgba(200, 160, 30, 0.28)');
+  bl.addColorStop(0, `rgba(200,160,30,${(0.28 + breathe).toFixed(3)})`);
   bl.addColorStop(1, 'transparent');
   ctx.fillStyle = bl;
   ctx.fillRect(cx - 130, 10, 260, 100);
@@ -877,10 +879,11 @@ export function makeHubScreen(app) {
           ctx.fillRect((mx - ms) | 0, (my - ms * 0.3) | 0, ms * 2, Math.max(1, ms * 0.6) | 0);
           ctx.restore();
         } }
-      // Gold bloom behind hub header
+      // Gold bloom behind hub header (breathing)
       const hcx = app.W / 2;
+      const hbloomA = 0.30 + 0.04 * Math.sin(t * 0.85);
       const hbloom = ctx.createRadialGradient(hcx, 60, 8, hcx, 60, 130);
-      hbloom.addColorStop(0, 'rgba(200, 160, 30, 0.30)');
+      hbloom.addColorStop(0, `rgba(200,160,30,${hbloomA.toFixed(3)})`);
       hbloom.addColorStop(1, 'transparent');
       ctx.fillStyle = hbloom;
       ctx.fillRect(hcx - 130, 10, 260, 100);
@@ -919,7 +922,14 @@ export function makeHubScreen(app) {
         sprite(app, ic.icon, r.x + r.w / 2 - 30, r.y + 16 + (sel ? Math.sin(t * 5) * 3 : 0), 5);
         text(ctx, ic.label, r.x + r.w / 2, r.y + 96, { size: 16, align: 'center', color: sel ? GOLD : FG });
       });
-      box(ctx, 120, 320, 720, 60, {});
+      const INFO_ACCENT = { office: '#c07800', client: '#c09010', hospital: '#3aa84a', options: '#3a6ee0' };
+      const infoAccent = INFO_ACCENT[ICONS[idx].id] ?? '#3c4364';
+      box(ctx, 120, 320, 720, 60, { stroke: infoAccent + '88' });
+      { const ia = 0.08 + 0.04 * Math.sin(t * 1.1);
+        const ig = ctx.createLinearGradient(120, 320, 120 + 180, 320);
+        ig.addColorStop(0, infoAccent + '30'); ig.addColorStop(1, 'transparent');
+        ctx.save(); ctx.globalAlpha = ia * 2; ctx.fillStyle = ig;
+        ctx.fillRect(122, 322, 716, 56); ctx.restore(); }
       text(ctx, ICONS[idx].info, 140, 340, { size: 15, color: DIM });
       const rec = currentHunter(app);
       if (rec) {
