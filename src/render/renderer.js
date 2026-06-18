@@ -1103,6 +1103,19 @@ export function createRenderer(canvas, opts = {}) {
           ctx.stroke();
           ctx.restore();
         }
+        // Four rotating shadow tendrils extending outward
+        const trot = (clock / 6500) * Math.PI * 2;
+        for (let ti = 0; ti < 4; ti++) {
+          const ta = trot + ti * Math.PI / 2;
+          for (let seg = 2; seg <= 5; seg++) {
+            const sr = seg * 2.8 * s;
+            const talpha = (0.28 - seg * 0.045) + 0.10 * Math.sin(clock / 820 + ti + seg);
+            if (talpha <= 0) continue;
+            ctx.save(); ctx.globalAlpha = talpha; ctx.fillStyle = '#250850';
+            ctx.fillRect((cx + Math.cos(ta) * sr - s) | 0, (cy + Math.sin(ta) * sr - s) | 0, s * 2, s * 2);
+            ctx.restore();
+          }
+        }
       }
       if (m.kind === 'OOZ') {
         // Slime drips: 5 particles fall downward from sprite bottom, staggered phases
