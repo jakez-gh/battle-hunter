@@ -519,6 +519,12 @@ export function createRenderer(canvas, opts = {}) {
       eg.addColorStop(1, 'rgba(126,232,160,0.0)');
       ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = eg;
       ctx.fillRect(ep.x, ep.y, es, es); ctx.restore();
+      // Outer pulsing ring (phase offset from inner bloom)
+      const ringPulse = 0.3 + 0.7 * Math.sin(clock / 700 + 1.1);
+      ctx.save(); ctx.globalAlpha = ringPulse * 0.42;
+      ctx.strokeStyle = '#7ee8a0'; ctx.lineWidth = cam.scale;
+      ctx.strokeRect(ep.x + cam.scale, ep.y + cam.scale, es - 2 * cam.scale, es - 2 * cam.scale);
+      ctx.restore();
     }
     // Warm torch-light bloom centered on the active unit
     { const ak = activeKey();
@@ -950,10 +956,18 @@ export function createRenderer(canvas, opts = {}) {
     // hand as mini card backs colored by card color
     let cx = x + 340;
     for (const cardId of h.hand ?? []) {
-      ctx.fillStyle = CARD_MINI[String(cardId)[0]] ?? '#8d8d9e';
+      const cc = CARD_MINI[String(cardId)[0]] ?? '#8d8d9e';
+      // Shadow
+      ctx.save(); ctx.globalAlpha = 0.4; ctx.fillStyle = '#000';
+      ctx.fillRect(cx + 1, y + 4, 5, 9); ctx.restore();
+      ctx.fillStyle = cc;
       ctx.fillRect(cx, y + 3, 5, 9);
+      // Top highlight
       ctx.save(); ctx.globalAlpha = 0.38; ctx.fillStyle = '#fff';
       ctx.fillRect(cx + 1, y + 4, 3, 2); ctx.restore();
+      // Bottom shadow stripe
+      ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = '#000';
+      ctx.fillRect(cx, y + 10, 5, 2); ctx.restore();
       ctx.strokeStyle = '#101018';
       ctx.strokeRect(cx + 0.5, y + 3.5, 5, 9);
       cx += 7;
