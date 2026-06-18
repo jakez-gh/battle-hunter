@@ -416,6 +416,25 @@ const WALL = [ // stone-block face — front face of a wall, viewed from corrido
   'GGGGGGGGGGGGGGGG',  // bottom ledge — transitions to floor
 ];
 
+const WALL_D = [ // rough-cut stone — weathered texture marks inside each block face
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGgGGGGdGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGgGGGGGGGX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGXcGGGGXcGX',
+  'XGGGGGXGGdGGXGGX',
+  'XGGGGGXGGGGGXGgX',
+  'XgGGGGXGGGGGXgGX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XgGGdGGGGGgGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_C = [ // stone-block face — one wide upper block, three narrow lower blocks
   'XXXXXXXXXXXXXXXX',
   'XcGGGGGGGGGGGGgX',
@@ -547,6 +566,7 @@ export const TILES = {
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
   wallC: { grid: WALL_C, palette: TILE_PALETTE },
+  wallD: { grid: WALL_D, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
