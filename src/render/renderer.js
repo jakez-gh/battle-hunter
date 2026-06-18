@@ -808,6 +808,25 @@ export function createRenderer(canvas, opts = {}) {
       }
     }
     ctx.restore();
+    // Wet stone shimmer: 1-in-20 floor tiles get a brief bright reflective glint
+    for (let sy = y0; sy <= y1; sy++) {
+      for (let sx = x0; sx <= x1; sx++) {
+        if (!b.floor[sy]?.[sx]) continue;
+        const sh = ((sx * 3571 + sy * 2341) ^ 1337) & 0xFFFF;
+        if (sh % 20 !== 0) continue;
+        const speriod = 9000 + (sh & 0x1FFF);
+        const sphase = ((clock + sh * 37) % speriod) / speriod;
+        if (sphase > 0.018) continue;
+        const sa = Math.sin(sphase / 0.018 * Math.PI) * 0.52;
+        const soffx = ((sh & 0xF) + 1) * cam.scale;
+        const soffy = ((sh >> 4 & 0xF) + 1) * cam.scale;
+        const sp = worldToScreen(sx, sy, cam);
+        ctx.save(); ctx.globalAlpha = sa; ctx.fillStyle = '#e8f0ff';
+        ctx.fillRect((sp.x + soffx - cam.scale) | 0, (sp.y + soffy - cam.scale * 0.5) | 0, cam.scale * 2, cam.scale);
+        ctx.fillRect((sp.x + soffx - cam.scale * 0.5) | 0, (sp.y + soffy - cam.scale) | 0, cam.scale, cam.scale * 2);
+        ctx.restore();
+      }
+    }
     if (b.exit) {
       blitTile('tile.exit', b.exit.x, b.exit.y);
       const ep = worldToScreen(b.exit.x, b.exit.y, cam);
