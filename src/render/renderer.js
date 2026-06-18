@@ -668,12 +668,39 @@ export function createRenderer(canvas, opts = {}) {
         const gk = k != null && ghosts.has(k) ? k : ghosts.keys().next().value;
         if (gk != null) ghosts.get(gk).dyingKey = gk;
         addFloat(k ?? gk, ev.drop != null ? `DROP ${ev.drop}` : '', '#ffe98a');
-        // Type-colored explosion: 20 particles spread at varied speeds
         const deadGhost = ghosts.get(gk ?? k);
         const KILL_COLORS = { VAC: '#2890c8', OOZ: '#28a838', FNG: '#c87020', WYRM: '#7c1cc8' };
-        const killCol = KILL_COLORS[deadGhost?.kind] ?? '#ff8866';
+        const killKind = deadGhost?.kind;
+        const killCol = KILL_COLORS[killKind] ?? '#ff8866';
         const kpos = deadGhost?.pos ?? displayPos(gk ?? k);
-        if (kpos) {
+        if (kpos && killKind === 'WYRM') {
+          // WYRM death: void detonation — 3 rings at staggered radii + shock wave + screen blowout
+          shake = { t: 0, dur: 560, mag: 5.0 };
+          turnFlash = { color: '#9c28f8', t: 0, dur: 700 };
+          // Shock wave ring: fast, very short-lived
+          for (let i = 0; i < 20; i++) {
+            const a = (i / 20) * Math.PI * 2;
+            sparkles.push({ wx: kpos.x + 0.5, wy: kpos.y + 0.5,
+              vx: Math.cos(a) * 5.5, vy: Math.sin(a) * 5.5,
+              t: 0, ttl: 210, color: i % 4 === 0 ? '#fff' : '#e0c0ff' });
+          }
+          // Dense mid ring
+          for (let i = 0; i < 28; i++) {
+            const a = (i / 28) * Math.PI * 2;
+            const spd = 2.2 + (i % 5) * 0.55;
+            sparkles.push({ wx: kpos.x + 0.5, wy: kpos.y + 0.5,
+              vx: Math.cos(a) * spd, vy: Math.sin(a) * spd - 0.4,
+              t: 0, ttl: 600, color: i % 5 === 0 ? '#fff' : i % 5 === 1 ? '#e0c0ff' : i % 5 === 2 ? '#9838e8' : '#5c1098' });
+          }
+          // Slow lingering void-mist ring
+          for (let i = 0; i < 16; i++) {
+            const a = (i / 16) * Math.PI * 2;
+            sparkles.push({ wx: kpos.x + 0.5, wy: kpos.y + 0.5,
+              vx: Math.cos(a) * 0.8, vy: Math.sin(a) * 0.8 - 0.2,
+              t: 0, ttl: 900, color: i % 3 === 0 ? '#c898ff' : '#7c1cc8', round: true, alpha0: 0.7 });
+          }
+        } else if (kpos) {
+          // Standard monster kill: type-colored 20-particle burst
           for (let i = 0; i < 20; i++) {
             const a = (i / 20) * Math.PI * 2;
             const spd = 1.0 + (i % 4) * 0.6;
