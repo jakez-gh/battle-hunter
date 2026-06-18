@@ -256,9 +256,9 @@ export function createRenderer(canvas, opts = {}) {
       case 'turnStarted':
         manualPan = null;
         if (k?.[0] === 'h') {
-          addSparkles(k, '#c8d0ff');
           const tu = findUnit(k);
           const tc = SLOT_COLORS[(tu?.slot ?? 0) % 4] ?? '#c8d0ff';
+          addSparkles(k, tc);
           turnFlash = { color: tc, t: 0, dur: 520 };
         }
         break;
