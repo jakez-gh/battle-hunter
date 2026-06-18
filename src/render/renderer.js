@@ -1194,6 +1194,45 @@ export function createRenderer(canvas, opts = {}) {
         }
         ix += 8 * s;
       }
+      // Ambient status particles — drawn clock-based, no sparkles array
+      const scx = p.x + TILE * s / 2, scy = p.y + TILE * s * 0.4 - bobPx;
+      if (u.status?.stun) {
+        // Stun: 4 yellow stars orbiting above the unit's head
+        for (let i = 0; i < 4; i++) {
+          const a = (clock / 380 + i * Math.PI * 0.5);
+          const orx = Math.cos(a) * 5 * s, ory = Math.sin(a * 0.7) * 2.5 * s;
+          const sa = 0.55 + 0.35 * Math.sin(clock / 200 + i * 1.3);
+          ctx.save(); ctx.globalAlpha = sa * alpha; ctx.fillStyle = i % 2 === 0 ? '#ffe060' : '#fff880';
+          ctx.fillRect((scx + orx - s * 0.5) | 0, (scy - 12 * s + ory) | 0, Math.max(1, s) | 0, Math.max(1, s) | 0);
+          ctx.restore();
+        }
+      }
+      if (u.status?.leg) {
+        // Leg: slow-drifting cyan frost pixels falling around the unit
+        for (let i = 0; i < 5; i++) {
+          const fperiod = 1400 + i * 180;
+          const fphase = ((clock + i * (fperiod / 5)) % fperiod) / fperiod;
+          const fx = scx + (i - 2) * 3.5 * s + Math.sin(fphase * Math.PI * 1.4 + i) * 2 * s;
+          const fy = (scy - 10 * s) + fphase * 14 * s;
+          const fa = Math.sin(fphase * Math.PI) * 0.6;
+          if (fa < 0.05) continue;
+          ctx.save(); ctx.globalAlpha = fa * alpha; ctx.fillStyle = i % 2 === 0 ? '#90c8f8' : '#c0e4ff';
+          ctx.fillRect(fx | 0, fy | 0, Math.max(1, s) | 0, Math.max(1, s) | 0);
+          ctx.restore();
+        }
+      }
+      if (u.status?.panic) {
+        // Panic: 5 red sparks racing outward in fast arcs around the unit
+        for (let i = 0; i < 5; i++) {
+          const a = (clock / 160 + i * Math.PI * 0.4);
+          const pr = (3 + 3 * ((clock / 160 + i * 0.4) % 1)) * s;
+          const pa = 0.7 - ((clock / 160 + i * 0.4) % 1) * 0.65;
+          ctx.save(); ctx.globalAlpha = Math.max(0, pa) * alpha;
+          ctx.fillStyle = i % 2 === 0 ? '#ff3820' : '#ff9040';
+          ctx.fillRect((scx + Math.cos(a) * pr - s * 0.5) | 0, (scy + Math.sin(a) * pr * 0.55 - s * 0.5) | 0, Math.max(1, s) | 0, Math.max(1, s) | 0);
+          ctx.restore();
+        }
+      }
     }
   }
 
