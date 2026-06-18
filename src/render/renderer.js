@@ -273,10 +273,24 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'monsterMoved':
-        beginSlide(k, ev.from ?? null,
+      case 'monsterMoved': {
+        const mfrom = ev.from ?? null;
+        beginSlide(k, mfrom,
           ev.to ?? ev.pos ?? (Array.isArray(ev.path) ? ev.path[ev.path.length - 1] : null));
+        // Monster footstep dust from departure tile
+        if (mfrom) {
+          const STEP_COL = { VAC: '#3080a8', OOZ: '#288a38', FNG: '#9a6c20', WYRM: '#5c1c9a' };
+          const mu = findUnit(k);
+          const mc = STEP_COL[mu?.kind] ?? '#664444';
+          for (let i = 0; i < 4; i++) {
+            const a = (i / 4) * Math.PI * 2;
+            sparkles.push({ wx: mfrom.x + 0.5, wy: mfrom.y + 0.5,
+              vx: Math.cos(a) * 0.6, vy: Math.sin(a) * 0.6,
+              t: 0, ttl: 350, color: mc });
+          }
+        }
         break;
+      }
       case 'cardPlayed': {
         const cc = CARD_MINI[String(ev.card ?? '')[0]] ?? '#c8d0ff';
         if (ev.card) addFloat(k, String(ev.card), cc, { ttl: 560 });
@@ -703,14 +717,18 @@ export function createRenderer(canvas, opts = {}) {
         const [x, y] = String(cell).split(',').map(Number);
         const p = worldToScreen(x, y, cam);
         const ts = TILE * s;
-        ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = rangeCol;
+        const [rx, ry] = String(cell).split(',').map(Number);
+        const tpulse = 0.65 + 0.35 * Math.sin(clock / 480 + (rx + ry) * 0.7);
+        ctx.save(); ctx.globalAlpha = 0.12 * tpulse; ctx.fillStyle = rangeCol;
         ctx.fillRect(p.x, p.y, ts, ts); ctx.restore();
         const L = 3 * s, W = s;
+        ctx.save(); ctx.globalAlpha = tpulse;
         ctx.fillStyle = rangeCol;
         ctx.fillRect(p.x + 1, p.y + 1, L, W); ctx.fillRect(p.x + 1, p.y + 1, W, L);
         ctx.fillRect(p.x + ts - L - 1, p.y + 1, L, W); ctx.fillRect(p.x + ts - W - 1, p.y + 1, W, L);
         ctx.fillRect(p.x + 1, p.y + ts - W - 1, L, W); ctx.fillRect(p.x + 1, p.y + ts - L - 1, W, L);
         ctx.fillRect(p.x + ts - L - 1, p.y + ts - W - 1, L, W); ctx.fillRect(p.x + ts - W - 1, p.y + ts - L - 1, W, L);
+        ctx.restore();
       }
     }
     if (overlays.path) {
