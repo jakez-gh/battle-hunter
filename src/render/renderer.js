@@ -252,6 +252,7 @@ export function createRenderer(canvas, opts = {}) {
     switch (ev.type) {
       case 'turnStarted':
         manualPan = null;
+        if (k?.[0] === 'h') addSparkles(k, '#c8d0ff');
         break;
       case 'stepped': {
         const fromPos = ev.from ?? null;
