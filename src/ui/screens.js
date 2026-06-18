@@ -1616,7 +1616,13 @@ export function makeGameScreen(app, g) {
     });
 
     (st.monsters || []).forEach((mo, i) => {
-      text(ctx, `${mo.kind} ${mo.hp}/${mo.maxHp}`, X + 10, 296 + i * 16, { size: 12, color: BAD });
+      const my = 290 + i * 22;
+      text(ctx, mo.kind, X + 10, my, { size: 11, color: BAD });
+      const mr = Math.max(0, mo.maxHp ? mo.hp / mo.maxHp : 0);
+      ctx.fillStyle = '#151828'; ctx.fillRect(X + 52, my + 2, 88, 7);
+      ctx.fillStyle = mr > 0.5 ? '#cc4a3a' : mr > 0.25 ? '#e07020' : '#ff3a2a';
+      ctx.fillRect(X + 52, my + 2, Math.round(88 * mr), 7);
+      text(ctx, `${mo.hp}/${mo.maxHp}`, X + W - 8, my, { size: 10, align: 'right', color: '#8d4040' });
     });
 
     // info panel (Tab cycles)

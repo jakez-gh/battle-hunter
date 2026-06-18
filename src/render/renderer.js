@@ -728,7 +728,18 @@ export function createRenderer(canvas, opts = {}) {
     const jy = settled ? 0 : Math.cos(clock / 33) * 1.5 * s;
     const popT = settled && phase < 0.78 ? (phase - 0.6) / 0.18 : 0;
     const chipScale = (1 + Math.sin(popT * Math.PI) * 0.32) * s;
-    blit(`chip.${clamp(v, 1, 6) | 0}`, p.x + 4 * s + jx, p.y - 18 * s + jy, chipScale);
+    const cx = p.x + 4 * s + jx;
+    const cy = p.y - 18 * s + jy;
+    // Drop shadow under the chip
+    ctx.save(); ctx.globalAlpha = 0.38; ctx.fillStyle = '#000';
+    ctx.fillRect(cx + chipScale * 0.5, cy + chipScale * 0.5, 8 * chipScale, 8 * chipScale);
+    ctx.restore();
+    blit(`chip.${clamp(v, 1, 6) | 0}`, cx, cy, chipScale);
+    // Top-left shine overlay
+    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#fff';
+    ctx.fillRect(cx + chipScale, cy + chipScale, 4 * chipScale, 2 * chipScale);
+    ctx.fillRect(cx + chipScale, cy + chipScale, 2 * chipScale, 4 * chipScale);
+    ctx.restore();
     if (ev.type === 'flagClaimed' && settled && ev.effect != null) {
       text(String(ev.effect), p.x + 8 * s, p.y - 28 * s, '#ffe98a', 12, 'center');
     }
