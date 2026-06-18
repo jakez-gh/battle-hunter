@@ -973,7 +973,9 @@ export function makeHubScreen(app) {
         rec.items.slice(0, 6).forEach((slot, i) =>
           text(ctx, '- ' + itemName(slot), 640, 412 + i * 18, { size: 12, color: DIM }));
       } else {
-        text(ctx, 'No active hunter - visit the OFFICE first.', 120, 430, { size: 16, color: BAD });
+        ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = BAD;
+        text(ctx, 'No active hunter - visit the OFFICE first.', 120, 430, { size: 16, color: BAD, shadow: false });
+        ctx.restore();
       }
       text(ctx, 'Esc: back to title', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
     },
@@ -1459,7 +1461,9 @@ export function makeOptionsScreen(app) {
         }
         if (row === 'wallpaper') {
           text(ctx, 'Wallpaper', 260, y, { size: 18, color: sel ? '#fff' : FG });
-          text(ctx, `< ${WALLPAPERS[opts.wallpaper].name} >`, 500, y, { size: 16, color: GOLD });
+          ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = '#906000';
+          text(ctx, `< ${WALLPAPERS[opts.wallpaper].name} >`, 500, y, { size: 16, color: GOLD, shadow: false });
+          ctx.restore();
           text(ctx, `${unlocked.length}/${WALLPAPERS.length} unlocked (find Discs)`, 500, y + 22, { size: 11, color: DIM }); return;
         }
         text(ctx, cap(row), 260, y, { size: 18, color: sel ? '#fff' : FG });
@@ -1967,13 +1971,21 @@ export function makeGameScreen(app, g) {
     ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = '#906000';
     text(ctx, `R${st.round ?? '?'}`, X + 10, 13, { size: 13, color: GOLD, shadow: false });
     ctx.restore();
-    text(ctx, `deck ${_deckCount}`, X + 62, 13, { size: 13, color: _deckCol });
+    if (_deckUrgent || _deckLow) {
+      ctx.save(); ctx.shadowBlur = _deckUrgent ? 8 : 4; ctx.shadowColor = _deckUrgent ? BAD : '#c07830';
+      text(ctx, `deck ${_deckCount}`, X + 62, 13, { size: 13, color: _deckCol, shadow: false });
+      ctx.restore();
+    } else {
+      text(ctx, `deck ${_deckCount}`, X + 62, 13, { size: 13, color: _deckCol });
+    }
     { const rp = 0.06 + 0.04 * Math.sin(hudT * 1.5);
       const rrg = ctx.createRadialGradient(X + 164, 20, 2, X + 164, 20, 38);
       rrg.addColorStop(0, '#a898c8'); rrg.addColorStop(1, 'transparent');
       ctx.save(); ctx.globalAlpha = rp; ctx.fillStyle = rrg;
       ctx.fillRect(X + 126, 6, 78, 26); ctx.restore(); }
-    text(ctx, `relic L${st.relicLevel ?? '?'}`, X + 138, 13, { size: 13, color: '#a898c8' });
+    ctx.save(); ctx.shadowBlur = 4; ctx.shadowColor = '#7860a8';
+    text(ctx, `relic L${st.relicLevel ?? '?'}`, X + 138, 13, { size: 13, color: '#a898c8', shadow: false });
+    ctx.restore();
 
     (st.hunters || []).forEach((h, i) => {
       const y = 42 + i * 62;

@@ -133,7 +133,7 @@ none — claim one from the backlog
 
 - Network play (WebRTC or WebSocket) for remote multiplayer
 - Replay/spectate mode (engine is deterministic; save action log + seed)
-- Additional board sections (currently 12; more variety = less repetition)
+- Additional board sections (currently 14; more variety = less repetition)
 - Sound effect for each item use type
 - High-score leaderboard (localStorage, top-10 per mode)
 - Accessibility: keyboard nav on all menus, colour-blind palette option
