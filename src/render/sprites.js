@@ -454,6 +454,25 @@ const WALL_C = [ // stone-block face — one wide upper block, three narrow lowe
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_E = [ // colonnade face — two equal sub-blocks with centre pillar divider
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGgGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGXcGGGGGgX',
+  'XGgGGGGXGGGGdGGX',
+  'XGGGGGGXGGGGGGGX',
+  'XgGGGGGXGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_B = [ // stone-block face — three narrow sub-blocks in lower band
   'XXXXXXXXXXXXXXXX',  // ceiling cap
   'XcGGGGGGGGGGGGgX',  // upper block, lit corner
@@ -627,6 +646,7 @@ export const TILES = {
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
   wallC: { grid: WALL_C, palette: TILE_PALETTE },
   wallD: { grid: WALL_D, palette: TILE_PALETTE },
+  wallE: { grid: WALL_E, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
