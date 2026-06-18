@@ -1868,7 +1868,11 @@ export function makeGameScreen(app, g) {
           ctx.fillRect(cx - 6, cy - 4, 54, 68); ctx.restore();
         }
         sprite(app, `card.${color}`, cx, cy, 3);
-        text(ctx, String(cid).slice(1), cx + 21, cy + 22, { size: 14, align: 'center', color: CARD_HEX[color] ?? FG });
+        { const cv = String(cid).slice(1), cc = CARD_HEX[color] ?? FG;
+          text(ctx, cv, cx + 21, cy + 22, { size: 14, align: 'center', color: cc });
+          ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = cc;
+          text(ctx, cv, cx + 21, cy + 22, { size: 14, align: 'center', color: cc, shadow: false });
+          ctx.restore(); }
       });
     }
   }
