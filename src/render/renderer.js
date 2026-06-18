@@ -769,6 +769,22 @@ export function createRenderer(canvas, opts = {}) {
         }
       }
     }
+    // Ambient dust motes: 1-in-5 floor tiles get a gently drifting speck
+    ctx.save(); ctx.fillStyle = '#c8d0e8';
+    for (let my = y0; my <= y1; my++) {
+      for (let mx = x0; mx <= x1; mx++) {
+        if (!b.floor[my]?.[mx]) continue;
+        const mh = ((mx * 2341 + my * 1013) ^ 571) & 0xFFFF;
+        if (mh % 5 !== 0) continue;
+        const period = 7600 + (mh & 0x7FF);
+        const motePh = ((clock + mh * 23) % period) / period;
+        const mp = worldToScreen(mx + 0.5 + Math.sin(motePh * Math.PI * 2) * 0.38,
+          my + 0.38 + Math.cos(motePh * Math.PI * 1.5) * 0.28, cam);
+        ctx.globalAlpha = Math.max(0, 0.04 + 0.04 * Math.sin(motePh * Math.PI * 2.7 + mh * 0.012));
+        ctx.fillRect(mp.x | 0, mp.y | 0, cam.scale, cam.scale);
+      }
+    }
+    ctx.restore();
     if (b.exit) {
       blitTile('tile.exit', b.exit.x, b.exit.y);
       const ep = worldToScreen(b.exit.x, b.exit.y, cam);
