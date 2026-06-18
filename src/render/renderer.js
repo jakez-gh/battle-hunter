@@ -1382,7 +1382,9 @@ export function createRenderer(canvas, opts = {}) {
           const tv = Object.values(st.totals).filter((v) => typeof v === 'number');
           text(tv.join(' vs '), bx + bw / 2, by + 124, '#f0f4ff', 12, 'center');
         }
-        text(`-${st.damage}`, bx + bw / 2, by + 150, '#ff6a5a', 24, 'center');
+        { ctx.save(); ctx.shadowBlur = 14; ctx.shadowColor = '#ff5050';
+          text(`-${st.damage}`, bx + bw / 2, by + 150, '#ff6a5a', 24, 'center');
+          ctx.restore(); }
         if (st.crit && anim?.ev.type === 'strikeRolled') {
           const p = anim.t / anim.dur;
           if (p > 0.5 && p < 0.72) {
@@ -1398,7 +1400,9 @@ export function createRenderer(canvas, opts = {}) {
             // White rim flash on edges
             ctx.save(); ctx.globalAlpha = fadeAlpha * 0.35; ctx.fillStyle = '#fff';
             ctx.fillRect(bx, by, bw, bh); ctx.restore();
+            ctx.save(); ctx.shadowBlur = 22; ctx.shadowColor = '#ffe060';
             text('CRIT!', bx + bw / 2, by + bh / 2 - 10, '#ffe98a', 28, 'center');
+            ctx.restore();
           }
         }
       }
@@ -1434,7 +1438,9 @@ export function createRenderer(canvas, opts = {}) {
     const tsz = Math.round(20 * bscale);
     const ty = by + 10 + Math.round((20 - tsz) * 0.5);
     text(banner.text, bw / 2 + 1, ty + 1, 'rgba(0,0,0,0.65)', tsz, 'center');
+    ctx.save(); ctx.shadowBlur = 16; ctx.shadowColor = banner.color;
     text(banner.text, bw / 2, ty, banner.color, tsz, 'center');
+    ctx.restore();
   }
 
   // --- public API --------------------------------------------------------------
