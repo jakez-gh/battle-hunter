@@ -1280,9 +1280,14 @@ export function createRenderer(canvas, opts = {}) {
     const ratio = h.maxHp ? clamp(h.hp / h.maxHp, 0, 1) : 0;
     ctx.fillStyle = '#1c1e28';
     ctx.fillRect(x + 112, y + 5, 52, 6);
-    ctx.fillStyle = ratio > 0.5 ? '#3aa84a' : ratio > 0.25 ? '#d8b83a' : '#cc4a3a';
     const bw = Math.round(52 * ratio);
-    ctx.fillRect(x + 112, y + 5, bw, 6);
+    if (bw > 0) {
+      const [hc0, hc1] = ratio > 0.5 ? ['#52da68', '#2d8f40'] : ratio > 0.25 ? ['#f2df4a', '#b89818'] : ['#f07060', '#a83028'];
+      const hbg = ctx.createLinearGradient(x + 112, y + 5, x + 112, y + 11);
+      hbg.addColorStop(0, hc0); hbg.addColorStop(1, hc1);
+      ctx.fillStyle = hbg;
+      ctx.fillRect(x + 112, y + 5, bw, 6);
+    }
     if (bw > 2) { ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#fff';
       ctx.fillRect(x + 112, y + 5, bw, 2); ctx.restore(); }
     if (ratio <= 0.25 && bw > 0) {
