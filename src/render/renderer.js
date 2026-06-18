@@ -327,6 +327,17 @@ export function createRenderer(canvas, opts = {}) {
       case 'deckCount':
         deckShown = ev.count ?? ev.value ?? deckShown;
         break;
+      case 'dieRolled': {
+        const dp = displayPos(k);
+        if (dp) {
+          for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2;
+            sparkles.push({ wx: dp.x + 0.5, wy: dp.y - 0.2, vx: Math.cos(a) * 1.5,
+              vy: Math.sin(a) * 1.5 - 1.6, t: 0, ttl: 380, color: i % 2 ? '#ffe98a' : '#c8d8f0' });
+          }
+        }
+        break;
+      }
       case 'trapTriggered':
         shake = { t: 0, dur: EVENT_DURATIONS.trapTriggered, mag: 3 };
         addFloat(k, ev.kind === 'damage' ? 'TRAP!' : '', '#ff6a5a',
@@ -691,13 +702,23 @@ export function createRenderer(canvas, opts = {}) {
         }
         blitTile(`tile.${floors[(x * 7 + y * 13) % 7]}`, x, y);
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
-          // Puddle: ~12% of floor tiles get a subtle wet reflection shimmer
+          // Puddle: ~12% of floor tiles get a reflective wet shimmer
           const ph = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;
           if ((ph & 0xFF) < 30) {
-            const pw = 0.06 + 0.04 * Math.sin(clock / 1600 + ph * 0.009);
+            const pw = 0.12 + 0.08 * Math.sin(clock / 1600 + ph * 0.009);
+            const px = fp.x + ts * 0.18, py = fp.y + ts * 0.56;
+            const pw2 = ts * 0.64, ph2 = ts * 0.26;
+            const pcx = px + pw2 * 0.45, pcy = py + ph2 * 0.4;
+            const pg = ctx.createRadialGradient(pcx, pcy, 0, pcx, pcy, pw2 * 0.6);
+            pg.addColorStop(0, '#a8c8e8'); pg.addColorStop(0.45, '#5080b8'); pg.addColorStop(1, '#253060');
             ctx.save(); ctx.globalAlpha = pw;
-            ctx.fillStyle = '#6090c0';
-            ctx.fillRect(fp.x + ts * 0.25, fp.y + ts * 0.55, ts * 0.5, ts * 0.3);
+            ctx.fillStyle = pg; ctx.fillRect(px | 0, py | 0, pw2, ph2);
+            // Animated specular streak drifting across the puddle
+            const specT = ((clock * 0.00025 + ph * 0.00171) % 1);
+            const specX = px + pw2 * (0.06 + specT * 0.72);
+            const sg = ctx.createLinearGradient(specX - ts * 0.07, 0, specX + ts * 0.07, 0);
+            sg.addColorStop(0, 'transparent'); sg.addColorStop(0.5, 'rgba(210,240,255,0.62)'); sg.addColorStop(1, 'transparent');
+            ctx.fillStyle = sg; ctx.fillRect(px | 0, py | 0, pw2, ph2);
             ctx.restore();
           }
           // Scorch mark: ~3% of floor tiles get a subtle dark radial burn
@@ -1304,7 +1325,7 @@ export function createRenderer(canvas, opts = {}) {
         const sp2 = worldToScreen(tx, ty, cam);
         const spx = sp2.x + ((h >> 4) & 13) * s;
         const spy = sp2.y + ((h >> 8) & 13) * s;
-        ctx.save(); ctx.globalAlpha = t2 * 0.22;
+        ctx.save(); ctx.globalAlpha = t2 * 0.28;
         ctx.fillStyle = (h & 1) ? '#e8c87a' : '#9adfe8';
         // Star/cross shape: 4-arm plus sign for a gem-sparkle look
         ctx.fillRect(spx + s, spy, s, s * 3);     // vertical arm
