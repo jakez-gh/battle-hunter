@@ -967,6 +967,22 @@ export function createRenderer(canvas, opts = {}) {
         }
         blitTile(`tile.${floors[(x * 7 + y * 13) % 14]}`, x, y);
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
+          // Warm torch-light pool: if the wall directly above this floor tile has a torch,
+          // spill a warm amber glow onto the top of this tile
+          if (!b.floor[y - 1]?.[x]) {
+            const twh = ((x * 1637 + (y - 1) * 3571) ^ 997) & 0xFFFF;
+            if ((twh & 0xFF) >= 20 && ((twh >> 8) & 0xFF) < 16) {
+              const cs = cam.scale;
+              const tcx = fp.x + (((twh >> 4) & 0xF) + 1.5) * cs;
+              const tcy = fp.y + ts * 0.15;
+              const tgp = 0.14 + 0.07 * Math.sin(clock / 850 + twh * 0.031);
+              const tgr = ctx.createRadialGradient(tcx, tcy, 0, tcx, tcy, cs * 5.5);
+              tgr.addColorStop(0, 'rgba(255,160,40,' + tgp.toFixed(2) + ')');
+              tgr.addColorStop(1, 'transparent');
+              ctx.fillStyle = tgr;
+              ctx.fillRect((tcx - cs * 5.5) | 0, fp.y | 0, cs * 11, ts);
+            }
+          }
           // Puddle: ~12% of floor tiles get a reflective wet shimmer
           const ph = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;
           if ((ph & 0xFF) < 30) {
