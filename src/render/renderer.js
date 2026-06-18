@@ -2211,6 +2211,12 @@ export function createRenderer(canvas, opts = {}) {
       x + 222, y + 3, active ? '#6e7890' : '#484c5e');
     // hand as mini card backs colored by card color
     let cx = x + 340;
+    if (active && (h.hand?.length ?? 0) > 0) {
+      const sc = SLOT_COLORS[h.slot % 4] ?? '#3a6ee0';
+      const cg = ctx.createLinearGradient(x + 340, y, x + 340 + (h.hand.length) * 7 + 8, y);
+      cg.addColorStop(0, sc + '28'); cg.addColorStop(1, 'transparent');
+      ctx.save(); ctx.fillStyle = cg; ctx.fillRect(x + 340, y, (h.hand.length) * 7 + 8, 16); ctx.restore();
+    }
     for (const cardId of h.hand ?? []) {
       const cc = CARD_MINI[String(cardId)[0]] ?? '#8d8d9e';
       // Shadow
