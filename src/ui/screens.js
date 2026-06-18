@@ -2673,7 +2673,9 @@ export function makeManualScreen(app) {
       for (let si = 0; si < pg.sections.length; si++) {
         const sec = pg.sections[si];
         if (curY >= bodyBottom) break;
-        text(ctx, sec.head, BX + 20, curY, { size: 13, color: GOLD });
+        ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = '#906000';
+        text(ctx, sec.head, BX + 20, curY, { size: 13, color: GOLD, shadow: false });
+        ctx.restore();
         curY = wrapText(ctx, sec.body, BX + 28, curY + 18, BW - 60, 17, { size: 13, color: DIM });
         curY += 6;
       }
@@ -2684,12 +2686,22 @@ export function makeManualScreen(app) {
       ctx.fillStyle = '#3c4364';
       ctx.fillRect(BX + 20, navY, BW - 40, 1);
 
-      text(ctx, '< Prev', BX + 30, navY + 12,
-        { size: 13, color: page > 0 ? DIM : '#444', shadow: false });
+      if (page > 0) {
+        ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = DIM;
+        text(ctx, '< Prev', BX + 30, navY + 12, { size: 13, color: FG, shadow: false });
+        ctx.restore();
+      } else {
+        text(ctx, '< Prev', BX + 30, navY + 12, { size: 13, color: '#444', shadow: false });
+      }
       text(ctx, 'Esc / Enter: close', app.W / 2, navY + 12,
         { size: 13, align: 'center', color: DIM, shadow: false });
-      text(ctx, 'Next >', BX + BW - 30, navY + 12,
-        { size: 13, align: 'right', color: page < PAGES.length - 1 ? DIM : '#444', shadow: false });
+      if (page < PAGES.length - 1) {
+        ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = DIM;
+        text(ctx, 'Next >', BX + BW - 30, navY + 12, { size: 13, align: 'right', color: FG, shadow: false });
+        ctx.restore();
+      } else {
+        text(ctx, 'Next >', BX + BW - 30, navY + 12, { size: 13, align: 'right', color: '#444', shadow: false });
+      }
 
       const spacing = 14;
       const dotsX = app.W / 2 - ((PAGES.length - 1) * spacing) / 2;
