@@ -618,6 +618,18 @@ export function createRenderer(canvas, opts = {}) {
             ctx.fillRect(fp.x + ts * 0.25, fp.y + ts * 0.55, ts * 0.5, ts * 0.3);
             ctx.restore();
           }
+          // Scorch mark: ~3% of floor tiles get a subtle dark radial burn
+          { const sh = ((x * 2237 + y * 4507) ^ 1319) & 0xFFFF;
+            if ((sh & 0xFF) < 8) {
+              const smcx = fp.x + (4 + (sh & 7)) * cam.scale;
+              const smcy = fp.y + (4 + ((sh >> 8) & 7)) * cam.scale;
+              const smr = (4 + (sh & 3)) * cam.scale;
+              const smg = ctx.createRadialGradient(smcx, smcy, 0, smcx, smcy, smr);
+              smg.addColorStop(0, 'rgba(22,18,10,0.30)');
+              smg.addColorStop(1, 'transparent');
+              ctx.fillStyle = smg;
+              ctx.fillRect(smcx - smr, smcy - smr, smr * 2, smr * 2);
+            } }
           // Hairline crack: ~5% of floor tiles get a 3-5 pixel diagonal scratch
           if (((ph >> 8) & 0xFF) < 13) {
             const cs = cam.scale;
