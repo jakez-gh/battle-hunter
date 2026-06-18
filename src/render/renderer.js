@@ -280,6 +280,16 @@ export function createRenderer(canvas, opts = {}) {
               vx: Math.cos(a) * 0.5, vy: Math.sin(a) * 0.5 - 0.3,
               t: 0, ttl: 280, color: i === 0 ? '#d8dcf0' : sc });
           }
+          // Target carrier: golden wake — larger, longer-lived particles
+          if (su?.hasTarget) {
+            for (let i = 0; i < 10; i++) {
+              const a = (i / 10) * Math.PI * 2;
+              const spd = 0.8 + (i % 3) * 0.45;
+              sparkles.push({ wx: fromPos.x + 0.5, wy: fromPos.y + 0.5,
+                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd - 0.5,
+                t: 0, ttl: 500, color: i % 3 === 0 ? '#fff' : i % 3 === 1 ? '#ffe98a' : '#ffc840' });
+            }
+          }
         }
         break;
       }
@@ -1046,7 +1056,16 @@ export function createRenderer(canvas, opts = {}) {
           ctx.fillRect(fp.x, fp.y + ts - 1, ts, 1);
           ctx.fillRect(fp.x + ts - 1, fp.y, 1, ts - 1);
           const vs = 'rgba(10,10,18,0.38)'; const vd = 4 * cam.scale;
-          if (y > 0 && !b.floor[y - 1]?.[x]) { ctx.fillStyle = vs; ctx.fillRect(fp.x, fp.y, ts, vd); }
+          if (y > 0 && !b.floor[y - 1]?.[x]) {
+            // Gradient wall-face shadow: stronger and smoother than flat strip
+            const wsd = 10 * cam.scale;
+            const wsg = ctx.createLinearGradient(0, fp.y, 0, fp.y + wsd);
+            wsg.addColorStop(0, 'rgba(0,0,0,0.62)');
+            wsg.addColorStop(0.55, 'rgba(0,0,0,0.18)');
+            wsg.addColorStop(1, 'transparent');
+            ctx.fillStyle = wsg;
+            ctx.fillRect(fp.x, fp.y, ts, wsd);
+          }
           if (!b.floor[y + 1]?.[x]) { ctx.fillStyle = vs; ctx.fillRect(fp.x, fp.y + ts - vd, ts, vd); }
           if (!b.floor[y]?.[x + 1]) { ctx.fillStyle = vs; ctx.fillRect(fp.x + ts - vd, fp.y, vd, ts); }
           if (!b.floor[y]?.[x - 1]) { ctx.fillStyle = vs; ctx.fillRect(fp.x, fp.y, vd, ts); }
@@ -1342,6 +1361,15 @@ export function createRenderer(canvas, opts = {}) {
         }
         ctx.restore();
       }
+    }
+    // Target carrier: pulsing gold tile border — visible from anywhere on the board
+    if (k[0] === 'h' && u?.hasTarget) {
+      const gp = 0.14 + 0.12 * Math.sin(clock / 500);
+      const ts = TILE * s;
+      ctx.save(); ctx.globalAlpha = gp * alpha;
+      ctx.strokeStyle = '#ffe98a'; ctx.lineWidth = s;
+      ctx.strokeRect(p.x + s * 0.5, p.y + s * 0.5, ts - s, ts - s);
+      ctx.restore();
     }
     // Low-HP danger glow: pulsing red around tile edges at ≤25% HP
     if (k[0] === 'h' && u && u.maxHp && u.hp / u.maxHp <= 0.25) {
