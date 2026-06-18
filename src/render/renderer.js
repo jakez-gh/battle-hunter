@@ -2201,7 +2201,14 @@ export function createRenderer(canvas, opts = {}) {
       ctx.strokeRect(cx + 0.5, y + 3.5, 5, 9);
       cx += 7;
     }
-    if (h.hasTarget) blit('ui.targetMark', cx + 2, y + 3, 1);
+    if (h.hasTarget) {
+      const tp = 0.38 + 0.32 * Math.sin(clock / 320);
+      const tpg = ctx.createRadialGradient(cx + 6, y + 7, 1, cx + 6, y + 7, 11);
+      tpg.addColorStop(0, '#ffe98a'); tpg.addColorStop(1, 'transparent');
+      ctx.save(); ctx.globalAlpha = tp * 0.50; ctx.fillStyle = tpg;
+      ctx.fillRect(cx - 2, y + 1, 18, 14); ctx.restore();
+      blit('ui.targetMark', cx + 2, y + 3, 1);
+    }
     // Active status condition indicators: pulsing colored glyph chips after hand
     let sdx = cx + (h.hasTarget ? 12 : 2);
     for (const sk of ['stun', 'leg', 'panic', 'empty']) {
@@ -2396,10 +2403,13 @@ export function createRenderer(canvas, opts = {}) {
           // Bounce-in pop: scale from 1→1.4→1 over the first 35% of non-rolling phase
           const popP = (anim?.ev.type === 'strikeRolled') ? Math.min(1, (anim.t / anim.dur - 0.5) / 0.35) : 1;
           const popScale = 1 + Math.sin(Math.max(0, popP) * Math.PI) * 0.40;
+          // Escalating color: low→coral, high (6+)→orange, max (9+)→gold
+          const dmgCol = st.damage >= 9 ? '#ffe050' : st.damage >= 6 ? '#ff9a40' : '#ff6a5a';
+          const dmgShadow = st.damage >= 9 ? '#e0a010' : st.damage >= 6 ? '#d06010' : '#ff5050';
           ctx.save();
           ctx.translate(dmgCx, dmgCy); ctx.scale(popScale, popScale); ctx.translate(-dmgCx, -dmgCy);
-          ctx.shadowBlur = 14; ctx.shadowColor = '#ff5050';
-          text(`-${st.damage}`, dmgCx, dmgCy, '#ff6a5a', 24, 'center');
+          ctx.shadowBlur = st.damage >= 6 ? 20 : 14; ctx.shadowColor = dmgShadow;
+          text(`-${st.damage}`, dmgCx, dmgCy, dmgCol, 24, 'center');
           ctx.restore(); }
         if (st.crit && anim?.ev.type === 'strikeRolled') {
           const p = anim.t / anim.dur;
