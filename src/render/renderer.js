@@ -544,6 +544,22 @@ export function createRenderer(canvas, opts = {}) {
         if (ev.type === 'wyrmSpawned' || ev.type === 'wyrmRespawned') {
           shake = { t: 0, dur: 520, mag: 3.5 };
           turnFlash = { color: '#6c1cac', t: 0, dur: 620 };
+          // WYRM terror burst: 3 rings of particles radiating outward at staggered speeds
+          const wp = mk ? displayPos(mk) : null;
+          if (wp) {
+            for (let ring = 0; ring < 3; ring++) {
+              const count = 10 + ring * 4;
+              const spd = 1.6 + ring * 0.9;
+              for (let i = 0; i < count; i++) {
+                const a = (i / count) * Math.PI * 2;
+                const isFlair = i % (ring === 0 ? 5 : 4) === 0;
+                sparkles.push({ wx: wp.x + 0.5, wy: wp.y + 0.5,
+                  vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+                  t: 0, ttl: 480 + ring * 120,
+                  color: isFlair ? '#fff' : ring === 0 ? '#e8c8ff' : ring === 1 ? '#9838e8' : '#5c1098' });
+              }
+            }
+          }
         } else if (ev.type !== 'monsterSpawned') {
           shake = { t: 0, dur: 400, mag: 2 };
         }
