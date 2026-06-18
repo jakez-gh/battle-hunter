@@ -359,6 +359,17 @@ export function makeTitleScreen(app) {
     onClick(pos) { menu.click(pos); },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      // Twinkling background stars — 40 gently oscillating specs
+      for (let i = 0; i < 40; i++) {
+        const sx = ((i * 137.508) % 1) * app.W;
+        const sy = ((i * 61.803) % 1) * app.H * 0.68 + Math.sin(t * (0.05 + (i % 5) * 0.02) + i * 0.8) * 10;
+        const sa = 0.10 + 0.10 * Math.sin(t * (1.2 + (i & 3) * 0.4) + i * 0.97);
+        ctx.save(); ctx.globalAlpha = sa;
+        ctx.fillStyle = (i & 7) === 0 ? GOLD : FG;
+        const sr = (i & 7) === 0 ? 2 : 1;
+        ctx.fillRect(sx | 0, sy | 0, sr, sr);
+        ctx.restore();
+      }
       // Chunky layered logo
       const cx = app.W / 2;
       const bob = Math.sin(t * 2) * 4;
@@ -734,6 +745,18 @@ export function makeHubScreen(app) {
           ctx.restore();
         }
         box(ctx, r.x, r.y, r.w, r.h, { stroke: sel ? GOLD : '#3c4364', fill: sel ? 'rgba(40,44,80,0.95)' : 'rgba(10,12,24,0.92)' });
+        // Shine sweep over selected box every 2.4s
+        if (sel) {
+          const shineX = r.x + ((t % 2.4) / 2.4) * (r.w + 60) - 30;
+          const shine = ctx.createLinearGradient(shineX - 30, 0, shineX + 30, 0);
+          shine.addColorStop(0, 'transparent');
+          shine.addColorStop(0.5, 'rgba(255,240,160,0.18)');
+          shine.addColorStop(1, 'transparent');
+          ctx.save();
+          ctx.save(); ctx.beginPath(); ctx.rect(r.x, r.y, r.w, r.h); ctx.clip();
+          ctx.fillStyle = shine; ctx.fillRect(shineX - 30, r.y, 60, r.h);
+          ctx.restore(); ctx.restore();
+        }
         sprite(app, ic.icon, r.x + r.w / 2 - 30, r.y + 16 + (sel ? Math.sin(t * 5) * 3 : 0), 5);
         text(ctx, ic.label, r.x + r.w / 2, r.y + 96, { size: 16, align: 'center', color: sel ? GOLD : FG });
       });
