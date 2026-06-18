@@ -835,6 +835,19 @@ export function createRenderer(canvas, opts = {}) {
         ctx.strokeRect(ep.x + cam.scale * 0.5, ep.y + cam.scale * 0.5, es - cam.scale, es - cam.scale);
         ctx.restore();
       }
+      // Rising mist: 6 particles float upward from portal center
+      const mistColor = targetActive ? 'rgba(255,230,120,' : 'rgba(126,232,160,';
+      for (let j = 0; j < 6; j++) {
+        const mperiod = 2200 + j * 280;
+        const mphase = ((clock + j * (mperiod / 6)) % mperiod) / mperiod;
+        const mx = ecx + (j - 2.5) * es * 0.12 + Math.sin(mphase * Math.PI * 2.3 + j * 1.1) * es * 0.18;
+        const my = ecy + es * 0.1 - mphase * es * 1.6;
+        const ma = Math.sin(mphase * Math.PI) * 0.35;
+        if (ma < 0.04) continue;
+        ctx.save(); ctx.globalAlpha = ma; ctx.fillStyle = mistColor + '1)';
+        ctx.fillRect((mx - cam.scale * 0.5) | 0, my | 0, cam.scale, cam.scale * 1.5);
+        ctx.restore();
+      }
       // Four sparkle particles orbiting the exit — cross/star shape
       const orbitColor = targetActive ? '#ffe98a' : '#7ee8a0';
       for (let j = 0; j < 4; j++) {
@@ -1201,6 +1214,14 @@ export function createRenderer(canvas, opts = {}) {
         ctx.restore();
       }
       if (m.kind === 'FNG') {
+        // Scorch mark: dark burnt ellipse on the floor beneath FNG
+        const scorchCy = p.y + TILE * s * 0.92;
+        const scorchRx = (5 + 1.5 * Math.sin(clock / 1100 + m.id * 1.1)) * s;
+        const scorchRy = (1.6 + 0.5 * Math.cos(clock / 900 + m.id * 0.7)) * s;
+        ctx.save(); ctx.globalAlpha = 0.32 + 0.10 * Math.sin(clock / 750 + m.id);
+        ctx.fillStyle = '#1a0800';
+        ctx.beginPath(); ctx.ellipse(cx, scorchCy, scorchRx, scorchRy, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
         // Ember sparks: 6 orange/red particles kicked upward from engine exhaust
         for (let j = 0; j < 6; j++) {
           const phase = ((clock / 900) + j * 0.18 + m.id * 0.37) % 1;
