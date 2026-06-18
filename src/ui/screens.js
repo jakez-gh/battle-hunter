@@ -1980,7 +1980,27 @@ export function makeMissionBriefingScreen(app, mission) {
   };
   const TYPE_COLOR = { fetch: FG, rescue: OK, resteal: BAD };
 
+  let brt = 0;
+  // 12 drifting background motes seeded to position — type-colored
+  const MOTE_COL = { fetch: GOLD, rescue: OK, resteal: BAD };
+  const moteCol = MOTE_COL[mission.type] ?? GOLD;
+  const motes = Array.from({ length: 12 }, (_, i) => ({
+    x: ((i * 137.508) % 1) * app.W,
+    y: ((i * 61.803) % 1) * app.H,
+    vx: ((i % 5) - 2) * 0.18,
+    vy: -0.22 - (i % 3) * 0.08,
+  }));
   return {
+    update(dt) {
+      brt += dt;
+      for (const m of motes) {
+        m.x += m.vx;
+        m.y += m.vy;
+        if (m.y < -8) m.y = app.H + 4;
+        if (m.x < -8) m.x = app.W + 4;
+        if (m.x > app.W + 8) m.x = -4;
+      }
+    },
     onKey(k) {
       if (k === 'confirm') { sfx.menuConfirm(); app.startMission(mission); }
       else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); }
@@ -1992,6 +2012,12 @@ export function makeMissionBriefingScreen(app, mission) {
     draw(ctx) {
       const BX = 60, BY = 44, BW = 840, BH = 596;
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      // Floating background motes
+      for (const m of motes) {
+        const ma = 0.06 + 0.06 * Math.sin(brt * 0.9 + m.x * 0.04);
+        ctx.save(); ctx.globalAlpha = ma; ctx.fillStyle = moteCol;
+        ctx.fillRect(m.x | 0, m.y | 0, 3, 3); ctx.restore();
+      }
       // Mission-type colored atmospheric bloom behind the box header
       const tcol = { fetch: 'rgba(200,160,30,', rescue: 'rgba(30,200,80,', resteal: 'rgba(200,50,50,' }[mission.type] ?? 'rgba(200,160,30,';
       const mbloom = ctx.createRadialGradient(app.W / 2, BY + 30, 10, app.W / 2, BY + 30, 200);
@@ -2032,12 +2058,16 @@ export function makeMissionBriefingScreen(app, mission) {
       text(ctx, oppNames.join(',  '), BX + 20, oppY + 28, { size: 14, color: DIM });
 
       const depY = BY + BH - 54;
+      // Deploy button pulse
+      const dpulse = 0.55 + 0.45 * Math.sin(brt * 2.2);
+      ctx.save(); ctx.globalAlpha = dpulse * 0.18; ctx.fillStyle = '#3aa84a';
+      ctx.fillRect(BX + 20, depY, BW - 40, 44); ctx.restore();
       ctx.fillStyle = 'rgba(20,50,20,0.60)';
       ctx.fillRect(BX + 20, depY, BW - 40, 44);
-      ctx.strokeStyle = '#3a8a3a'; ctx.lineWidth = 1;
-      ctx.strokeRect(BX + 21, depY, BW - 42, 44);
-      // Subtle green glow along the top edge of the deploy button
-      ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = '#3aa84a';
+      ctx.save(); ctx.globalAlpha = dpulse; ctx.strokeStyle = '#3a8a3a'; ctx.lineWidth = 1;
+      ctx.strokeRect(BX + 21, depY, BW - 42, 44); ctx.restore();
+      // Pulsing green glow along the top edge of the deploy button
+      ctx.save(); ctx.globalAlpha = dpulse * 0.55; ctx.fillStyle = '#3aa84a';
       ctx.fillRect(BX + 20, depY, BW - 40, 2); ctx.restore();
       text(ctx, 'Enter: DEPLOY', app.W / 2, depY + 6, { size: 17, align: 'center', color: OK });
       text(ctx, 'Esc: back', app.W / 2, depY + 26, { size: 12, align: 'center', color: DIM });
