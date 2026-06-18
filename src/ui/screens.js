@@ -426,7 +426,9 @@ function drawHunterCard(app, rec, x, y, w) {
   ctx.fillStyle = sh; ctx.fillRect(shX - 24, y + 2, 48, 72); ctx.restore();
   sprite(app, `hunter${rec.spriteId}.${rec.palette}.icon`, x + 8, y + 8, 5);
   const d = displayStats(rec.internal, rec.level);
-  text(ctx, rec.name, x + 76, y + 8, { size: 18, color: GOLD });
+  ctx.save(); ctx.shadowBlur = 9; ctx.shadowColor = '#b07a08';
+  text(ctx, rec.name, x + 76, y + 8, { size: 18, color: GOLD, shadow: false });
+  ctx.restore();
   text(ctx, `Lv ${rec.level}   ${rec.credits} cr`, x + 76, y + 30, { size: 14 });
   text(ctx, fmtStats({ ...d, maxHp: rec.maxHp }) + (rec.maxHp < baseMaxHp(rec) ? `/${baseMaxHp(rec)}` : ''), x + 76, y + 50, { size: 13, color: DIM });
 }
