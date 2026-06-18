@@ -503,9 +503,11 @@ export function makeRosterScreen(app, opts = {}) {
     });
   }
 
+  let rt = 0;
   return {
     enter() { host.push(rootMenu()); },
     resume() { host.clear(); host.push(rootMenu()); }, // refresh after creation
+    update(dt) { rt += dt; },
     onKey(k) { host.key(k); },
     onClick(pos) { host.click(pos); },
     draw(ctx) {
@@ -522,7 +524,15 @@ export function makeRosterScreen(app, opts = {}) {
         if (rec) {
           drawHunterCard(app, rec, 500, 100, 400);
           box(ctx, 500, 190, 400, 250, { title: 'STATUS' });
-          sprite(app, `hunter${rec.spriteId}.${rec.palette}.idle`, 520, 230, 8);
+          // Animated preview: walk cycle + gentle vertical bob
+          const rframe = Math.floor(rt * 2.5) % 2 ? 'step' : 'idle';
+          const rbob = Math.round(Math.sin(rt * 2.2) * 3);
+          const raccent = PALETTE_ACCENT[rec.palette] ?? '#3c4364';
+          // Palette-tinted glow behind the large sprite
+          const rg = ctx.createRadialGradient(664, 294, 12, 664, 294, 88);
+          rg.addColorStop(0, raccent + '44'); rg.addColorStop(1, 'transparent');
+          ctx.fillStyle = rg; ctx.fillRect(576, 206, 176, 176);
+          sprite(app, `hunter${rec.spriteId}.${rec.palette}.${rframe}`, 520, 230 + rbob, 8);
           const d = displayStats(rec.internal, rec.level);
           const lines = [
             `Level ${rec.level}`,
