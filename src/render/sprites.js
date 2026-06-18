@@ -339,6 +339,16 @@ const FLOOR_F = [ // diagonal slash top-left to bottom-right (mirrors FLOOR_B)
   'GGGGGGGGdGGGGGGG', 'GGGGGGGGGdGGGGGG', 'GGGGGGGGGGdGGGGG', 'GGGGGGGGGGGdGGGG',
   'GGGGGGGGGGGGdGGG', 'GGGGGGGGGGGGGdgG', 'GGGGGGGGGGGGGGgG', 'GGGGGGGGGGGGGGGg',
 ];
+const FLOOR_G = [ // X-cross groove: both diagonals combined corner-to-corner
+  'dGGGGGGGGGGGGGGd', 'GgGGGGGGGGGGGGgG',
+  'GGdGGGGGGGGGGdGG', 'GGGdGGGGGGGGdGGG',
+  'GGGGdGGGGGGdGGGG', 'GGGGGdGGGGdGGGGG',
+  'GGGGGGdGGdGGGGGG', 'GGGGGGGddGGGGGGG',
+  'GGGGGGGddGGGGGGG', 'GGGGGGdGGdGGGGGG',
+  'GGGGGdGGGGdGGGGG', 'GGGGdGGGGGGdGGGG',
+  'GGGdGGGGGGGGdGGG', 'GGdGGGGGGGGGGdGG',
+  'GGGGGGGGGGGGGgGG', 'GGGGGGGGGGGGGGGG',
+];
 const PIT = Array.from({ length: 16 }, (_, y) =>
   y === 0 ? 'XXXdXXXXXXXdXXXX' : 'X'.repeat(16));
 const EXIT = [
@@ -403,6 +413,7 @@ export const TILES = {
   floorD: { grid: FLOOR_D, palette: TILE_PALETTE },
   floorE: { grid: FLOOR_E, palette: TILE_PALETTE },
   floorF: { grid: FLOOR_F, palette: TILE_PALETTE },
+  floorG: { grid: FLOOR_G, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
