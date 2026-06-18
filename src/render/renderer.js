@@ -1430,7 +1430,11 @@ export function createRenderer(canvas, opts = {}) {
     }
     ctx.restore();
     if (u) {
-      text(u.name ?? u.kind ?? '', cx, y + sh + 4, '#f0f4ff', 12, 'center');
+      // Name in slot color (hunter) or monster label color, with faint glow
+      { const nc = k[0] === 'h' ? (SLOT_COLORS[(u.slot ?? 0) % 4] ?? '#f0f4ff') : (MONSTER_LABEL_COLOR[u.kind] ?? '#ff8866');
+        ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = nc;
+        text(u.name ?? u.kind ?? '', cx, y + sh + 4, nc, 12, 'center');
+        ctx.restore(); }
       // HP bar
       const ratio = u.maxHp ? clamp(u.hp / u.maxHp, 0, 1) : 0;
       const bw2 = sw;

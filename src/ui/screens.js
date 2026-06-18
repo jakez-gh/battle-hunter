@@ -2039,12 +2039,16 @@ export function makeResultsScreen(app, g) {
       rbloom.addColorStop(1, 'transparent');
       ctx.fillStyle = rbloom;
       ctx.fillRect(rcx - 200, 10, 400, 130);
-      // Layered result header text
+      // Layered result header text with pulsing glow
       const rtext = win ? 'MISSION COMPLETE' : 'MISSION FAILED';
       const rlay = win ? '#7a5400' : '#7a1010';
       text(ctx, rtext, rcx + 3, 29, { size: 34, align: 'center', color: '#000', shadow: false });
       text(ctx, rtext, rcx + 1, 27, { size: 34, align: 'center', color: rlay, shadow: false });
+      ctx.save();
+      ctx.shadowBlur = 24 + 10 * Math.sin(t * 1.8);
+      ctx.shadowColor = win ? '#c8960a' : '#aa2020';
       text(ctx, rtext, rcx, 26, { size: 34, align: 'center', color: win ? GOLD : BAD, shadow: false });
+      ctx.restore();
       if (!win && g.outcome.reason) text(ctx, String(g.outcome.reason), app.W / 2, 66, { size: 14, align: 'center', color: DIM });
       // Separator + score table
       ctx.save(); ctx.fillStyle = win ? GOLD : BAD; ctx.globalAlpha = 0.45;
