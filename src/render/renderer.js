@@ -783,7 +783,15 @@ export function createRenderer(canvas, opts = {}) {
       ctx.restore();
     }
     if (u && k[0] === 'h') {
-      if (u.hasTarget) blit('ui.targetMark', p.x + 4 * s, dy - 9 * s);
+      if (u.hasTarget) {
+        const tmx = p.x + 4 * s, tmy = dy - 9 * s;
+        const tmPulse = 0.45 + 0.45 * Math.sin(clock / 480);
+        ctx.save(); ctx.globalAlpha = tmPulse * 0.55;
+        ctx.fillStyle = '#e8d87e';
+        ctx.fillRect(tmx - s, tmy - s, 10 * s, 10 * s);
+        ctx.restore();
+        blit('ui.targetMark', tmx, tmy);
+      }
       const active = Object.entries(u.status ?? {}).filter(([, v]) => v).map(([n]) => n);
       let ix = p.x + (TILE * s - active.length * 8 * s) / 2;
       const statusY = p.y - bobPx;
