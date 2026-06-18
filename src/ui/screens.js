@@ -459,7 +459,8 @@ export function makeTitleScreen(app) {
           const ma = Math.min(phase, 1 - phase) * 2 * 0.5;
           ctx.save(); ctx.globalAlpha = ma;
           ctx.fillStyle = HUNTER_GLOWS[i];
-          ctx.fillRect(sx | 0, sy | 0, 3, 3);
+          ctx.fillRect((sx - 0.5) | 0, (sy - 1.5) | 0, 2, 4);
+          ctx.fillRect((sx - 1.5) | 0, (sy - 0.5) | 0, 4, 2);
           ctx.restore();
         }
         sprite(app, `hunter${i}.${pal}.${step}`, hx, 354, 5);
@@ -2129,7 +2130,9 @@ export function makeMissionBriefingScreen(app, mission) {
       for (const m of motes) {
         const ma = 0.06 + 0.06 * Math.sin(brt * 0.9 + m.x * 0.04);
         ctx.save(); ctx.globalAlpha = ma; ctx.fillStyle = moteCol;
-        ctx.fillRect(m.x | 0, m.y | 0, 3, 3); ctx.restore();
+        ctx.fillRect((m.x - 0.5) | 0, (m.y - 1.5) | 0, 2, 4);
+        ctx.fillRect((m.x - 1.5) | 0, (m.y - 0.5) | 0, 4, 2);
+        ctx.restore();
       }
       // Mission-type colored atmospheric bloom behind the box header
       const tcol = { fetch: 'rgba(200,160,30,', rescue: 'rgba(30,200,80,', resteal: 'rgba(200,50,50,' }[mission.type] ?? 'rgba(200,160,30,';
