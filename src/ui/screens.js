@@ -507,6 +507,7 @@ export function makeTitleScreen(app) {
         ctx.save(); ctx.fillStyle = scan;
         ctx.fillRect(cx - 260, 55 + bob, 520, 230); ctx.restore(); }
       // Decorative separator line + flanking diamonds
+      ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = '#806000';
       ctx.fillStyle = GOLD;
       ctx.fillRect(cx - 260, 300, 520, 3);
       // Flanking accent diamonds
@@ -517,7 +518,10 @@ export function makeTitleScreen(app) {
         ctx.lineTo(dx, fy + 5); ctx.lineTo(dx - 5, fy);
         ctx.closePath(); ctx.fill();
       }
-      text(ctx, 'relic dives of the Meridian Salvage Guild', cx, 314, { size: 15, align: 'center', color: DIM });
+      ctx.restore();
+      ctx.save(); ctx.shadowBlur = 4; ctx.shadowColor = '#404060';
+      text(ctx, 'relic dives of the Meridian Salvage Guild', cx, 314, { size: 15, align: 'center', color: DIM, shadow: false });
+      ctx.restore();
       // All 8 hunters marching with palette-colored ground glows
       const step = Math.floor(t * 3) % 2 ? 'step' : 'idle';
       const HUNTER_GLOWS = ['#3a6ee0','#cc4a3a','#e0c63a','#3aa84a','#8c3ae0','#c85c2a','#3aacc8','#888aa0'];
