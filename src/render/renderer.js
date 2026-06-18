@@ -1827,11 +1827,13 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillRect(cx + chipScale * 0.5, cy + chipScale * 0.5, 8 * chipScale, 8 * chipScale);
     ctx.restore();
     blit(`chip.${clamp(v, 1, 6) | 0}`, cx, cy, chipScale);
-    // Top-left shine overlay
-    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#fff';
-    ctx.fillRect(cx + chipScale, cy + chipScale, 4 * chipScale, 2 * chipScale);
-    ctx.fillRect(cx + chipScale, cy + chipScale, 2 * chipScale, 4 * chipScale);
-    ctx.restore();
+    // Diagonal gloss — top-left specular highlight fading to transparent
+    { const cw = 8 * chipScale;
+      const shineG = ctx.createLinearGradient(cx, cy, cx + cw * 0.62, cy + cw * 0.62);
+      shineG.addColorStop(0, 'rgba(255,255,255,0.30)');
+      shineG.addColorStop(0.48, 'rgba(255,255,255,0.07)');
+      shineG.addColorStop(1, 'transparent');
+      ctx.save(); ctx.fillStyle = shineG; ctx.fillRect(cx, cy, cw, cw); ctx.restore(); }
     if (ev.type === 'flagClaimed' && settled && ev.effect != null) {
       text(String(ev.effect), p.x + 8 * s, p.y - 28 * s, '#ffe98a', 12, 'center');
     }
