@@ -224,14 +224,18 @@ export function createRenderer(canvas, opts = {}) {
       wx: p.x + 0.5, wy: p.y, t: 0, ttl: extra.ttl ?? 800 });
   }
 
+  function addSparklesAt(wx, wy, color = '#ffe98a') {
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * Math.PI * 2;
+      sparkles.push({ wx: wx + 0.5, wy: wy + 0.5, vx: Math.cos(a) * 2.2,
+        vy: Math.sin(a) * 2.2 - 1, t: 0, ttl: 600, color });
+    }
+  }
+
   function addSparkles(k, color = '#ffe98a') {
     const p = displayPos(k);
     if (!p) return;
-    for (let i = 0; i < 14; i++) {
-      const a = (i / 14) * Math.PI * 2;
-      sparkles.push({ wx: p.x + 0.5, wy: p.y + 0.5, vx: Math.cos(a) * 2.2,
-        vy: Math.sin(a) * 2.2 - 1, t: 0, ttl: 600, color });
-    }
+    addSparklesAt(p.x, p.y, color);
   }
 
   function beginSlide(k, from, to) {
@@ -275,6 +279,7 @@ export function createRenderer(canvas, opts = {}) {
         break;
       case 'boxOpened':
         popOverride(closedBoxes, ev.pos ? key(ev.pos.x, ev.pos.y) : null);
+        if (ev.pos) addSparklesAt(ev.pos.x, ev.pos.y, '#e8d87e');
         break;
       case 'targetFound':
         addSparkles(k);
@@ -282,6 +287,7 @@ export function createRenderer(canvas, opts = {}) {
         break;
       case 'flagClaimed':
         popOverride(standingFlags, ev.pos ? key(ev.pos.x, ev.pos.y) : null);
+        if (ev.pos) addSparklesAt(ev.pos.x, ev.pos.y, '#e8c040');
         break;
       case 'exitWarpedAway':
         unitFlash = { key: k, t: 0, dur: EVENT_DURATIONS.exitWarpedAway, color: '#f7f7ff' };
