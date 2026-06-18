@@ -404,10 +404,21 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'trapDodged':
+      case 'trapDodged': {
         addFloat(k, 'DODGE', '#9adfe8');
         addSparkles(k, '#9adfe8');
+        // Fast sideways scatter — suggests a quick roll to the side
+        const ddp = displayPos(k);
+        if (ddp) {
+          for (let i = 0; i < 8; i++) {
+            const side = i % 2 === 0 ? 1 : -1;
+            sparkles.push({ wx: ddp.x + 0.5, wy: ddp.y + 0.5,
+              vx: side * (1.8 + (i >> 1) * 0.6), vy: -0.4 - (i >> 1) * 0.2,
+              t: 0, ttl: 320, color: i % 3 === 0 ? '#fff' : '#9adfe8' });
+          }
+        }
         break;
+      }
       case 'trapSet':
         addFloat(k, 'SET', '#8fd17e');
         if (ev.pos) addSparklesAt(ev.pos.x, ev.pos.y, '#8fd17e');
@@ -675,14 +686,19 @@ export function createRenderer(canvas, opts = {}) {
       }
       case 'actAgain': {
         addFloat(k, 'AGAIN!', '#ffe98a', { big: true, ttl: 900 });
-        // Gold ring burst (same as targetFound but smaller)
+        // Slot-colored flash: "this hunter is back for another shot"
+        const aau = findUnit(k);
+        const aaCol = k?.[0] === 'h' ? (SLOT_COLORS[(aau?.slot ?? 0) % 4] ?? '#ffe98a') : '#ffe98a';
+        turnFlash = { color: aaCol, t: 0, dur: 500 };
+        // Gold ring burst + extra slot-colored particles
         const ap2 = displayPos(k);
         if (ap2) {
-          for (let i = 0; i < 10; i++) {
-            const a = (i / 10) * Math.PI * 2;
-            const spd = 1.4 + (i % 3) * 0.5;
+          for (let i = 0; i < 14; i++) {
+            const a = (i / 14) * Math.PI * 2;
+            const spd = 1.4 + (i % 4) * 0.45;
             sparkles.push({ wx: ap2.x + 0.5, wy: ap2.y + 0.5, vx: Math.cos(a) * spd,
-              vy: Math.sin(a) * spd - 0.6, t: 0, ttl: 550, color: i % 2 === 0 ? '#fff' : '#ffe98a' });
+              vy: Math.sin(a) * spd - 0.6, t: 0, ttl: 580,
+              color: i % 4 === 0 ? '#fff' : i % 4 === 1 ? '#ffe98a' : aaCol });
           }
         }
         break;
