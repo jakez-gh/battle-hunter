@@ -141,6 +141,10 @@ function box(ctx, x, y, w, h, opt = {}) {
   ctx.stroke();
   ctx.restore();
   if (opt.title) {
+    // Subtle gold wash behind the title area
+    const tg = ctx.createLinearGradient(x + 4, y, x + Math.min(w - 8, 140), y);
+    tg.addColorStop(0, 'rgba(200,160,30,0.14)'); tg.addColorStop(1, 'transparent');
+    ctx.fillStyle = tg; ctx.fillRect(x + 4, y + 2, Math.min(w - 8, 140), 26);
     ctx.fillStyle = GOLD; ctx.fillRect(x + 4, y + 7, 2, 18);
     text(ctx, opt.title, x + 10, y + 8, { size: 14, color: GOLD });
   }
