@@ -2162,9 +2162,10 @@ export function createRenderer(canvas, opts = {}) {
 
   function drawHunterWindow(h, i, y) {
     const active = activeKey() === `h${h.id}`;
+    const defeated = h.maxHp > 0 && h.hp <= 0;
     const x = 2;
     const w = canvas.width - 4;
-    ctx.fillStyle = active ? 'rgba(220, 228, 255, 0.10)' : 'rgba(0, 0, 0, 0.30)';
+    ctx.fillStyle = defeated ? 'rgba(8,4,12,0.55)' : active ? 'rgba(220, 228, 255, 0.10)' : 'rgba(0, 0, 0, 0.30)';
     ctx.fillRect(x, y, w, 16);
     if (active) {
       const sc = SLOT_COLORS[h.slot % 4] ?? '#3a6ee0';
@@ -2172,12 +2173,12 @@ export function createRenderer(canvas, opts = {}) {
       rg.addColorStop(0, sc + '30'); rg.addColorStop(1, sc + '00');
       ctx.fillStyle = rg; ctx.fillRect(x, y, w, 16);
     }
-    ctx.fillStyle = SLOT_COLORS[h.slot % 4] ?? '#f0f4ff';
+    ctx.fillStyle = defeated ? '#5a2030' : (SLOT_COLORS[h.slot % 4] ?? '#f0f4ff');
     ctx.fillRect(x, y, active ? 4 : 2, 16);
     const icon = atlas[`hunter${h.spriteId}.${paletteName(h)}.icon`];
-    if (icon) ctx.drawImage(icon, x + 6, y + 2, 12, 12);
+    if (icon) { ctx.save(); ctx.globalAlpha = defeated ? 0.35 : 1; ctx.drawImage(icon, x + 6, y + 2, 12, 12); ctx.restore(); }
     text((h.name ?? '').slice(0, 7).padEnd(7), x + 22, y + 3,
-      active ? '#ffe98a' : '#b8bccc');
+      defeated ? '#504858' : active ? '#ffe98a' : '#b8bccc');
     text(`L${h.level ?? 1}`, x + 86, y + 3, active ? '#a8b0c4' : '#5e6278');
     // HP bar + number
     const ratio = h.maxHp ? clamp(h.hp / h.maxHp, 0, 1) : 0;
@@ -2198,7 +2199,11 @@ export function createRenderer(canvas, opts = {}) {
       ctx.save(); ctx.globalAlpha = urgency * 0.45; ctx.fillStyle = '#ff9a7e';
       ctx.fillRect(x + 112, y + 5, bw, 6); ctx.restore();
     }
-    text(`${h.hp}/${h.maxHp}`, x + 168, y + 3, active ? '#c0c8d8' : '#8a90a0');
+    if (defeated) {
+      text('KO', x + 168, y + 3, '#7a2830');
+    } else {
+      text(`${h.hp}/${h.maxHp}`, x + 168, y + 3, active ? '#c0c8d8' : '#8a90a0');
+    }
     const iv = h.internal ?? { mv: 0, at: 0, df: 0 };
     text(`MV+${Math.floor((iv.mv ?? 0) / 3)} AT${iv.at ?? 0} DF${Math.floor((iv.df ?? 0) / 2)}`,
       x + 222, y + 3, active ? '#6e7890' : '#484c5e');
