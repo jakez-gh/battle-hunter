@@ -649,7 +649,7 @@ export function createRenderer(canvas, opts = {}) {
     const y0 = Math.max(0, Math.floor(cam.y / TILE));
     const x1 = Math.min(b.w - 1, Math.ceil((cam.x + vw) / TILE));
     const y1 = Math.min(b.h - 1, Math.ceil((cam.y + vh) / TILE));
-    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH'];
+    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH', 'floorI', 'floorJ'];
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
@@ -731,7 +731,7 @@ export function createRenderer(canvas, opts = {}) {
           }
           continue;
         }
-        blitTile(`tile.${floors[(x * 7 + y * 13) % 8]}`, x, y);
+        blitTile(`tile.${floors[(x * 7 + y * 13) % 10]}`, x, y);
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
           // Puddle: ~12% of floor tiles get a reflective wet shimmer
           const ph = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;

@@ -435,6 +435,44 @@ const WALL_B = [ // stone-block face — three narrow sub-blocks in lower band
   'GGGGGGGGGGGGGGGG',  // floor transition
 ];
 
+const FLOOR_I = [ // diagonal scratch — single dark groove from top-left toward bottom-right
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGgG',  // corner accent
+  'GGGGGGGGGGGGGGdG',
+  'GGdGGGGGGGGGGGGG',  // scratch start
+  'GGGdGGGGGGGGGGGG',
+  'GGGGdGGGGGGGGGGG',
+  'GGGGGdGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',  // gap in scratch
+  'GGGGGGGGdGGGGGGG',  // scratch resumes
+  'GGGGGGGGGdGGGGGG',
+  'GGGGGGGGGGdGGGGG',
+  'GGGGGGGGGGGdGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGgG',  // corner accent
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const FLOOR_J = [ // inset square — raised flagstone-within-flagstone
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGgG',  // corner accent
+  'GGGGGGGGGGGGGGGG',
+  'GGGddddddddddGGG',  // top edge of inset square
+  'GGGdGGGGGGGGdGGG',
+  'GGGdGGGGGGGGdGGG',
+  'GGGdGGgGGGGGdGGG',  // texture fleck
+  'GGGdGGGGGGGGdGGG',
+  'GGGdGGGGGGGGdGGG',
+  'GGGdGGGGGGgGdGGG',  // texture fleck
+  'GGGdGGGGGGGGdGGG',
+  'GGGdGGGGGGGGdGGG',
+  'GGGGdddddddddGGG',  // bottom edge of inset (shifted right for 3D)
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGgGG',  // corner accent
+  'GGGGGGGGGGGGGGGG',
+];
+
 export const TILES = {
   floorA: { grid: FLOOR_A, palette: TILE_PALETTE },
   floorB: { grid: FLOOR_B, palette: TILE_PALETTE },
@@ -444,6 +482,8 @@ export const TILES = {
   floorF: { grid: FLOOR_F, palette: TILE_PALETTE },
   floorG: { grid: FLOOR_G, palette: TILE_PALETTE },
   floorH: { grid: FLOOR_H, palette: TILE_PALETTE },
+  floorI: { grid: FLOOR_I, palette: TILE_PALETTE },
+  floorJ: { grid: FLOOR_J, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
