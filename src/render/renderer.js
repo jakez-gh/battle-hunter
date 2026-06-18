@@ -468,7 +468,8 @@ export function createRenderer(canvas, opts = {}) {
         addSparkles(k, '#ffe98a');
         break;
       case 'missionWon':
-        banner = { text: 'MISSION COMPLETE', color: '#ffe98a' };
+        banner = { text: 'MISSION COMPLETE', color: '#ffe98a', startMs: clock };
+        turnFlash = { color: '#7ee8a0', t: 0, dur: 900 };
         // Multi-burst celebration across the board
         for (const h of state?.hunters ?? []) {
           const hk = `h${h.id}`;
@@ -477,10 +478,11 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       case 'missionLost':
-        banner = { text: 'MISSION FAILED', color: '#ff6a5a' };
+        banner = { text: 'MISSION FAILED', color: '#ff6a5a', startMs: clock };
+        turnFlash = { color: '#cc3333', t: 0, dur: 700 };
         break;
       case 'scoreTallied':
-        banner = banner ?? { text: 'RESULTS', color: '#f0f4ff' };
+        banner = banner ?? { text: 'RESULTS', color: '#f0f4ff', startMs: clock };
         break;
       default:
         break;
@@ -1397,9 +1399,14 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillRect(0, by, bw, 2);
     ctx.fillRect(0, by + 38, bw, 2);
     ctx.restore();
-    // drop-shadow + main text
-    text(banner.text, bw / 2 + 1, by + 11, 'rgba(0,0,0,0.65)', 20, 'center');
-    text(banner.text, bw / 2, by + 10, banner.color, 20, 'center');
+    // drop-shadow + main text — scale pop on appear
+    const age = clock - (banner.startMs ?? clock);
+    const popT = Math.min(age / 280, 1);
+    const bscale = 1 + Math.sin(popT * Math.PI) * 0.18;
+    const tsz = Math.round(20 * bscale);
+    const ty = by + 10 + Math.round((20 - tsz) * 0.5);
+    text(banner.text, bw / 2 + 1, ty + 1, 'rgba(0,0,0,0.65)', tsz, 'center');
+    text(banner.text, bw / 2, ty, banner.color, tsz, 'center');
   }
 
   // --- public API --------------------------------------------------------------
