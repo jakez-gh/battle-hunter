@@ -121,7 +121,10 @@ function box(ctx, x, y, w, h, opt = {}) {
   ctx.lineTo(x + w - 3, y + 3);
   ctx.stroke();
   ctx.restore();
-  if (opt.title) text(ctx, opt.title, x + 10, y + 8, { size: 14, color: GOLD });
+  if (opt.title) {
+    ctx.fillStyle = GOLD; ctx.fillRect(x + 4, y + 7, 2, 18);
+    text(ctx, opt.title, x + 10, y + 8, { size: 14, color: GOLD });
+  }
 }
 
 function sprite(app, name, x, y, scale = 1) {
