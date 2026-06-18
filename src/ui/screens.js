@@ -1733,6 +1733,10 @@ export function makeGameScreen(app, g) {
       const y = 42 + i * 62;
       const activeNow = st.current?.kind === 'hunter' && st.current.index === i;
       box(ctx, X, y, W, 58, { stroke: activeNow ? GOLD : '#3c4364' });
+      // Slot-color thin bar on left edge of every hunter panel
+      { const sc = SLOT_COLORS[h.slot ?? i];
+        ctx.save(); ctx.globalAlpha = activeNow ? 0.80 : 0.30;
+        ctx.fillStyle = sc; ctx.fillRect(X + 2, y + 2, 3, 54); ctx.restore(); }
       // Slot-color glow wash behind active hunter panel
       if (activeNow) {
         const sc = SLOT_COLORS[h.slot ?? i];
@@ -1755,6 +1759,8 @@ export function makeGameScreen(app, g) {
         hg.addColorStop(0, c0); hg.addColorStop(1, c1);
         ctx.fillStyle = hg;
         ctx.fillRect(X + 60, y + 26, 120 * ratio, 10);
+        ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#fff';
+        ctx.fillRect(X + 60, y + 26, 120 * ratio, 4); ctx.restore();
       }
       const hpCol = ratio <= 0.25 ? (0.5 + 0.5 * Math.sin(hudT * 6)) > 0.5 ? BAD : '#9d2a2a' : DIM;
       text(ctx, `${h.hp}/${h.maxHp}`, X + 186, y + 22, { size: 11, color: hpCol });
