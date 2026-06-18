@@ -742,11 +742,13 @@ export function createRenderer(canvas, opts = {}) {
       const ecx = ep.x + es / 2, ecy = ep.y + es / 2;
       const targetActive = state.hunters?.some((h) => h.hasTarget) ?? false;
       const pulse = 0.4 + 0.6 * Math.sin(clock / 700);
-      const eg = ctx.createRadialGradient(ecx, ecy, 0, ecx, ecy, es * 0.7);
+      // Ambient portal light spills onto surrounding floor tiles
+      const eg = ctx.createRadialGradient(ecx, ecy, 0, ecx, ecy, es * 2.2);
       eg.addColorStop(0, 'rgba(126,232,160,0.55)');
+      eg.addColorStop(0.32, 'rgba(126,232,160,0.20)');
       eg.addColorStop(1, 'rgba(126,232,160,0.0)');
       ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = eg;
-      ctx.fillRect(ep.x, ep.y, es, es); ctx.restore();
+      ctx.fillRect(ep.x - es, ep.y - es, es * 3, es * 3); ctx.restore();
       // Outer pulsing ring (phase offset from inner bloom)
       const ringPulse = 0.3 + 0.7 * Math.sin(clock / 700 + 1.1);
       ctx.save(); ctx.globalAlpha = ringPulse * 0.42;
