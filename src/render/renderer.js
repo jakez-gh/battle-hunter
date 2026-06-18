@@ -628,6 +628,9 @@ export function createRenderer(canvas, opts = {}) {
       }
     }
     if (overlays.path) {
+      const ak = activeKey();
+      const au = ak ? findUnit(ak) : null;
+      const pathCol = ak && ak[0] === 'h' && au ? (SLOT_COLORS[(au.slot ?? 0) % 4] ?? '#ffe98a') : '#ffe98a';
       for (const step of overlays.path) {
         const c = typeof step === 'string'
           ? { x: +step.split(',')[0], y: +step.split(',')[1] } : step;
@@ -635,11 +638,11 @@ export function createRenderer(canvas, opts = {}) {
         const dcx = p.x + 8 * s, dcy = p.y + 8 * s;
         const flow = 0.55 + 0.45 * Math.sin(clock / 340 - (c.x + c.y) * 0.9);
         const gr = ctx.createRadialGradient(dcx, dcy, 0, dcx, dcy, 5 * s);
-        gr.addColorStop(0, '#ffe98a'); gr.addColorStop(1, 'transparent');
+        gr.addColorStop(0, pathCol); gr.addColorStop(1, 'transparent');
         ctx.save(); ctx.globalAlpha = flow;
         ctx.fillStyle = gr;
         ctx.fillRect(dcx - 5 * s, dcy - 5 * s, 10 * s, 10 * s);
-        ctx.fillStyle = '#ffe98a';
+        ctx.fillStyle = pathCol;
         ctx.fillRect(p.x + 7 * s, p.y + 7 * s, 2 * s, 2 * s);
         ctx.restore();
       }
@@ -874,7 +877,9 @@ export function createRenderer(canvas, opts = {}) {
     const p = worldToScreen(pos.x, pos.y, cam);
     const cx = p.x + TILE * s / 2;
     const cy = p.y + (TILE - 1) * s;
-    const sg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 6 * s);
+    const isActive = k === activeKey();
+    const r = isActive ? 6 * s + 1.5 * s * (0.5 + 0.5 * Math.sin(clock / 380)) : 6 * s;
+    const sg = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
     sg.addColorStop(0, 'rgba(0,0,0,0.52)');
     sg.addColorStop(0.5, 'rgba(0,0,0,0.24)');
     sg.addColorStop(1, 'rgba(0,0,0,0)');
@@ -882,7 +887,7 @@ export function createRenderer(canvas, opts = {}) {
     ctx.globalAlpha = alpha;
     ctx.scale(1, 0.32);
     ctx.fillStyle = sg;
-    ctx.fillRect(cx - 6 * s, (cy / 0.32) - 6 * s, 12 * s, 12 * s);
+    ctx.fillRect(cx - r, (cy / 0.32) - r, r * 2, r * 2);
     ctx.restore();
   }
 
