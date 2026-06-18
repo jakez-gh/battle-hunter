@@ -464,16 +464,31 @@ export function createRenderer(canvas, opts = {}) {
       }
       case 'exitWarpedAway': {
         unitFlash = { key: k, t: 0, dur: EVENT_DURATIONS.exitWarpedAway, color: '#f7f7ff' };
+        const ewu = findUnit(k);
+        const ewSlotCol = k?.[0] === 'h' ? (SLOT_COLORS[(ewu?.slot ?? 0) % 4] ?? '#3a6ee0') : '#3a6ee0';
         addSparkles(k, '#7ee8a0');
-        // Portal eruption at the exit tile
+        // Slot-colored ring from the escaping hunter — "I made it out!"
+        const ewp = displayPos(k);
+        if (ewp) {
+          for (let i = 0; i < 10; i++) {
+            const a = (i / 10) * Math.PI * 2;
+            sparkles.push({ wx: ewp.x + 0.5, wy: ewp.y + 0.3,
+              vx: Math.cos(a) * 2.2, vy: Math.sin(a) * 2.2 - 0.9,
+              t: 0, ttl: 540, color: i % 3 === 0 ? '#fff' : ewSlotCol });
+          }
+        }
+        turnFlash = { color: '#7ee8a0', t: 0, dur: 650 };
+        shake = { t: 0, dur: 260, mag: 2.0 };
+        // Portal eruption at the exit tile — expanded burst mixing slot + portal green
         const ex = state?.board?.exit;
         if (ex) {
           addSparklesAt(ex.x, ex.y, '#7ee8a0');
-          for (let i = 0; i < 8; i++) {
-            const a = (i / 8) * Math.PI * 2;
+          for (let i = 0; i < 20; i++) {
+            const a = (i / 20) * Math.PI * 2;
+            const spd = i % 5 === 0 ? 4.5 : 2.0 + (i % 4) * 0.7;
             sparkles.push({ wx: ex.x + 0.5, wy: ex.y + 0.5,
-              vx: Math.cos(a) * 3.2, vy: Math.sin(a) * 3.2 - 0.5,
-              t: 0, ttl: 480, color: '#fff' });
+              vx: Math.cos(a) * spd, vy: Math.sin(a) * spd - 0.8,
+              t: 0, ttl: 520, color: i % 5 === 0 ? '#fff' : i % 5 === 1 ? ewSlotCol : '#7ee8a0' });
           }
         }
         break;
@@ -533,14 +548,18 @@ export function createRenderer(canvas, opts = {}) {
       case 'hunterDefeated': {
         unitFlash = { key: k, t: 0, dur: EVENT_DURATIONS.hunterDefeated, color: '#f7f7ff' };
         shake = { t: 0, dur: 500, mag: 4 };
+        turnFlash = { color: '#cc3333', t: 0, dur: 600 };
         addFloat(k, 'DEFEATED', '#ff6a5a', { big: true, ttl: 900 });
+        const dpu = findUnit(k);
+        const dpSlotCol = k?.[0] === 'h' ? (SLOT_COLORS[(dpu?.slot ?? 0) % 4] ?? '#cc4a3a') : '#cc4a3a';
         const dp = displayPos(k);
         if (dp) {
-          for (let i = 0; i < 18; i++) {
-            const a = (i / 18) * Math.PI * 2;
-            const spd = 1.2 + (i % 3) * 0.5;
+          for (let i = 0; i < 20; i++) {
+            const a = (i / 20) * Math.PI * 2;
+            const spd = 1.2 + (i % 4) * 0.55;
             sparkles.push({ wx: dp.x + 0.5, wy: dp.y + 0.5, vx: Math.cos(a) * spd,
-              vy: Math.sin(a) * spd - 0.6, t: 0, ttl: 700, color: i % 3 === 0 ? '#f7f7ff' : '#9a5555' });
+              vy: Math.sin(a) * spd - 0.6, t: 0, ttl: 700,
+              color: i % 4 === 0 ? '#f7f7ff' : i % 4 === 1 ? '#ff6a5a' : dpSlotCol });
           }
         }
         break;
@@ -687,11 +706,24 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'missionLost':
+      case 'missionLost': {
         banner = { text: 'MISSION FAILED', color: '#ff6a5a', startMs: clock };
         turnFlash = { color: '#cc3333', t: 0, dur: 700 };
         shake = { t: 0, dur: 400, mag: 3 };
+        // Collapse debris: dark falling particles from each hunter position
+        for (const mlh of state?.hunters ?? []) {
+          const mlp = displayPos(`h${mlh.id}`);
+          if (!mlp) continue;
+          for (let i = 0; i < 14; i++) {
+            const a = -Math.PI * 0.5 + (i - 6.5) * 0.30;
+            const spd = 0.8 + (i % 4) * 0.45;
+            sparkles.push({ wx: mlp.x + 0.5, wy: mlp.y + 0.4,
+              vx: Math.cos(a) * spd, vy: Math.sin(a) * spd + 0.5,
+              t: 0, ttl: 680, color: i % 4 === 0 ? '#fff' : i % 4 === 1 ? '#ff6a5a' : i % 4 === 2 ? '#882020' : '#2a1010' });
+          }
+        }
         break;
+      }
       case 'scoreTallied':
         banner = banner ?? { text: 'RESULTS', color: '#f0f4ff', startMs: clock };
         break;
