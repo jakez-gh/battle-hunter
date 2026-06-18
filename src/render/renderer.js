@@ -1192,12 +1192,24 @@ export function createRenderer(canvas, opts = {}) {
         const pulse = 0.10 + 0.08 * Math.sin(clock / 1100 + box.x * 3.7 + box.y * 2.3);
         ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = '#e8d87e';
         ctx.fillRect(bp.x, bp.y, TILE * cam.scale, TILE * cam.scale); ctx.restore();
-        // Occasional white gleam glint above the box (treasure chest twinkle)
+        // Star-sparkle twinkle above closed boxes — 4-arm cross + 4 diagonal corner dots
         const gleamPhase = ((clock * 0.5 + box.x * 417 + box.y * 293) % 2800) / 2800;
         if (gleamPhase < 0.12) {
           const ga = Math.min(gleamPhase, 0.12 - gleamPhase) / 0.06;
-          ctx.save(); ctx.globalAlpha = ga * 0.85; ctx.fillStyle = '#fff';
-          ctx.fillRect((bp.x + 6 * cam.scale) | 0, (bp.y - 3 * cam.scale) | 0, cam.scale * 2, cam.scale * 2);
+          const gs = cam.scale;
+          const gcx = (bp.x + 7.5 * gs) | 0;
+          const gcy = (bp.y - 3 * gs) | 0;
+          ctx.save(); ctx.globalAlpha = ga * 0.90; ctx.fillStyle = '#fff';
+          ctx.fillRect(gcx, gcy - 3 * gs, gs, 3 * gs);      // top arm
+          ctx.fillRect(gcx, gcy + gs, gs, 3 * gs);           // bottom arm
+          ctx.fillRect(gcx - 3 * gs, gcy, 3 * gs, gs);      // left arm
+          ctx.fillRect(gcx + gs, gcy, 3 * gs, gs);           // right arm
+          ctx.fillRect(gcx, gcy, gs, gs);                     // bright centre
+          ctx.globalAlpha = ga * 0.45;
+          ctx.fillRect(gcx - 2 * gs, gcy - 2 * gs, gs, gs); // top-left dot
+          ctx.fillRect(gcx + 2 * gs, gcy - 2 * gs, gs, gs); // top-right dot
+          ctx.fillRect(gcx - 2 * gs, gcy + 2 * gs, gs, gs); // bottom-left dot
+          ctx.fillRect(gcx + 2 * gs, gcy + 2 * gs, gs, gs); // bottom-right dot
           ctx.restore();
         }
       }
