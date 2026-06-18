@@ -711,6 +711,24 @@ export function createRenderer(canvas, opts = {}) {
               }
             }
           }
+          // Void depth: slow purple pulse + rare brief spark on pit tiles
+          if (!b.floor[y + 1]?.[x]) {
+            const vp = worldToScreen(x, y, cam);
+            const ts = TILE * cam.scale;
+            const vh = ((x * 3571 + y * 1637) ^ 1013) & 0xFFFF;
+            const vpulse = 0.05 + 0.03 * Math.sin(clock / (4800 + (vh & 0x7FF)) + vh * 0.009);
+            const vgr = ctx.createRadialGradient(vp.x + ts * 0.5, vp.y + ts * 0.5, 0,
+              vp.x + ts * 0.5, vp.y + ts * 0.5, ts * 0.6);
+            vgr.addColorStop(0, 'rgba(65,20,120,' + vpulse.toFixed(3) + ')'); vgr.addColorStop(1, 'transparent');
+            ctx.fillStyle = vgr; ctx.fillRect(vp.x | 0, vp.y | 0, ts, ts);
+            const vperiod = 7000 + (vh & 0x1FFF);
+            const vphase = ((clock + vh * 23) % vperiod) / vperiod;
+            if (vphase < 0.012) {
+              ctx.save(); ctx.globalAlpha = Math.sin(vphase / 0.012 * Math.PI) * 0.55; ctx.fillStyle = '#3520a8';
+              ctx.fillRect((vp.x + ((vh & 0xF) + 1) * cam.scale) | 0, (vp.y + ((vh >> 4 & 0xF) + 1) * cam.scale) | 0, cam.scale, cam.scale);
+              ctx.restore();
+            }
+          }
           continue;
         }
         blitTile(`tile.${floors[(x * 7 + y * 13) % 8]}`, x, y);
