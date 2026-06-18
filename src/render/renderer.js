@@ -1233,8 +1233,13 @@ export function createRenderer(canvas, opts = {}) {
       if (closed) {
         const bp = worldToScreen(box.x, box.y, cam);
         const pulse = 0.10 + 0.08 * Math.sin(clock / 1100 + box.x * 3.7 + box.y * 2.3);
-        ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = '#e8d87e';
-        ctx.fillRect(bp.x, bp.y, TILE * cam.scale, TILE * cam.scale); ctx.restore();
+        // Radial glow centered on box — fades beyond tile edges for a softer ambient
+        { const ts = TILE * cam.scale;
+          const bcx = bp.x + ts / 2, bcy = bp.y + ts / 2;
+          const bg = ctx.createRadialGradient(bcx, bcy, 0, bcx, bcy, ts * 0.88);
+          bg.addColorStop(0, '#e8d87e'); bg.addColorStop(0.52, '#e8d87e'); bg.addColorStop(1, 'transparent');
+          ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = bg;
+          ctx.fillRect(bp.x - ts * 0.18, bp.y - ts * 0.18, ts * 1.36, ts * 1.36); ctx.restore(); }
         // Star-sparkle twinkle above closed boxes — 4-arm cross + 4 diagonal corner dots
         const gleamPhase = ((clock * 0.5 + box.x * 417 + box.y * 293) % 2800) / 2800;
         if (gleamPhase < 0.12) {
