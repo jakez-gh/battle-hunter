@@ -1950,7 +1950,9 @@ export function makeGameScreen(app, g) {
       ctx.save(); ctx.globalAlpha = dp; ctx.fillStyle = dr;
       ctx.fillRect(X + 58, 6, 76, 26); ctx.restore();
     }
-    text(ctx, `R${st.round ?? '?'}`, X + 10, 13, { size: 13, color: GOLD });
+    ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = '#906000';
+    text(ctx, `R${st.round ?? '?'}`, X + 10, 13, { size: 13, color: GOLD, shadow: false });
+    ctx.restore();
     text(ctx, `deck ${_deckCount}`, X + 62, 13, { size: 13, color: _deckCol });
     { const rp = 0.06 + 0.04 * Math.sin(hudT * 1.5);
       const rrg = ctx.createRadialGradient(X + 164, 20, 2, X + 164, 20, 38);
@@ -1981,7 +1983,10 @@ export function makeGameScreen(app, g) {
         ig.addColorStop(0, ia + '28'); ig.addColorStop(1, 'transparent');
         ctx.fillStyle = ig; ctx.fillRect(X + 4, y + 2, 56, 54); }
       sprite(app, `hunter${h.spriteId}.${h.palette}.icon`, X + 6, y + 6, 4);
-      text(ctx, h.name ?? `P${i + 1}`, X + 60, y + 6, { size: 14, color: SLOT_COLORS[h.slot ?? i] });
+      { const nc = SLOT_COLORS[h.slot ?? i];
+        ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = nc;
+        text(ctx, h.name ?? `P${i + 1}`, X + 60, y + 6, { size: 14, color: nc, shadow: false });
+        ctx.restore(); }
       if (h.hasTarget) {
         const tp = 0.18 + 0.14 * Math.sin(hudT * 3.2);
         const tr = ctx.createRadialGradient(X + W - 18, y + 14, 2, X + W - 18, y + 14, 18);
@@ -2009,7 +2014,13 @@ export function makeGameScreen(app, g) {
         }
       }
       const hpCol = ratio <= 0.25 ? (0.5 + 0.5 * Math.sin(hudT * 6)) > 0.5 ? BAD : '#9d2a2a' : DIM;
-      text(ctx, `${h.hp}/${h.maxHp}`, X + 186, y + 22, { size: 11, color: hpCol });
+      if (ratio <= 0.25) {
+        ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = BAD;
+        text(ctx, `${h.hp}/${h.maxHp}`, X + 186, y + 22, { size: 11, color: hpCol, shadow: false });
+        ctx.restore();
+      } else {
+        text(ctx, `${h.hp}/${h.maxHp}`, X + 186, y + 22, { size: 11, color: hpCol });
+      }
       text(ctx, `hand ${h.hand?.length ?? 0}  bag ${h.items?.length ?? 0}`, X + 60, y + 40, { size: 11, color: DIM });
       // status glyphs — pulsing colored background behind each icon
       let sx = X + 160;
