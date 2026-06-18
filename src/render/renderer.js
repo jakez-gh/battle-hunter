@@ -1053,6 +1053,14 @@ export function createRenderer(canvas, opts = {}) {
         }
         blitTile(`tile.${floors[(x * 7 + y * 13) % 15]}`, x, y);
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
+          // Wall overhang shadow: floor tiles directly beneath a wall get a top-edge drop shadow
+          if (!b.floor[y - 1]?.[x]) {
+            const sg = ctx.createLinearGradient(fp.x, fp.y, fp.x, fp.y + cam.scale * 3.5);
+            sg.addColorStop(0, 'rgba(0,0,0,0.36)');
+            sg.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = sg;
+            ctx.fillRect(fp.x | 0, fp.y | 0, ts, cam.scale * 3.5);
+          }
           // Warm torch-light pool: if the wall directly above this floor tile has a torch,
           // spill a warm amber glow onto the top of this tile
           if (!b.floor[y - 1]?.[x]) {
