@@ -497,6 +497,15 @@ export function createRenderer(canvas, opts = {}) {
         }
         blitTile(`tile.${floors[(x * 7 + y * 13) % 4]}`, x, y);
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
+          // Puddle: ~12% of floor tiles get a subtle wet reflection shimmer
+          const ph = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;
+          if ((ph & 0xFF) < 30) {
+            const pw = 0.06 + 0.04 * Math.sin(clock / 1600 + ph * 0.009);
+            ctx.save(); ctx.globalAlpha = pw;
+            ctx.fillStyle = '#6090c0';
+            ctx.fillRect(fp.x + ts * 0.25, fp.y + ts * 0.55, ts * 0.5, ts * 0.3);
+            ctx.restore();
+          }
           ctx.fillStyle = 'rgba(0,0,0,0.22)';
           ctx.fillRect(fp.x, fp.y + ts - 1, ts, 1);
           ctx.fillRect(fp.x + ts - 1, fp.y, 1, ts - 1);
