@@ -1785,12 +1785,25 @@ export function makeGameScreen(app, g) {
   function drawHud(ctx, st) {
     const X = 724, W = 232;
     box(ctx, X, 6, W, 30);
-    // Active-unit slot-color dot on left edge of round info bar
-    { const cur = st.current;
-      const ci = cur?.kind === 'hunter' ? (st.hunters?.[cur.index]?.slot ?? cur.index) : -1;
-      if (ci >= 0) { ctx.fillStyle = SLOT_COLORS[ci % 4]; ctx.fillRect(X + 3, 9, 3, 22); }
-      else { ctx.fillStyle = '#cc4a3a'; ctx.fillRect(X + 3, 9, 3, 22); } }
-    text(ctx, `R${st.round ?? '?'}  deck ${st.deck?.length ?? '?'}  relic L${st.relicLevel ?? '?'}`, X + 10, 13, { size: 13 });
+    // Active-unit slot-color dot + ambient wash on round info bar
+    const _cur = st.current;
+    const _ci = _cur?.kind === 'hunter' ? (st.hunters?.[_cur.index]?.slot ?? _cur.index) : -1;
+    const _sc = SLOT_COLORS[_ci >= 0 ? _ci % 4 : 0] ?? '#cc4a3a';
+    if (_ci >= 0) {
+      const rwash = 0.06 + 0.04 * Math.sin(hudT * 2.4);
+      ctx.save(); ctx.globalAlpha = rwash;
+      const rg = ctx.createLinearGradient(X + 4, 8, X + W - 4, 8);
+      rg.addColorStop(0, _sc); rg.addColorStop(1, 'transparent');
+      ctx.fillStyle = rg; ctx.fillRect(X + 4, 8, W - 8, 26); ctx.restore();
+    }
+    ctx.fillStyle = _sc; ctx.fillRect(X + 3, 9, 3, 22);
+    const _deckCount = st.deck?.length ?? '?';
+    const _deckLow = typeof _deckCount === 'number' && _deckCount < 20;
+    const _deckUrgent = typeof _deckCount === 'number' && _deckCount < 5;
+    const _deckCol = _deckUrgent ? BAD : _deckLow ? '#e0a850' : FG;
+    text(ctx, `R${st.round ?? '?'}`, X + 10, 13, { size: 13, color: GOLD });
+    text(ctx, `deck ${_deckCount}`, X + 62, 13, { size: 13, color: _deckCol });
+    text(ctx, `relic L${st.relicLevel ?? '?'}`, X + 138, 13, { size: 13, color: '#a898c8' });
 
     (st.hunters || []).forEach((h, i) => {
       const y = 42 + i * 62;

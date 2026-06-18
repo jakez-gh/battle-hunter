@@ -69,6 +69,7 @@ const CARD_MINI = { R: '#cc4a3a', Y: '#d8b83a', B: '#3a6ee0', G: '#3aa84a' };
 const TRAP_COLORS = { damage: '#cc4a3a', stun: '#d8b83a', leg: '#3a6ee0', empty: '#8d8d9e' };
 const STATUS_GLOW = { stun: '#d8b83a', leg: '#3a6ee0', panic: '#cc4a3a', empty: '#8d8d9e' };
 const MONSTER_AURA = { VAC: 'rgba(80,170,220,0.55)', OOZ: 'rgba(60,200,80,0.50)', FNG: 'rgba(220,130,40,0.52)', WYRM: 'rgba(140,60,220,0.55)' };
+const MONSTER_LABEL_COLOR = { VAC: '#50b0e8', OOZ: '#50c84a', FNG: '#e09040', WYRM: '#9870d8' };
 const MONSTER_KINDS = new Set(['VAC', 'OOZ', 'FNG', 'WYRM']);
 const BATTLE_EVENTS = new Set([
   'battleStarted', 'responseChosen', 'escapeRolled', 'strikeRolled',
@@ -1012,6 +1013,43 @@ export function createRenderer(canvas, opts = {}) {
     }
   }
 
+  function drawUnitLabels() {
+    if (!state?.monsters?.length) return;
+    const s = cam.scale;
+    for (const m of state.monsters ?? []) {
+      const k = `m${m.id}`;
+      if (hiddenUnits.has(k)) continue;
+      const pos = displayPos(k);
+      if (!pos) continue;
+      const p = worldToScreen(pos.x, pos.y, cam);
+      const cx = p.x + TILE * s / 2;
+      const barW = 14 * s;
+      const barH = Math.max(1, Math.round(s * 1.5));
+      const barX = Math.round(cx - barW / 2);
+      const labelY = Math.round(p.y - 7 * s);
+      const barY = labelY + 10;
+      const ratio = m.maxHp ? clamp(m.hp / m.maxHp, 0, 1) : 0;
+      const labelCol = MONSTER_LABEL_COLOR[m.kind] ?? '#ff8866';
+      // Kind label above HP bar
+      text(m.kind, cx, labelY, labelCol, 9, 'center');
+      // Dark backdrop behind HP bar
+      ctx.save(); ctx.globalAlpha = 0.72; ctx.fillStyle = '#080a12';
+      ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2); ctx.restore();
+      // Colored HP fill
+      const fill = Math.round(barW * ratio);
+      if (fill > 0) {
+        const [mc0, mc1] = ratio > 0.5 ? ['#e05a3a', '#a82820'] : ratio > 0.25 ? ['#f07020', '#a04810'] : ['#ff4040', '#c01818'];
+        const mg = ctx.createLinearGradient(barX, barY, barX, barY + barH);
+        mg.addColorStop(0, mc0); mg.addColorStop(1, mc1);
+        ctx.fillStyle = mg;
+        ctx.fillRect(barX, barY, fill, barH);
+        // Shine
+        ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = '#fff';
+        ctx.fillRect(barX, barY, fill, Math.max(1, barH >> 1)); ctx.restore();
+      }
+    }
+  }
+
   function drawUnits() {
     const list = [];
     for (const h of state.hunters ?? []) {
@@ -1605,6 +1643,7 @@ export function createRenderer(canvas, opts = {}) {
       drawAmbientShimmer();
       drawOverlays();
       drawUnits();
+      drawUnitLabels();
       drawDieChip();
       drawFloats();
       drawCursor();
