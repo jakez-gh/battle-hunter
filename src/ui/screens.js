@@ -1862,6 +1862,14 @@ export function makeGameScreen(app, g) {
       if (filled) {
         ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#fff';
         ctx.fillRect(736 + d * 14, 439, dotW, 3); ctx.restore();
+        if (rem <= 2) {
+          // Urgency halo on remaining steps
+          const up = 0.20 + 0.18 * Math.sin(hudT * 6.0);
+          const ug = ctx.createRadialGradient(736 + d * 14 + dotW / 2, 443, 1, 736 + d * 14 + dotW / 2, 443, 12);
+          ug.addColorStop(0, BAD); ug.addColorStop(1, 'transparent');
+          ctx.save(); ctx.globalAlpha = up; ctx.fillStyle = ug;
+          ctx.fillRect(736 + d * 14 - 6, 432, dotW + 12, 20); ctx.restore();
+        }
       }
     }
     text(ctx, `${rem} step${rem !== 1 ? 's' : ''} left`, 736, 456, { size: 12, color: rem <= 2 ? BAD : DIM });
@@ -1887,6 +1895,13 @@ export function makeGameScreen(app, g) {
     const _deckLow = typeof _deckCount === 'number' && _deckCount < 20;
     const _deckUrgent = typeof _deckCount === 'number' && _deckCount < 5;
     const _deckCol = _deckUrgent ? BAD : _deckLow ? '#e0a850' : FG;
+    if (_deckUrgent) {
+      const dp = 0.13 + 0.11 * Math.sin(hudT * 5.5);
+      const dr = ctx.createRadialGradient(X + 100, 20, 2, X + 100, 20, 42);
+      dr.addColorStop(0, BAD); dr.addColorStop(1, 'transparent');
+      ctx.save(); ctx.globalAlpha = dp; ctx.fillStyle = dr;
+      ctx.fillRect(X + 58, 6, 76, 26); ctx.restore();
+    }
     text(ctx, `R${st.round ?? '?'}`, X + 10, 13, { size: 13, color: GOLD });
     text(ctx, `deck ${_deckCount}`, X + 62, 13, { size: 13, color: _deckCol });
     text(ctx, `relic L${st.relicLevel ?? '?'}`, X + 138, 13, { size: 13, color: '#a898c8' });
@@ -1910,7 +1925,14 @@ export function makeGameScreen(app, g) {
       }
       sprite(app, `hunter${h.spriteId}.${h.palette}.icon`, X + 6, y + 6, 4);
       text(ctx, h.name ?? `P${i + 1}`, X + 60, y + 6, { size: 14, color: SLOT_COLORS[h.slot ?? i] });
-      if (h.hasTarget) sprite(app, 'ui.targetMark', X + W - 24, y + 6, 2);
+      if (h.hasTarget) {
+        const tp = 0.18 + 0.14 * Math.sin(hudT * 3.2);
+        const tr = ctx.createRadialGradient(X + W - 18, y + 14, 2, X + W - 18, y + 14, 18);
+        tr.addColorStop(0, GOLD); tr.addColorStop(1, 'transparent');
+        ctx.save(); ctx.globalAlpha = tp; ctx.fillStyle = tr;
+        ctx.fillRect(X + W - 36, y + 2, 32, 24); ctx.restore();
+        sprite(app, 'ui.targetMark', X + W - 24, y + 6, 2);
+      }
       // HP bar
       const ratio = Math.max(0, (h.hp ?? 0) / (h.maxHp || 1));
       ctx.fillStyle = '#1a1c2e';
