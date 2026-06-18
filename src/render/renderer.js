@@ -266,11 +266,13 @@ export function createRenderer(canvas, opts = {}) {
         const fromPos = ev.from ?? null;
         beginSlide(k, fromPos, ev.to ?? ev.pos ?? null);
         if (fromPos && k?.[0] === 'h') {
+          const su = findUnit(k);
+          const sc = SLOT_COLORS[(su?.slot ?? 0) % 4] ?? '#9aa0b0';
           for (let i = 0; i < 5; i++) {
             const a = (i / 5) * Math.PI * 2;
             sparkles.push({ wx: fromPos.x + 0.5, wy: fromPos.y + 0.5,
               vx: Math.cos(a) * 0.5, vy: Math.sin(a) * 0.5 - 0.3,
-              t: 0, ttl: 280, color: '#9aa0b0' });
+              t: 0, ttl: 280, color: i === 0 ? '#d8dcf0' : sc });
           }
         }
         break;
@@ -378,12 +380,30 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'trapTriggered':
+      case 'trapTriggered': {
         shake = { t: 0, dur: EVENT_DURATIONS.trapTriggered, mag: 3 };
         addFloat(k, ev.kind === 'damage' ? 'TRAP!' : '', '#ff6a5a',
           { icon: ['stun', 'leg', 'empty'].includes(ev.kind) ? `status.${ev.kind}` : null });
-        addSparkles(k, '#ff6a5a');
+        const tp = displayPos(k);
+        if (tp) {
+          // Burst pattern varies by trap kind
+          const trapBursts = {
+            damage: ['#ff6a5a', '#ff3010', '#ffb840', '#fff'],
+            stun:   ['#ffe060', '#f8c820', '#fff8b0', '#fff'],
+            leg:    ['#3a80e8', '#60b0f8', '#c0d8ff', '#fff'],
+            empty:  ['#9aa0b0', '#c0c8d8', '#808898', '#9aa0b0'],
+          };
+          const cols = trapBursts[ev.kind] ?? trapBursts.damage;
+          for (let i = 0; i < 16; i++) {
+            const a = (i / 16) * Math.PI * 2;
+            const spd = 1.0 + (i % 4) * 0.5;
+            sparkles.push({ wx: tp.x + 0.5, wy: tp.y + 0.5,
+              vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+              t: 0, ttl: 360, color: cols[i % cols.length] });
+          }
+        }
         break;
+      }
       case 'trapDodged':
         addFloat(k, 'DODGE', '#9adfe8');
         addSparkles(k, '#9adfe8');
