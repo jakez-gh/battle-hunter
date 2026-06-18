@@ -197,16 +197,38 @@ function drawWallpaper(ctx, W, H, index) {
   ctx.strokeStyle = wp.accent;
   ctx.lineWidth = 2;
   const S = 48;
-  if (wp.pattern === 'grid') {
+  if (wp.pattern === 'plain') {
+    // Slow horizontal scanlines drifting downward — adds subtle texture to flat fills
+    const drift = (t * 6) % S;
+    ctx.save(); ctx.globalAlpha = 0.04; ctx.fillStyle = wp.accent;
+    for (let y = -S + drift; y < H; y += S) ctx.fillRect(0, y | 0, W, 2);
+    ctx.restore();
+  } else if (wp.pattern === 'grid') {
     for (let x = 0; x <= W; x += S) ctx.fillRect(x, 0, 2, H);
     for (let y = 0; y <= H; y += S) ctx.fillRect(0, y, W, 2);
+    // Brief twinkle at grid intersections: ~1-in-3 intersections flash per cycle
+    ctx.save();
+    for (let y = S; y < H; y += S) {
+      for (let x = S; x < W; x += S) {
+        const ih = ((x * 31 + y * 17) ^ 0x3C7) & 0xFFF;
+        const period = 3200 + (ih & 0xFFF);
+        const phase = ((t * 1000 + ih * 23) % period) / period;
+        if (phase > 0.06) continue;
+        const ga = Math.sin(phase / 0.06 * Math.PI) * 0.55;
+        ctx.globalAlpha = ga; ctx.fillStyle = wp.accent;
+        ctx.fillRect(x - 2, y - 2, 6, 6);
+      }
+    }
+    ctx.restore();
   } else if (wp.pattern === 'dots') {
     // Dots breathe slowly between 3 and 4.5px
     const dr = 3 + 1.5 * Math.sin(t * 0.8);
     for (let y = S / 2; y < H; y += S) for (let x = S / 2; x < W; x += S)
       ctx.fillRect((x - dr) | 0, (y - dr) | 0, dr * 2 + 1 | 0, dr * 2 + 1 | 0);
   } else if (wp.pattern === 'stripes') {
-    for (let y = 0; y < H; y += S) ctx.fillRect(0, y, W, 10);
+    // Stripes drift slowly upward — seamlessly wraps every S pixels
+    const drift = (t * 8) % S;
+    for (let y = -S + drift; y < H; y += S) ctx.fillRect(0, y | 0, W, 10);
   } else if (wp.pattern === 'diag') {
     // Lines drift diagonally at 12px/s — S-periodic so it wraps seamlessly
     const drift = (t * 12) % S;
@@ -1928,13 +1950,13 @@ export function makeGameScreen(app, g) {
         try { color = cardColor(cid); } catch { /* unknown id */ }
         ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = '#000';
         ctx.fillRect(cx + 3, cy + 3, 42, 60); ctx.restore();
-        if (i === 0) {
-          const cpulse = 0.10 + 0.08 * Math.sin(hudT * 2.2);
-          const cg = ctx.createRadialGradient(cx + 21, cy + 28, 2, cx + 21, cy + 28, 30);
-          cg.addColorStop(0, GOLD); cg.addColorStop(1, 'transparent');
-          ctx.save(); ctx.globalAlpha = cpulse; ctx.fillStyle = cg;
-          ctx.fillRect(cx - 6, cy - 4, 54, 68); ctx.restore();
-        }
+        // Color-matched glow behind every card; first card gets a brighter gold pulse
+        { const cc2 = CARD_HEX[color] ?? '#ffe98a';
+          const baseAlpha = i === 0 ? (0.12 + 0.08 * Math.sin(hudT * 2.2)) : 0.06;
+          const cg = ctx.createRadialGradient(cx + 21, cy + 28, 2, cx + 21, cy + 28, 28);
+          cg.addColorStop(0, i === 0 ? GOLD : cc2); cg.addColorStop(1, 'transparent');
+          ctx.save(); ctx.globalAlpha = baseAlpha; ctx.fillStyle = cg;
+          ctx.fillRect(cx - 4, cy - 2, 50, 64); ctx.restore(); }
         sprite(app, `card.${color}`, cx, cy, 3);
         { const cv = String(cid).slice(1), cc = CARD_HEX[color] ?? FG;
           text(ctx, cv, cx + 21, cy + 22, { size: 14, align: 'center', color: cc });

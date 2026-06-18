@@ -487,14 +487,26 @@ export function createRenderer(canvas, opts = {}) {
         addSparkles(k);
         addFloat(k, 'TARGET!', '#ffe98a', { big: true, ttl: 1100 });
         turnFlash = { color: '#ffe98a', t: 0, dur: 700 };
-        // Gold burst: 12 fast-moving particles in a ring
+        shake = { t: 0, dur: 300, mag: 2.5 };
+        // Gold burst: 20 fast-moving particles in a ring + slow lingering outer ring
         { const tp = displayPos(k);
           if (tp) {
+            for (let i = 0; i < 20; i++) {
+              const a = (i / 20) * Math.PI * 2;
+              const spd = i % 5 === 0 ? 3.5 : 1.8 + (i % 3) * 0.8;
+              sparkles.push({ wx: tp.x + 0.5, wy: tp.y + 0.5, vx: Math.cos(a) * spd,
+                vy: Math.sin(a) * spd - 0.8, t: 0, ttl: i % 5 === 0 ? 500 : 700,
+                color: i % 5 === 0 ? '#fff' : i % 3 === 0 ? '#ffd040' : '#ffe98a' });
+            }
+          } }
+        // Exit portal also erupts gold — exit is now "live"
+        { const ex = state?.board?.exit;
+          if (ex) {
             for (let i = 0; i < 12; i++) {
               const a = (i / 12) * Math.PI * 2;
-              const spd = 1.8 + (i % 3) * 0.8;
-              sparkles.push({ wx: tp.x + 0.5, wy: tp.y + 0.5, vx: Math.cos(a) * spd,
-                vy: Math.sin(a) * spd - 0.8, t: 0, ttl: 700, color: i % 3 === 0 ? '#fff' : '#ffe98a' });
+              sparkles.push({ wx: ex.x + 0.5, wy: ex.y + 0.5, vx: Math.cos(a) * 2.0,
+                vy: Math.sin(a) * 2.0 - 0.8, t: 0, ttl: 550,
+                color: i % 4 === 0 ? '#fff' : i % 4 === 1 ? '#ffe98a' : '#7ee8a0' });
             }
           } }
         break;
