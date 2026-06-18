@@ -1933,10 +1933,20 @@ export function makeResultsScreen(app, g) {
         // Left border per column in slot color
         ctx.save(); ctx.globalAlpha = 0.38; ctx.fillStyle = SLOT_COLORS[h.slot ?? i];
         ctx.fillRect(x, 95, 2, 435); ctx.restore();
-        sprite(app, `hunter${h.spriteId}.${h.palette}.icon`, x + 30, 96, 4);
+        // Animated icon: winner marches after count-up; others stay idle
+        const rIconFrame = (isFirst && t >= 1.8) ? (Math.floor(t * 3) % 2 ? 'step' : 'idle') : 'icon';
+        const iconBob = (isFirst && t >= 1.8) ? Math.round(Math.sin(t * 4) * 2) : 0;
+        sprite(app, `hunter${h.spriteId}.${h.palette}.${rIconFrame}`, x + 30, 96 + iconBob, rIconFrame === 'icon' ? 4 : 3);
         if (isFirst) {
+          // Persistent soft winner tint
           ctx.save(); ctx.globalAlpha = 0.15; ctx.fillStyle = GOLD;
           ctx.fillRect(x + 2, 95, cw - 2, 48); ctx.restore();
+          // Reveal pulse when count-up finishes (t 1.8–2.4s)
+          if (t >= 1.8 && t < 2.4) {
+            const fp = Math.sin(((t - 1.8) / 0.6) * Math.PI);
+            ctx.save(); ctx.globalAlpha = fp * 0.30; ctx.fillStyle = GOLD;
+            ctx.fillRect(x + 2, 95, cw - 2, 435); ctx.restore();
+          }
         }
         text(ctx, r.name, x + 84, 130, { size: 15, align: 'center', color: SLOT_COLORS[h.slot ?? i] });
         // Score count-up animation: values tick from 0 to final over 1.8s
