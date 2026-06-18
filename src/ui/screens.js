@@ -2475,8 +2475,10 @@ export function makeMissionBriefingScreen(app, mission) {
       ctx.restore();
 
       text(ctx, 'Level ' + mission.level, BX + 20, BY + 70, { size: 14, color: DIM });
-      text(ctx, mission.type.toUpperCase(), BX + 130, BY + 70,
-        { size: 14, color: TYPE_COLOR[mission.type] || FG });
+      { const tc = TYPE_COLOR[mission.type] || FG;
+        ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = tc;
+        text(ctx, mission.type.toUpperCase(), BX + 130, BY + 70, { size: 14, color: tc, shadow: false });
+        ctx.restore(); }
 
       ctx.fillStyle = '#3c4364';
       ctx.fillRect(BX + 20, BY + 94, BW - 40, 1);
@@ -2488,13 +2490,17 @@ export function makeMissionBriefingScreen(app, mission) {
       ctx.fillStyle = '#3c4364';
       ctx.fillRect(BX + 20, nextY, BW - 40, 1);
 
-      text(ctx, 'OBJECTIVE', BX + 20, nextY + 10, { size: 12, color: GOLD });
+      ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = '#b07a08';
+      text(ctx, 'OBJECTIVE', BX + 20, nextY + 10, { size: 12, color: GOLD, shadow: false });
+      ctx.restore();
       wrapText(ctx, TYPE_HINT[mission.type] || '', BX + 20, nextY + 28, BW - 60, 20, { size: 14, color: DIM });
 
       const oppY = nextY + 78;
       ctx.fillStyle = '#3c4364';
       ctx.fillRect(BX + 20, oppY, BW - 40, 1);
-      text(ctx, 'OPPOSITION', BX + 20, oppY + 10, { size: 12, color: GOLD });
+      ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = '#b07a08';
+      text(ctx, 'OPPOSITION', BX + 20, oppY + 10, { size: 12, color: GOLD, shadow: false });
+      ctx.restore();
       const oppNames = mission.opponents.map(function(o) {
         if (o === 'RAVEN') return 'RAVEN agent';
         if (o === 'keld') return 'Keld';
