@@ -271,6 +271,22 @@ export function createRenderer(canvas, opts = {}) {
         beginSlide(k, ev.from ?? null,
           ev.to ?? ev.pos ?? (Array.isArray(ev.path) ? ev.path[ev.path.length - 1] : null));
         break;
+      case 'cardPlayed': {
+        const cc = CARD_MINI[String(ev.card ?? '')[0]] ?? '#c8d0ff';
+        if (ev.card) addFloat(k, String(ev.card), cc, { ttl: 560 });
+        if (k?.[0] === 'h') {
+          const cp = displayPos(k);
+          if (cp) {
+            for (let i = 0; i < 6; i++) {
+              const a = (i / 6) * Math.PI * 2;
+              sparkles.push({ wx: cp.x + 0.5, wy: cp.y + 0.5,
+                vx: Math.cos(a) * 1.4, vy: Math.sin(a) * 1.4 - 0.5,
+                t: 0, ttl: 400, color: cc });
+            }
+          }
+        }
+        break;
+      }
       case 'cardDrawn':
         deckShown = Math.max(0, deckShown - 1);
         break;
