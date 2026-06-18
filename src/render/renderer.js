@@ -2037,6 +2037,22 @@ export function createRenderer(canvas, opts = {}) {
         ctx.restore();
       }
     }
+    // Ambient air dust: 16 tiny motes drifting slowly in screen space
+    const vwAir = canvas.width, vhAir = canvas.height - HUD_H;
+    for (let ai = 0; ai < 16; ai++) {
+      const aperiod = 9000 + ai * 530;
+      const aphase = ((clock + ai * (aperiod / 16)) % aperiod) / aperiod;
+      const ax = ((ai * 173.5 + 47) % vwAir);
+      const ay = ((ai * 251.3 + 83) % vhAir);
+      const mx = ax + Math.sin(clock / (2200 + ai * 140) + ai) * 18 + Math.sin(aphase * Math.PI * 2) * 8;
+      const my = ay + Math.cos(clock / (1800 + ai * 190) + ai * 1.4) * 12 - aphase * 22;
+      const ma = Math.sin(aphase * Math.PI) * 0.09;
+      if (ma < 0.01) continue;
+      ctx.save(); ctx.globalAlpha = ma;
+      ctx.fillStyle = (ai & 3) === 0 ? '#e8c87a' : '#8090a8';
+      ctx.fillRect((mx - 0.5) | 0, (my - 0.5) | 0, 1, 2);
+      ctx.restore();
+    }
   }
 
   function drawUnitShadow(k, pos, alpha) {
