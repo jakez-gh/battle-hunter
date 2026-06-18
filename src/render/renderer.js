@@ -973,6 +973,29 @@ export function createRenderer(canvas, opts = {}) {
     // Active unit gets a gentle idle bob (±1.5 px)
     const bobPx = k === activeKey() ? Math.round(Math.sin(clock / 650) * 1.5) * s : 0;
     const dy = p.y + (TILE * s - h) - bobPx;
+    // Motion trail: ghost copies while sliding for a blur effect
+    if (slides.has(k) && anim) {
+      const sl = slides.get(k);
+      const p2 = Math.min(1, anim.t / anim.dur);
+      const trailFade = p2 < 0.72 ? 1 : (1 - p2) / 0.28;
+      for (let tr = 1; tr <= 2; tr++) {
+        const tp = Math.max(0, p2 - tr * 0.20);
+        const tx2 = sl.fx + (sl.tx - sl.fx) * tp;
+        const ty2 = sl.fy + (sl.ty - sl.fy) * tp;
+        if (Math.abs(tx2 - pos.x) < 0.02 && Math.abs(ty2 - pos.y) < 0.02) continue;
+        const tp2 = worldToScreen(tx2, ty2, cam);
+        const tdx = (tp2.x + (TILE * s - w) / 2) | 0;
+        const tdy = (tp2.y + (TILE * s - h)) | 0;
+        ctx.save();
+        ctx.globalAlpha = alpha * (0.20 - tr * 0.07) * trailFade;
+        if (facing.get(k) === -1) {
+          ctx.translate(tdx + w, tdy); ctx.scale(-1, 1); ctx.drawImage(img, 0, 0, w, h);
+        } else {
+          ctx.drawImage(img, tdx, tdy, w, h);
+        }
+        ctx.restore();
+      }
+    }
     // Low-HP danger glow: pulsing red around tile edges at ≤25% HP
     if (k[0] === 'h' && u && u.maxHp && u.hp / u.maxHp <= 0.25) {
       const danger = 0.18 + 0.18 * Math.sin(clock / 260);
