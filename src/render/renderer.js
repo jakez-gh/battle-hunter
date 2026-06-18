@@ -1512,11 +1512,14 @@ export function createRenderer(canvas, opts = {}) {
       ctx.restore();
     }
     // Low-HP danger glow: pulsing red around tile edges at ≤25% HP
-    if (k[0] === 'h' && u && u.maxHp && u.hp / u.maxHp <= 0.25) {
-      const danger = 0.18 + 0.18 * Math.sin(clock / 260);
+    if (u && u.maxHp && u.hp / u.maxHp <= 0.25) {
+      const hpRatio = u.hp / u.maxHp;
+      const urgency = 1 - hpRatio * 4; // 0 at 25%, 1 at 0HP
+      const danger = (0.15 + 0.18 * urgency) * (1 + Math.sin(clock / 260)) * 0.5;
       const ts = TILE * s;
       ctx.save(); ctx.globalAlpha = danger * alpha;
-      ctx.strokeStyle = '#ff4a3a'; ctx.lineWidth = s * 0.7;
+      ctx.strokeStyle = k[0] === 'h' ? '#ff4a3a' : '#ff6820';
+      ctx.lineWidth = s * 0.7;
       ctx.strokeRect(p.x + s * 0.4, p.y + s * 0.4, ts - s * 0.8, ts - s * 0.8);
       ctx.restore();
     }
