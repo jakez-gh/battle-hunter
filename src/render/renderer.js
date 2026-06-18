@@ -524,6 +524,18 @@ export function createRenderer(canvas, opts = {}) {
             ctx.fillRect(fp.x + ts * 0.25, fp.y + ts * 0.55, ts * 0.5, ts * 0.3);
             ctx.restore();
           }
+          // Hairline crack: ~5% of floor tiles get a 3-5 pixel diagonal scratch
+          if (((ph >> 8) & 0xFF) < 13) {
+            const cs = cam.scale;
+            const cx0 = fp.x + (2 + (ph >> 4 & 7)) * cs;
+            const cy0 = fp.y + (3 + (ph >> 12 & 5)) * cs;
+            const clen = 3 + (ph & 3);
+            ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#101018';
+            for (let ci = 0; ci < clen; ci++) {
+              ctx.fillRect((cx0 + ci * cs) | 0, (cy0 + ci * cs) | 0, cs, cs);
+            }
+            ctx.restore();
+          }
           ctx.fillStyle = 'rgba(0,0,0,0.22)';
           ctx.fillRect(fp.x, fp.y + ts - 1, ts, 1);
           ctx.fillRect(fp.x + ts - 1, fp.y, 1, ts - 1);
@@ -917,9 +929,12 @@ export function createRenderer(canvas, opts = {}) {
         const sp2 = worldToScreen(tx, ty, cam);
         const spx = sp2.x + ((h >> 4) & 13) * s;
         const spy = sp2.y + ((h >> 8) & 13) * s;
-        ctx.save(); ctx.globalAlpha = t2 * 0.18;
+        ctx.save(); ctx.globalAlpha = t2 * 0.22;
         ctx.fillStyle = (h & 1) ? '#e8c87a' : '#9adfe8';
-        ctx.fillRect(spx, spy, s * 2, s * 2); ctx.restore();
+        // Star/cross shape: 4-arm plus sign for a gem-sparkle look
+        ctx.fillRect(spx + s, spy, s, s * 3);     // vertical arm
+        ctx.fillRect(spx, spy + s, s * 3, s);     // horizontal arm
+        ctx.restore();
       }
     }
   }
