@@ -146,7 +146,9 @@ function box(ctx, x, y, w, h, opt = {}) {
     tg.addColorStop(0, 'rgba(200,160,30,0.14)'); tg.addColorStop(1, 'transparent');
     ctx.fillStyle = tg; ctx.fillRect(x + 4, y + 2, Math.min(w - 8, 140), 26);
     ctx.fillStyle = GOLD; ctx.fillRect(x + 4, y + 7, 2, 18);
-    text(ctx, opt.title, x + 10, y + 8, { size: 14, color: GOLD });
+    ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = '#906000';
+    text(ctx, opt.title, x + 10, y + 8, { size: 14, color: GOLD, shadow: false });
+    ctx.restore();
   }
 }
 
@@ -2443,8 +2445,18 @@ export function makeResultsScreen(app, g) {
             ctx.strokeStyle = bc; ctx.lineWidth = 1;
             ctx.strokeRect(x + 66.5, 446.5, 35, 21);
           }
-          text(ctx, PLACE[pl] ?? '-', x + 84, 450, { size: 16, align: 'center', color: pl === 0 ? GOLD : pl === 1 ? '#c0d8f0' : pl === 2 ? '#e09050' : DIM }); }
-        text(ctx, String(cnt(r.credits)), x + 84, 490, { size: 15, align: 'center', color: OK });
+          { const ptc = pl === 0 ? GOLD : pl === 1 ? '#c0d8f0' : pl === 2 ? '#e09050' : DIM;
+            const pGlow = pl === 0 ? '#c09010' : pl === 1 ? '#6090c0' : pl === 2 ? '#b05820' : null;
+            if (pGlow) {
+              ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = pGlow;
+              text(ctx, PLACE[pl] ?? '-', x + 84, 450, { size: 16, align: 'center', color: ptc, shadow: false });
+              ctx.restore();
+            } else {
+              text(ctx, PLACE[pl] ?? '-', x + 84, 450, { size: 16, align: 'center', color: ptc, shadow: false });
+            } } }
+        ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = OK;
+        text(ctx, String(cnt(r.credits)), x + 84, 490, { size: 15, align: 'center', color: OK, shadow: false });
+        ctx.restore();
       });
       text(ctx, 'Enter: collect and return to the hub', app.W / 2, 600, { size: 15, align: 'center', color: DIM });
     },
