@@ -403,9 +403,15 @@ export function makeTitleScreen(app) {
         const sy = ((i * 61.803) % 1) * app.H * 0.68 + Math.sin(t * (0.05 + (i % 5) * 0.02) + i * 0.8) * 10;
         const sa = 0.10 + 0.10 * Math.sin(t * (1.2 + (i & 3) * 0.4) + i * 0.97);
         ctx.save(); ctx.globalAlpha = sa;
-        ctx.fillStyle = (i & 7) === 0 ? GOLD : FG;
-        const sr = (i & 7) === 0 ? 2 : 1;
-        ctx.fillRect(sx | 0, sy | 0, sr, sr);
+        if ((i & 7) === 0) {
+          // Gold stars: cross/star shape
+          ctx.fillStyle = GOLD;
+          ctx.fillRect((sx - 0.4) | 0, (sy - 1.5) | 0, 1, 3);
+          ctx.fillRect((sx - 1.5) | 0, (sy - 0.4) | 0, 3, 1);
+        } else {
+          ctx.fillStyle = FG;
+          ctx.fillRect(sx | 0, sy | 0, 1, 1);
+        }
         ctx.restore();
       }
       // Chunky layered logo
@@ -2352,7 +2358,9 @@ export function makeManualScreen(app) {
       box(ctx, BX, BY, BW, BH, { title: 'HOW TO PLAY' });
 
       const pg = PAGES[page];
-      text(ctx, pg.title, BX + 20, BY + 36, { size: 22, color: GOLD });
+      ctx.save(); ctx.shadowBlur = 14; ctx.shadowColor = '#b07a08';
+      text(ctx, pg.title, BX + 20, BY + 36, { size: 22, color: GOLD, shadow: false });
+      ctx.restore();
       text(ctx, (page + 1) + ' / ' + PAGES.length, BX + BW - 24, BY + 36,
         { size: 14, align: 'right', color: DIM });
 
