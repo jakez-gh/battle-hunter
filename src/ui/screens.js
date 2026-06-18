@@ -1531,8 +1531,15 @@ export function makeGameScreen(app, g) {
       if (timing) drawTiming(ctx, timing);
       if (banner) {
         const w = Math.max(280, banner.text.length * 12 + 60);
+        const bAlpha = Math.min(1, banner.t * 2.5);
+        ctx.save(); ctx.globalAlpha = bAlpha;
         box(ctx, (680 - w) / 2 + 40, 30, w, 44, { stroke: GOLD });
+        // Banner gold bloom behind text
+        const bc = ctx.createRadialGradient(380, 52, 4, 380, 52, 80);
+        bc.addColorStop(0, 'rgba(200,160,30,0.22)'); bc.addColorStop(1, 'transparent');
+        ctx.fillStyle = bc; ctx.fillRect((680 - w) / 2 + 40, 30, w, 44);
         text(ctx, banner.text, 380, 42, { size: 17, align: 'center', color: GOLD });
+        ctx.restore();
       }
       if (A.rendererBusy(g.renderer)) text(ctx, 'any key: skip', 712, 700, { size: 11, align: 'right', color: DIM });
     },
