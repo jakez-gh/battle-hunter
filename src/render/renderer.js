@@ -1260,7 +1260,10 @@ export function createRenderer(canvas, opts = {}) {
       const barY = y + sh + 20;
       ctx.fillStyle = '#131520';
       ctx.fillRect(barX, barY, bw2, 5);
-      ctx.fillStyle = ratio > 0.5 ? '#3aa84a' : ratio > 0.25 ? '#d8b83a' : '#cc4a3a';
+      const [cbc0, cbc1] = ratio > 0.5 ? ['#52da68', '#2d8f40'] : ratio > 0.25 ? ['#f2df4a', '#b89818'] : ['#f07060', '#a83028'];
+      const cbg = ctx.createLinearGradient(barX, barY, barX, barY + 5);
+      cbg.addColorStop(0, cbc0); cbg.addColorStop(1, cbc1);
+      ctx.fillStyle = cbg;
       ctx.fillRect(barX, barY, Math.round(bw2 * ratio), 5);
       // shine on bar
       if (Math.round(bw2 * ratio) > 2) {
@@ -1315,6 +1318,14 @@ export function createRenderer(canvas, opts = {}) {
     const defW = defImg ? defImg.width * 3 : 48;
     drawCombatant(battle.a, bx + 24, by + 28, false);
     drawCombatant(battle.d, bx + bw - 24 - defW, by + 28, true);
+    // Center divider — thin vertical line with gradient fade to top/bottom
+    { const dvx = (bx + bw / 2) | 0;
+      const dvAlpha = 0.18 + 0.10 * Math.sin(clock / 900);
+      const dvg = ctx.createLinearGradient(dvx, by + 18, dvx, by + bh - 8);
+      dvg.addColorStop(0, 'transparent'); dvg.addColorStop(0.2, '#ffe98a');
+      dvg.addColorStop(0.8, '#ffe98a'); dvg.addColorStop(1, 'transparent');
+      ctx.save(); ctx.globalAlpha = dvAlpha; ctx.fillStyle = dvg;
+      ctx.fillRect(dvx, by + 18, 1, bh - 26); ctx.restore(); }
     // VS with gold glow
     { const vcx = bx + bw / 2, vcy = by + 50;
       const vg = ctx.createRadialGradient(vcx, vcy, 0, vcx, vcy, 26);

@@ -265,6 +265,15 @@ function drawMenu(ctx, m, x, y, w, opt = {}) {
       sg.addColorStop(0, 'rgba(80,100,220,0.42)'); sg.addColorStop(1, 'rgba(80,100,220,0.10)');
       ctx.fillStyle = sg; ctx.fillRect(x + 4, oy - 2, w - 8, lh);
       ctx.fillStyle = 'rgba(120,150,255,0.72)'; ctx.fillRect(x + 4, oy - 2, 2, lh);
+      // Subtle shimmer scan across selected row
+      const mt = typeof performance !== 'undefined' ? performance.now() / 1000 : 0;
+      const shX = x + 4 + ((mt % 2.4) / 2.4) * (w + 40) - 20;
+      const sh = ctx.createLinearGradient(shX - 16, 0, shX + 16, 0);
+      sh.addColorStop(0, 'transparent');
+      sh.addColorStop(0.5, 'rgba(180,200,255,0.22)');
+      sh.addColorStop(1, 'transparent');
+      ctx.save(); ctx.beginPath(); ctx.rect(x + 4, oy - 2, w - 8, lh); ctx.clip();
+      ctx.fillStyle = sh; ctx.fillRect(shX - 16, oy - 2, 32, lh); ctx.restore();
     }
     const color = it.disabled ? '#565d75' : it.color ?? (sel ? '#ffffff' : FG);
     text(ctx, (sel ? '>' : ' ') + it.label, x + 10, oy, { size: opt.size ?? 15, color });
