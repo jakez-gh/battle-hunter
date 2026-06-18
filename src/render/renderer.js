@@ -1083,11 +1083,19 @@ export function createRenderer(canvas, opts = {}) {
         if (st.crit && anim?.ev.type === 'strikeRolled') {
           const p = anim.t / anim.dur;
           if (p > 0.5 && p < 0.72) {
-            ctx.save();
-            ctx.globalAlpha = 0.6;
-            ctx.fillStyle = '#f7f7ff';
-            ctx.fillRect(bx, by, bw, bh);
-            ctx.restore();
+            const fp = (p - 0.5) / 0.22;
+            const fadeAlpha = fp < 0.5 ? fp * 2 : 2 - fp * 2;
+            // Gold radial burst from center
+            const ccx = bx + bw / 2, ccy = by + bh / 2;
+            const cg = ctx.createRadialGradient(ccx, ccy, 0, ccx, ccy, bh * 0.8);
+            cg.addColorStop(0, `rgba(255,240,140,${(fadeAlpha * 0.9).toFixed(2)})`);
+            cg.addColorStop(0.4, `rgba(220,160,20,${(fadeAlpha * 0.5).toFixed(2)})`);
+            cg.addColorStop(1, 'transparent');
+            ctx.save(); ctx.fillStyle = cg; ctx.fillRect(bx, by, bw, bh); ctx.restore();
+            // White rim flash on edges
+            ctx.save(); ctx.globalAlpha = fadeAlpha * 0.35; ctx.fillStyle = '#fff';
+            ctx.fillRect(bx, by, bw, bh); ctx.restore();
+            text('CRIT!', bx + bw / 2, by + bh / 2 - 10, '#ffe98a', 28, 'center');
           }
         }
       }
