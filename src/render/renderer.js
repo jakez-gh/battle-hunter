@@ -649,7 +649,7 @@ export function createRenderer(canvas, opts = {}) {
     const y0 = Math.max(0, Math.floor(cam.y / TILE));
     const x1 = Math.min(b.w - 1, Math.ceil((cam.x + vw) / TILE));
     const y1 = Math.min(b.h - 1, Math.ceil((cam.y + vh) / TILE));
-    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG'];
+    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH'];
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
@@ -700,7 +700,7 @@ export function createRenderer(canvas, opts = {}) {
           }
           continue;
         }
-        blitTile(`tile.${floors[(x * 7 + y * 13) % 7]}`, x, y);
+        blitTile(`tile.${floors[(x * 7 + y * 13) % 8]}`, x, y);
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
           // Puddle: ~12% of floor tiles get a reflective wet shimmer
           const ph = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;
@@ -846,6 +846,17 @@ export function createRenderer(canvas, opts = {}) {
       const sway = Math.sin(clock / 900 + f.x * 1.4 + f.y * 0.9) * 0.4;
       const swayH = Math.cos(clock / 700 + f.x * 1.1 + f.y * 1.3) * 0.25;
       const fp = worldToScreen(f.x, f.y, cam);
+      // Color-matched ambient glow pool at the flag base
+      const FLAG_GLOW = { Red: 'rgba(220,70,50,', Blue: 'rgba(70,105,220,', Green: 'rgba(50,180,70,', Yellow: 'rgba(200,185,45,' };
+      const fgcol = FLAG_GLOW[cap] ?? 'rgba(200,200,200,';
+      const fgcx = fp.x + TILE * cam.scale / 2;
+      const fgcy = fp.y + (TILE - 3) * cam.scale;
+      const fpulse = 0.28 + 0.16 * Math.sin(clock / 900 + f.x * 1.4 + f.y * 0.9);
+      const fgr = ctx.createRadialGradient(fgcx, fgcy, 0, fgcx, fgcy, 9 * cam.scale);
+      fgr.addColorStop(0, fgcol + fpulse.toFixed(2) + ')');
+      fgr.addColorStop(1, 'transparent');
+      ctx.fillStyle = fgr;
+      ctx.fillRect(fp.x - 2 * cam.scale, fp.y + 4 * cam.scale, TILE * cam.scale + 4 * cam.scale, 14 * cam.scale);
       const img = atlas[`tile.flag${cap}`];
       if (img) ctx.drawImage(img, (fp.x + swayH * cam.scale) | 0, (fp.y + sway * cam.scale) | 0, img.width * cam.scale, img.height * cam.scale);
     }
