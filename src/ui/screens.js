@@ -1958,6 +1958,10 @@ export function makeGameScreen(app, g) {
         ag.addColorStop(0, sc); ag.addColorStop(1, 'transparent');
         ctx.fillStyle = ag; ctx.fillRect(X + 4, y + 2, W - 8, 54); ctx.restore();
       }
+      { const ia = PALETTE_ACCENT[h.palette] ?? '#3c4364';
+        const ig = ctx.createRadialGradient(X + 32, y + 30, 2, X + 32, y + 30, 26);
+        ig.addColorStop(0, ia + '28'); ig.addColorStop(1, 'transparent');
+        ctx.fillStyle = ig; ctx.fillRect(X + 4, y + 2, 56, 54); }
       sprite(app, `hunter${h.spriteId}.${h.palette}.icon`, X + 6, y + 6, 4);
       text(ctx, h.name ?? `P${i + 1}`, X + 60, y + 6, { size: 14, color: SLOT_COLORS[h.slot ?? i] });
       if (h.hasTarget) {
