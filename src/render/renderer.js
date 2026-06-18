@@ -224,7 +224,7 @@ export function createRenderer(canvas, opts = {}) {
     const p = extra.pos ?? displayPos(k);
     if (!p) return;
     floats.push({ text, color, icon: extra.icon ?? null, big: extra.big ?? false,
-      wx: p.x + 0.5, wy: p.y, t: 0, ttl: extra.ttl ?? 800 });
+      glow: extra.glow ?? null, wx: p.x + 0.5, wy: p.y, t: 0, ttl: extra.ttl ?? 800 });
   }
 
   function addSparklesAt(wx, wy, color = '#ffe98a') {
@@ -591,7 +591,8 @@ export function createRenderer(canvas, opts = {}) {
         if ((ev.damage ?? 0) > 0) {
           const dmg = ev.damage ?? 0;
           const floatCol = dmg >= 9 ? '#ffe050' : dmg >= 6 ? '#ff9a40' : '#ff6a5a';
-          addFloat(battle?.d ?? k, `-${dmg}`, floatCol, { big: true });
+          const floatGlow = dmg >= 9 ? 22 : dmg >= 6 ? 15 : 10;
+          addFloat(battle?.d ?? k, `-${dmg}`, floatCol, { big: true, glow: floatGlow });
           unitFlash = { key: battle?.d ?? k, t: 0, dur: EVENT_DURATIONS.strikeRolled,
             color: ev.crit ? '#ffe060' : dmg >= 6 ? '#ff8820' : '#ff3828' };
         }
@@ -1953,8 +1954,7 @@ export function createRenderer(canvas, opts = {}) {
         const fsz = Math.round((f.big ? 16 : 12) * pop);
         text(f.text, p.x + 1, fy + 1, 'rgba(0,0,0,0.65)', fsz, 'center');
         if (f.big) {
-          const isNeg = String(f.text)[0] === '-';
-          ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = isNeg ? '#ff5050' : f.color;
+          ctx.save(); ctx.shadowBlur = f.glow ?? 10; ctx.shadowColor = f.color;
           text(f.text, p.x, fy, f.color, fsz, 'center');
           ctx.restore();
         } else {
