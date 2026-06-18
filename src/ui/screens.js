@@ -709,10 +709,27 @@ export function makeRosterScreen(app, opts = {}) {
           const lineColors = [FG, OK, FG, rec.maxHp < baseMaxHp(rec) ? '#d8cc88' : FG, null, FG, FG];
           lines.forEach((s, i) => {
             const ly = 226 + i * 26;
-            if (i === 4) {
+            if (i === 2) {
+              const rSegs = [
+                { t: `MV +${d.mv}`, c: '#3a6ee0' },
+                { t: `   AT ${d.at}`, c: '#cc4a3a' },
+                { t: `   DF ${d.df}`, c: '#e0c63a' },
+              ];
+              ctx.font = font(15, true);
+              ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+              let sx = 680;
+              for (const seg of rSegs) {
+                ctx.fillStyle = '#000'; ctx.fillText(seg.t, sx + 2, ly + 2);
+                ctx.fillStyle = seg.c; ctx.fillText(seg.t, sx, ly);
+                sx += Math.round(ctx.measureText(seg.t).width);
+              }
+            } else if (i === 4) {
               ctx.save(); ctx.shadowBlur = 4; ctx.shadowColor = '#906000';
               text(ctx, s, 680, ly, { size: 15, color: GOLD, shadow: false });
               ctx.restore();
+            } else if (i === 6) {
+              const ic = rec.items.length === 6 ? '#d8cc88' : rec.items.length === 0 ? DIM : FG;
+              text(ctx, s, 680, ly, { size: 15, color: ic });
             } else {
               text(ctx, s, 680, ly, { size: 15, color: lineColors[i] ?? FG });
             }
