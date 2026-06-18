@@ -589,9 +589,11 @@ export function createRenderer(canvas, opts = {}) {
         if (battle) battle.strike = { dice: flattenDice(ev.dice), totals: ev.totals,
           damage: ev.damage ?? 0, crit: !!ev.crit };
         if ((ev.damage ?? 0) > 0) {
-          addFloat(battle?.d ?? k, `-${ev.damage}`, '#ff6a5a', { big: true });
+          const dmg = ev.damage ?? 0;
+          const floatCol = dmg >= 9 ? '#ffe050' : dmg >= 6 ? '#ff9a40' : '#ff6a5a';
+          addFloat(battle?.d ?? k, `-${dmg}`, floatCol, { big: true });
           unitFlash = { key: battle?.d ?? k, t: 0, dur: EVENT_DURATIONS.strikeRolled,
-            color: ev.crit ? '#ffe060' : '#ff3828' };
+            color: ev.crit ? '#ffe060' : dmg >= 6 ? '#ff8820' : '#ff3828' };
         }
         if (ev.crit) {
           addSparkles(battle?.d ?? k, '#ffe98a');
