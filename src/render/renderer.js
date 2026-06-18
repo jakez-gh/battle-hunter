@@ -417,7 +417,11 @@ export function createRenderer(canvas, opts = {}) {
       case 'strikeRolled':
         if (battle) battle.strike = { dice: flattenDice(ev.dice), totals: ev.totals,
           damage: ev.damage ?? 0, crit: !!ev.crit };
-        if ((ev.damage ?? 0) > 0) addFloat(battle?.d ?? k, `-${ev.damage}`, '#ff6a5a', { big: true });
+        if ((ev.damage ?? 0) > 0) {
+          addFloat(battle?.d ?? k, `-${ev.damage}`, '#ff6a5a', { big: true });
+          unitFlash = { key: battle?.d ?? k, t: 0, dur: EVENT_DURATIONS.strikeRolled,
+            color: ev.crit ? '#ffe060' : '#ff3828' };
+        }
         if (ev.crit) {
           addSparkles(battle?.d ?? k, '#ffe98a');
           shake = { t: 0, dur: 450, mag: 3.0 };
