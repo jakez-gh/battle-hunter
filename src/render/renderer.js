@@ -1442,6 +1442,16 @@ export function createRenderer(canvas, opts = {}) {
         ctx.closePath();
         ctx.fill();
         ctx.restore();
+        // Scan pulses: 2 expanding rings (staggered phases) fading outward
+        for (let ri = 0; ri < 2; ri++) {
+          const rphase = ((clock + ri * 1800) / 3600) % 1;
+          const ringR = (5 + rphase * 18) * s;
+          const ringA = (1 - rphase) * 0.22;
+          ctx.save(); ctx.globalAlpha = ringA;
+          ctx.strokeStyle = '#50b0e8'; ctx.lineWidth = s * 0.4;
+          ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+        }
       }
       if (m.kind === 'FNG') {
         // Scorch mark: dark burnt ellipse on the floor beneath FNG
