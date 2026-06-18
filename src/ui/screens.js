@@ -786,7 +786,17 @@ export function makeCreationScreen(app) {
         }
         const [lab, val] = labels[row];
         if (lab) text(ctx, lab, 70, y, { size: 18, color: sel ? '#fff' : DIM });
-        text(ctx, val, 220, y, { size: 18, color: row === 'done' ? (canDone() ? OK : BAD) : FG });
+        if (row === 'done' && canDone()) {
+          // Pulsing green glow behind "BEGIN CAREER" when ready
+          const dp = 0.10 + 0.08 * Math.sin(state.t * 2.8);
+          ctx.save(); ctx.globalAlpha = dp * 2.5; ctx.fillStyle = OK;
+          ctx.fillRect(56, y - 8, 488, 48); ctx.restore();
+          ctx.save(); ctx.shadowBlur = 12; ctx.shadowColor = OK;
+          text(ctx, val, 220, y, { size: 18, color: OK, shadow: false });
+          ctx.restore();
+        } else {
+          text(ctx, val, 220, y, { size: 18, color: row === 'done' ? BAD : FG });
+        }
       });
       text(ctx, `Points left: ${left()} / ${POOL}`, 70, 80, { size: 18, color: left() ? GOLD : OK });
       // live preview
