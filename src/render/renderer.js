@@ -676,6 +676,7 @@ export function createRenderer(canvas, opts = {}) {
       const ep = worldToScreen(b.exit.x, b.exit.y, cam);
       const es = TILE * cam.scale;
       const ecx = ep.x + es / 2, ecy = ep.y + es / 2;
+      const targetActive = state.hunters?.some((h) => h.hasTarget) ?? false;
       const pulse = 0.4 + 0.6 * Math.sin(clock / 700);
       const eg = ctx.createRadialGradient(ecx, ecy, 0, ecx, ecy, es * 0.7);
       eg.addColorStop(0, 'rgba(126,232,160,0.55)');
@@ -688,14 +689,29 @@ export function createRenderer(canvas, opts = {}) {
       ctx.strokeStyle = '#7ee8a0'; ctx.lineWidth = cam.scale;
       ctx.strokeRect(ep.x + cam.scale, ep.y + cam.scale, es - 2 * cam.scale, es - 2 * cam.scale);
       ctx.restore();
-      // Four sparkle particles orbiting the exit in an elliptical path
+      // Gold urgent glow when someone holds the Target — "finish line is live"
+      if (targetActive) {
+        const urgPulse = 0.5 + 0.5 * Math.sin(clock / 380);
+        const ug = ctx.createRadialGradient(ecx, ecy, 0, ecx, ecy, es * 0.9);
+        ug.addColorStop(0, 'rgba(220,190,50,0.32)'); ug.addColorStop(1, 'transparent');
+        ctx.save(); ctx.globalAlpha = urgPulse; ctx.fillStyle = ug;
+        ctx.fillRect(ep.x - es * 0.1, ep.y - es * 0.1, es * 1.2, es * 1.2); ctx.restore();
+        ctx.save(); ctx.globalAlpha = urgPulse * 0.65;
+        ctx.strokeStyle = '#ffe98a'; ctx.lineWidth = cam.scale * 0.5;
+        ctx.strokeRect(ep.x + cam.scale * 0.5, ep.y + cam.scale * 0.5, es - cam.scale, es - cam.scale);
+        ctx.restore();
+      }
+      // Four sparkle particles orbiting the exit — cross/star shape
+      const orbitColor = targetActive ? '#ffe98a' : '#7ee8a0';
       for (let j = 0; j < 4; j++) {
         const angle = clock / 1100 + j * Math.PI / 2;
         const orx = ecx + Math.cos(angle) * es * 0.48;
         const ory = ecy + Math.sin(angle) * es * 0.28;
         const oa = 0.35 + 0.35 * Math.sin(clock / 480 + j * 1.5);
-        ctx.save(); ctx.globalAlpha = oa; ctx.fillStyle = '#7ee8a0';
-        ctx.fillRect((orx - cam.scale) | 0, (ory - cam.scale) | 0, cam.scale * 2, cam.scale * 2);
+        const oc = cam.scale;
+        ctx.save(); ctx.globalAlpha = oa; ctx.fillStyle = orbitColor;
+        ctx.fillRect((orx - oc * 0.3) | 0, (ory - oc) | 0, oc * 0.6, oc * 2);
+        ctx.fillRect((orx - oc) | 0, (ory - oc * 0.3) | 0, oc * 2, oc * 0.6);
         ctx.restore();
       }
     }
