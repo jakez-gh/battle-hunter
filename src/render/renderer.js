@@ -1948,7 +1948,9 @@ export function createRenderer(canvas, opts = {}) {
       shineG.addColorStop(1, 'transparent');
       ctx.save(); ctx.fillStyle = shineG; ctx.fillRect(cx, cy, cw, cw); ctx.restore(); }
     if (ev.type === 'flagClaimed' && settled && ev.effect != null) {
+      ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = '#ffe98a';
       text(String(ev.effect), p.x + 8 * s, p.y - 28 * s, '#ffe98a', 12, 'center');
+      ctx.restore();
     }
   }
 
@@ -2179,8 +2181,14 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillRect(x, y, active ? 4 : 2, 16);
     const icon = atlas[`hunter${h.spriteId}.${paletteName(h)}.icon`];
     if (icon) { ctx.save(); ctx.globalAlpha = defeated ? 0.35 : 1; ctx.drawImage(icon, x + 6, y + 2, 12, 12); ctx.restore(); }
-    text((h.name ?? '').slice(0, 7).padEnd(7), x + 22, y + 3,
-      defeated ? '#504858' : active ? '#ffe98a' : '#b8bccc');
+    if (active && !defeated) {
+      ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = '#b07a08';
+      text((h.name ?? '').slice(0, 7).padEnd(7), x + 22, y + 3, '#ffe98a');
+      ctx.restore();
+    } else {
+      text((h.name ?? '').slice(0, 7).padEnd(7), x + 22, y + 3,
+        defeated ? '#504858' : '#b8bccc');
+    }
     text(`L${h.level ?? 1}`, x + 86, y + 3, active ? '#a8b0c4' : '#5e6278');
     // HP bar + number
     const ratio = h.maxHp ? clamp(h.hp / h.maxHp, 0, 1) : 0;
@@ -2202,7 +2210,9 @@ export function createRenderer(canvas, opts = {}) {
       ctx.fillRect(x + 112, y + 5, bw, 6); ctx.restore();
     }
     if (defeated) {
-      text('KO', x + 168, y + 3, '#7a2830');
+      ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = '#aa1828';
+      text('KO', x + 168, y + 3, '#c03848');
+      ctx.restore();
     } else {
       text(`${h.hp}/${h.maxHp}`, x + 168, y + 3, active ? '#c0c8d8' : '#8a90a0');
     }
@@ -2342,7 +2352,13 @@ export function createRenderer(canvas, opts = {}) {
       const hpColor = ratio <= 0.25
         ? (0.5 + 0.5 * Math.sin(clock / 240)) > 0.5 ? '#ff8866' : '#cc4a3a'
         : '#8fd17e';
-      text(`${u.hp}/${u.maxHp}`, cx, barY + 8, hpColor, 11, 'center');
+      if (ratio <= 0.25) {
+        ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = '#ff6040';
+        text(`${u.hp}/${u.maxHp}`, cx, barY + 8, hpColor, 11, 'center');
+        ctx.restore();
+      } else {
+        text(`${u.hp}/${u.maxHp}`, cx, barY + 8, hpColor, 11, 'center');
+      }
       // Active status chips centered below HP readout
       { const sts = ['stun', 'leg', 'panic', 'empty'].filter((sk) => u.status?.[sk] > 0);
         let ssx = Math.round(cx - (sts.length * 10 - 2) / 2);
@@ -2411,7 +2427,9 @@ export function createRenderer(canvas, opts = {}) {
       const vg = ctx.createRadialGradient(vcx, vcy, 0, vcx, vcy, 26);
       vg.addColorStop(0, 'rgba(220,190,60,0.38)'); vg.addColorStop(1, 'transparent');
       ctx.fillStyle = vg; ctx.fillRect(vcx - 26, vcy - 18, 52, 36); }
+    ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = '#c09020';
     text('VS', bx + bw / 2, by + 42, '#ffe98a', 16, 'center');
+    ctx.restore();
     if (battle.response) {
       ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = '#9adfe8';
       text(String(battle.response).toUpperCase(), bx + bw / 2, by + 64, '#9adfe8', 12, 'center');
