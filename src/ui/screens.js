@@ -190,6 +190,7 @@ export function unlockedWallpapers(roster) {
 
 function drawWallpaper(ctx, W, H, index) {
   const wp = WALLPAPERS[index] ?? WALLPAPERS[0];
+  const t = performance.now() / 1000;
   ctx.fillStyle = wp.base;
   ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = wp.accent;
@@ -200,16 +201,24 @@ function drawWallpaper(ctx, W, H, index) {
     for (let x = 0; x <= W; x += S) ctx.fillRect(x, 0, 2, H);
     for (let y = 0; y <= H; y += S) ctx.fillRect(0, y, W, 2);
   } else if (wp.pattern === 'dots') {
-    for (let y = S / 2; y < H; y += S) for (let x = S / 2; x < W; x += S) ctx.fillRect(x - 3, y - 3, 6, 6);
+    // Dots breathe slowly between 3 and 4.5px
+    const dr = 3 + 1.5 * Math.sin(t * 0.8);
+    for (let y = S / 2; y < H; y += S) for (let x = S / 2; x < W; x += S)
+      ctx.fillRect((x - dr) | 0, (y - dr) | 0, dr * 2 + 1 | 0, dr * 2 + 1 | 0);
   } else if (wp.pattern === 'stripes') {
     for (let y = 0; y < H; y += S) ctx.fillRect(0, y, W, 10);
   } else if (wp.pattern === 'diag') {
+    // Lines drift diagonally at 12px/s — S-periodic so it wraps seamlessly
+    const drift = (t * 12) % S;
     ctx.beginPath();
-    for (let x = -H; x < W; x += S) { ctx.moveTo(x, 0); ctx.lineTo(x + H, H); }
+    for (let x = -H - S + drift; x < W; x += S) { ctx.moveTo(x, 0); ctx.lineTo(x + H, H); }
     ctx.stroke();
   } else if (wp.pattern === 'rings') {
+    // Rings breathe: radius oscillates ±4px on a slow cycle
+    const ringR = S / 3 + 4 * Math.sin(t * 0.55);
+    ctx.lineWidth = 1.5;
     for (let y = S; y < H; y += S * 2) for (let x = S; x < W; x += S * 2) {
-      ctx.beginPath(); ctx.arc(x, y, S / 3, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, ringR, 0, Math.PI * 2); ctx.stroke();
     }
   }
   // Radial vignette darkens edges and corners on every wallpaper
