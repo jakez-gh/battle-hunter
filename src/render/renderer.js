@@ -1075,6 +1075,19 @@ export function createRenderer(canvas, opts = {}) {
             const sg = ctx.createLinearGradient(specX - ts * 0.07, 0, specX + ts * 0.07, 0);
             sg.addColorStop(0, 'transparent'); sg.addColorStop(0.5, 'rgba(210,240,255,0.62)'); sg.addColorStop(1, 'transparent');
             ctx.fillStyle = sg; ctx.fillRect(px | 0, py | 0, pw2, ph2);
+            // Torch reflection: puddles below a torch wall pick up a warm amber shimmer
+            if (!b.floor[y - 1]?.[x]) {
+              const twh = ((x * 1637 + (y - 1) * 3571) ^ 997) & 0xFFFF;
+              if ((twh & 0xFF) >= 20 && ((twh >> 8) & 0xFF) < 16) {
+                const tflicker = 0.5 + 0.5 * Math.sin(clock / 850 + twh * 0.031);
+                const warmX = px + pw2 * (0.3 + 0.2 * Math.sin(clock / 1400 + twh * 0.019));
+                const wsg = ctx.createLinearGradient(warmX - ts * 0.10, 0, warmX + ts * 0.10, 0);
+                wsg.addColorStop(0, 'transparent');
+                wsg.addColorStop(0.5, 'rgba(255,160,40,' + (tflicker * 0.42).toFixed(2) + ')');
+                wsg.addColorStop(1, 'transparent');
+                ctx.fillStyle = wsg; ctx.fillRect(px | 0, py | 0, pw2, ph2);
+              }
+            }
             ctx.restore();
           }
           // Scorch mark: ~3% of floor tiles get a subtle dark radial burn
