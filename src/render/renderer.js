@@ -511,9 +511,19 @@ export function createRenderer(canvas, opts = {}) {
       case 'statusInflicted': {
         const STATUS_COL = { stun: '#3ab8e8', panic: '#e87020', leg: '#cc3a40', empty: '#7a7a8e' };
         const STATUS_NAME = { stun: 'STUN', panic: 'PANIC', leg: 'LEG WOUND', empty: 'DRAINED' };
-        addFloat(k, STATUS_NAME[ev.kind] ?? String(ev.kind ?? '?').toUpperCase(), STATUS_COL[ev.kind] ?? '#c0c8e0',
+        const stcol = STATUS_COL[ev.kind] ?? '#c0c8e0';
+        addFloat(k, STATUS_NAME[ev.kind] ?? String(ev.kind ?? '?').toUpperCase(), stcol,
           { icon: `status.${ev.kind}`, ttl: 900 });
-        addSparkles(k, STATUS_COL[ev.kind] ?? '#c0c8e0');
+        // Directional burst: particles rain outward + slightly upward from victim
+        const stp = displayPos(k);
+        if (stp) {
+          for (let i = 0; i < 12; i++) {
+            const a = (i / 12) * Math.PI * 2;
+            sparkles.push({ wx: stp.x + 0.5, wy: stp.y + 0.3, vx: Math.cos(a) * 1.3,
+              vy: Math.sin(a) * 1.3 - 0.5, t: 0, ttl: 480,
+              color: i % 3 === 0 ? '#fff' : stcol });
+          }
+        }
         break;
       }
       case 'critNegated':
@@ -535,10 +545,20 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'itemTaken':
+      case 'itemTaken': {
         addFloat(k, ev.itemId != null ? `GOT ${ev.itemId}` : 'TAKEN', '#ffe98a', { big: true });
-        addSparkles(k, '#e8d87e');
+        const itp = displayPos(k);
+        if (itp) {
+          for (let i = 0; i < 14; i++) {
+            const a = (i / 14) * Math.PI * 2;
+            const spd = 1.2 + (i % 3) * 0.5;
+            sparkles.push({ wx: itp.x + 0.5, wy: itp.y + 0.4, vx: Math.cos(a) * spd,
+              vy: Math.sin(a) * spd - 0.6, t: 0, ttl: 520,
+              color: i % 4 === 0 ? '#fff' : i % 4 === 1 ? '#ffe98a' : i % 4 === 2 ? '#ffc840' : '#e8d87e' });
+          }
+        }
         break;
+      }
       case 'surrendered':
         addFloat(k, 'SURRENDER', '#8d8d9e');
         addSparkles(k, '#8d8d9e');
