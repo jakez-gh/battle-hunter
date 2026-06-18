@@ -1219,51 +1219,56 @@ export function makeOptionsScreen(app) {
     },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, opts.wallpaper);
-      text(ctx, 'OPTIONS', app.W / 2, 50, { size: 36, align: 'center', color: GOLD });
+      drawGoldBloom(ctx, app.W / 2);
+      text(ctx, 'OPTIONS', app.W / 2, 30, { size: 36, align: 'center', color: GOLD });
       rows.forEach((row, i) => {
         const y = 124 + i * 56;
         const sel = i === idx;
         if (sel) {
-          ctx.fillStyle = 'rgba(80,100,200,0.3)';
-          ctx.fillRect(236, y - 10, 488, 48);
+          const og = ctx.createLinearGradient(236, 0, 724, 0);
+          og.addColorStop(0, 'rgba(80,100,220,0.42)'); og.addColorStop(1, 'rgba(80,100,220,0.10)');
+          ctx.fillStyle = og; ctx.fillRect(236, y - 10, 488, 48);
+          ctx.fillStyle = 'rgba(120,150,255,0.72)'; ctx.fillRect(236, y - 10, 2, 48);
+          const mt = typeof performance !== 'undefined' ? performance.now() / 1000 : 0;
+          const shX = 236 + ((mt % 2.4) / 2.4) * (488 + 40) - 20;
+          const sh = ctx.createLinearGradient(shX - 16, 0, shX + 16, 0);
+          sh.addColorStop(0, 'transparent'); sh.addColorStop(0.5, 'rgba(180,200,255,0.22)'); sh.addColorStop(1, 'transparent');
+          ctx.save(); ctx.beginPath(); ctx.rect(236, y - 10, 488, 48); ctx.clip();
+          ctx.fillStyle = sh; ctx.fillRect(shX - 16, y - 10, 32, 48); ctx.restore();
         }
-        if (row === 'back') {
-          text(ctx, 'BACK', 260, y, { size: 18, color: sel ? '#fff' : FG });
-          return;
+
+        function drawSlider(val, x2, y2, w2, barColor) {
+          ctx.fillStyle = '#23263a'; ctx.fillRect(x2, y2, w2, 12);
+          const bg = ctx.createLinearGradient(x2, y2, x2, y2 + 12);
+          bg.addColorStop(0, barColor + 'cc'); bg.addColorStop(1, barColor + '88');
+          ctx.fillStyle = bg; ctx.fillRect(x2, y2, w2 * val, 12);
+          ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#fff';
+          ctx.fillRect(x2, y2, w2 * val, 5); ctx.restore();
         }
+
+        if (row === 'back') { text(ctx, 'BACK', 260, y, { size: 18, color: sel ? '#fff' : FG }); return; }
         if (row === 'export') {
           text(ctx, 'Export Save', 260, y, { size: 18, color: sel ? '#fff' : FG });
-          text(ctx, 'copies JSON to clipboard', 500, y, { size: 13, color: DIM });
-          return;
+          text(ctx, 'copies JSON to clipboard', 500, y, { size: 13, color: DIM }); return;
         }
         if (row === 'import') {
           text(ctx, 'Import Save', 260, y, { size: 18, color: sel ? BAD : FG });
-          text(ctx, 'paste JSON — replaces current save', 500, y, { size: 13, color: DIM });
-          return;
+          text(ctx, 'paste JSON — replaces current save', 500, y, { size: 13, color: DIM }); return;
         }
         if (row === 'aiSpeed') {
           text(ctx, 'AI Speed', 260, y, { size: 18, color: sel ? '#fff' : FG });
           const spd = opts.aiSpeed ?? 8;
-          const sv = (spd - 1) / 63;
-          ctx.fillStyle = '#23263a';
-          ctx.fillRect(500, y + 4, 200, 12);
-          ctx.fillStyle = sel ? GOLD : '#7e9fee';
-          ctx.fillRect(500, y + 4, 200 * sv, 12);
-          text(ctx, `${spd}x`, 712, y, { size: 14, color: DIM });
-          return;
+          drawSlider((spd - 1) / 63, 500, y + 4, 200, sel ? '#d8b83a' : '#7e9fee');
+          text(ctx, `${spd}x`, 712, y, { size: 14, color: DIM }); return;
         }
         if (row === 'wallpaper') {
           text(ctx, 'Wallpaper', 260, y, { size: 18, color: sel ? '#fff' : FG });
           text(ctx, `< ${WALLPAPERS[opts.wallpaper].name} >`, 500, y, { size: 16, color: GOLD });
-          text(ctx, `${unlocked.length}/${WALLPAPERS.length} unlocked (find Discs)`, 500, y + 22, { size: 11, color: DIM });
-          return;
+          text(ctx, `${unlocked.length}/${WALLPAPERS.length} unlocked (find Discs)`, 500, y + 22, { size: 11, color: DIM }); return;
         }
         text(ctx, cap(row), 260, y, { size: 18, color: sel ? '#fff' : FG });
         const v = opts.volumes[row];
-        ctx.fillStyle = '#23263a';
-        ctx.fillRect(500, y + 4, 200, 12);
-        ctx.fillStyle = sel ? GOLD : '#7e9fee';
-        ctx.fillRect(500, y + 4, 200 * v, 12);
+        drawSlider(v, 500, y + 4, 200, sel ? '#d8b83a' : '#7e9fee');
         text(ctx, `${Math.round(v * 100)}%`, 712, y, { size: 14, color: DIM });
       });
       if (note) text(ctx, note, app.W / 2, 590, { size: 14, align: 'center', color: OK });
