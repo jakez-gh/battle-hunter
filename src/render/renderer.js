@@ -589,10 +589,22 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'surrendered':
-        addFloat(k, 'SURRENDER', '#8d8d9e');
-        addSparkles(k, '#8d8d9e');
+      case 'surrendered': {
+        addFloat(k, 'SURRENDER', '#c8ccd8', { big: true, ttl: 900 });
+        turnFlash = { color: '#8d8d9e', t: 0, dur: 500 };
+        // Falling white-flag debris: particles scattered upward then fall — suggests collapse
+        const sdp = displayPos(k);
+        if (sdp) {
+          for (let i = 0; i < 14; i++) {
+            const a = -Math.PI * 0.5 + (i - 6.5) * 0.38;
+            const spd = 0.7 + (i % 4) * 0.38;
+            sparkles.push({ wx: sdp.x + 0.5, wy: sdp.y + 0.4,
+              vx: Math.cos(a) * spd * 0.6, vy: Math.sin(a) * spd + 0.4,
+              t: 0, ttl: 600, color: i % 3 === 0 ? '#f0f4ff' : i % 3 === 1 ? '#8d8d9e' : '#555568' });
+          }
+        }
         break;
+      }
       case 'monsterSpawned':
       case 'wyrmSpawned':
       case 'wyrmRespawned': {
@@ -2218,6 +2230,30 @@ export function createRenderer(canvas, opts = {}) {
       drawCursor();
       ctx.restore();
       drawVignette();
+      // Heartbeat edge glow when any hunter is at critical HP (≤25%)
+      if (state?.hunters) {
+        for (const hh of state.hunters) {
+          if (!(hh.hp > 0) || !hh.maxHp) continue;
+          const ratio = hh.hp / hh.maxHp;
+          if (ratio > 0.25) continue;
+          const hpDanger = 1 - ratio * 4;  // 0 at 25%, 1 at 0%
+          const beatCycle = 1300;
+          const bp = (clock % beatCycle) / beatCycle;
+          const b1 = bp < 0.12 ? Math.sin(bp * Math.PI / 0.12) : 0;
+          const b2 = bp > 0.18 && bp < 0.30 ? Math.sin((bp - 0.18) * Math.PI / 0.12) * 0.65 : 0;
+          const beatPulse = Math.max(b1, b2);
+          if (beatPulse <= 0) continue;
+          const maxAlpha = 0.18 + 0.20 * hpDanger;
+          const fa = beatPulse * maxAlpha;
+          const fw = canvas.width, fh = canvas.height - HUD_H;
+          const hg = ctx.createRadialGradient(fw / 2, fh / 2, fh * 0.28, fw / 2, fh / 2, fh * 0.82);
+          hg.addColorStop(0, 'transparent');
+          hg.addColorStop(1, '#cc2222');
+          ctx.save(); ctx.globalAlpha = fa; ctx.fillStyle = hg;
+          ctx.fillRect(0, 0, fw, fh); ctx.restore();
+          break;  // one heartbeat overlay is enough
+        }
+      }
       if (turnFlash) {
         const fa = (1 - turnFlash.t / turnFlash.dur) * 0.28;
         const fw = canvas.width, fh = canvas.height - HUD_H;
