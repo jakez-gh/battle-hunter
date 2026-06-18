@@ -473,6 +473,44 @@ const FLOOR_J = [ // inset square — raised flagstone-within-flagstone
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_K = [ // paired vertical grooves — stone panel joint running top to bottom
+  'GGGGGGGGGGGGGGGg',
+  'GgGGGGGGGGGGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGgG',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const FLOOR_L = [ // corner bracket marks — layout survey marks at each quadrant corner
+  'GGGGGGGGGGGGGGGG',
+  'GgGGGGGGGGGGGGgG',
+  'GGdGGGGGGGGGGdGG',
+  'GGdGGGGGGGGGGdGG',
+  'GGGddGGGGGGddGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGddGGGGGGddGGG',
+  'GGdGGGGGGGGGGdGG',
+  'GGdGGGGGGGGGGdGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGgGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
 export const TILES = {
   floorA: { grid: FLOOR_A, palette: TILE_PALETTE },
   floorB: { grid: FLOOR_B, palette: TILE_PALETTE },
@@ -484,6 +522,8 @@ export const TILES = {
   floorH: { grid: FLOOR_H, palette: TILE_PALETTE },
   floorI: { grid: FLOOR_I, palette: TILE_PALETTE },
   floorJ: { grid: FLOOR_J, palette: TILE_PALETTE },
+  floorK: { grid: FLOOR_K, palette: TILE_PALETTE },
+  floorL: { grid: FLOOR_L, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
