@@ -800,7 +800,10 @@ export function makeCreationScreen(app) {
           text(ctx, val, 220, y, { size: 18, color: row === 'done' ? BAD : FG });
         }
       });
-      text(ctx, `Points left: ${left()} / ${POOL}`, 70, 80, { size: 18, color: left() ? GOLD : OK });
+      { const ptc = left() ? GOLD : OK;
+        ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = left() ? '#b07a08' : OK;
+        text(ctx, `Points left: ${left()} / ${POOL}`, 70, 80, { size: 18, color: ptc, shadow: false });
+        ctx.restore(); }
       // live preview
       const pal = PALETTE_NAMES[state.palette];
       const frame = Math.floor(state.t * 3) % 2 ? 'step' : 'idle';
@@ -831,7 +834,9 @@ export function makeCreationScreen(app) {
         ctx.restore();
       }
       sprite(app, `hunter${state.spriteId}.${pal}.${frame}`, 660, 150, 11);
-      text(ctx, state.name || '-------', 750, 350, { size: 22, align: 'center', color: GOLD });
+      ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = '#b07a08';
+      text(ctx, state.name || '-------', 750, 350, { size: 22, align: 'center', color: GOLD, shadow: false });
+      ctx.restore();
       text(ctx, fmtStats(d), 750, 385, { size: 14, align: 'center' });
       text(ctx, `displayed: MV ${d.mv}  DF ${d.df}  HP ${d.maxHp}`, 750, 420, { size: 12, align: 'center', color: DIM });
       text(ctx, 'type to name - arrows to adjust - Enter on BEGIN', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
