@@ -575,8 +575,28 @@ export function createRenderer(canvas, opts = {}) {
         }
         if (mk) {
           hiddenUnits.delete(mk);
-          const SPAWN_COLORS = { VAC: '#50aadc', OOZ: '#3cc850', FNG: '#dca040', WYRM: '#8c3cdc' };
-          addSparkles(mk, SPAWN_COLORS[kind] ?? '#cc3a22');
+          const sp = displayPos(mk);
+          if (sp) {
+            // Kind-specific spawn burst
+            const SPAWN_BURST = {
+              VAC: { cols: ['#50b0e8', '#fff', '#1860a8'], count: 12, spd: 2.0, ttl: 380 },
+              OOZ: { cols: ['#3cc850', '#a0f0a0', '#1a7830'], count: 10, spd: 1.4, ttl: 420 },
+              FNG: { cols: ['#e09040', '#fff880', '#c03010'], count: 12, spd: 1.8, ttl: 400 },
+            };
+            const burst = SPAWN_BURST[kind];
+            if (burst) {
+              for (let i = 0; i < burst.count; i++) {
+                const a = (i / burst.count) * Math.PI * 2;
+                const spd = burst.spd + (i % 3) * 0.4;
+                sparkles.push({ wx: sp.x + 0.5, wy: sp.y + 0.5, vx: Math.cos(a) * spd,
+                  vy: Math.sin(a) * spd - 0.4, t: 0, ttl: burst.ttl,
+                  color: burst.cols[i % burst.cols.length] });
+              }
+            } else {
+              const SPAWN_COLORS = { WYRM: '#8c3cdc' };
+              addSparkles(mk, SPAWN_COLORS[kind] ?? '#cc3a22');
+            }
+          }
         }
         if (ev.type === 'wyrmSpawned' || ev.type === 'wyrmRespawned') {
           shake = { t: 0, dur: 520, mag: 3.5 };
