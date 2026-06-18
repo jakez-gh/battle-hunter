@@ -1920,7 +1920,13 @@ export function makeGameScreen(app, g) {
         }
       }
     }
-    text(ctx, `${rem} step${rem !== 1 ? 's' : ''} left`, 736, 456, { size: 12, color: rem <= 2 ? BAD : DIM });
+    if (rem <= 2) {
+      ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = BAD;
+      text(ctx, `${rem} step${rem !== 1 ? 's' : ''} left`, 736, 456, { size: 12, color: BAD, shadow: false });
+      ctx.restore();
+    } else {
+      text(ctx, `${rem} step${rem !== 1 ? 's' : ''} left`, 736, 456, { size: 12, color: DIM });
+    }
     text(ctx, 'arrows: step \xb7 Enter: stop', 736, 472, { size: 11, color: DIM });
   }
 
