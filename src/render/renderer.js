@@ -2213,6 +2213,14 @@ export function createRenderer(canvas, opts = {}) {
       ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = '#aa1828';
       text('KO', x + 168, y + 3, '#c03848');
       ctx.restore();
+    } else if (active && ratio <= 0.25) {
+      ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = '#a81020';
+      text(`${h.hp}/${h.maxHp}`, x + 168, y + 3, '#f07060');
+      ctx.restore();
+    } else if (active && ratio <= 0.5) {
+      ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = '#b09010';
+      text(`${h.hp}/${h.maxHp}`, x + 168, y + 3, '#f2df4a');
+      ctx.restore();
     } else {
       text(`${h.hp}/${h.maxHp}`, x + 168, y + 3, active ? '#c0c8d8' : '#8a90a0');
     }
@@ -2296,7 +2304,13 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillStyle = CARD_MINI.B;
     ctx.fillRect(canvas.width - 74, 7, 8, 12);
     const deckColor = deckUrgent ? '#ff6a5a' : deckLow ? '#e0a850' : '#f0f4ff';
-    text(`x${deckShown}`, canvas.width - 8, 8, deckColor, 12, 'right');
+    if (deckLow) {
+      ctx.save(); ctx.shadowBlur = deckUrgent ? 8 : 4; ctx.shadowColor = deckColor;
+      text(`x${deckShown}`, canvas.width - 8, 8, deckColor, 12, 'right');
+      ctx.restore();
+    } else {
+      text(`x${deckShown}`, canvas.width - 8, 8, deckColor, 12, 'right');
+    }
   }
 
   function drawCombatant(k, x, y, flip) {

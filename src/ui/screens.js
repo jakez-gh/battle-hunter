@@ -1844,7 +1844,9 @@ export function makeGameScreen(app, g) {
         sh.addColorStop(0, 'transparent'); sh.addColorStop(0.5, 'rgba(255,240,160,0.20)'); sh.addColorStop(1, 'transparent');
         ctx.save(); ctx.beginPath(); ctx.rect(bx0, 30, w, 44); ctx.clip();
         ctx.fillStyle = sh; ctx.fillRect(shX - 16, 30, 32, 44); ctx.restore();
-        text(ctx, banner.text, 380, 42, { size: 17, align: 'center', color: GOLD });
+        ctx.save(); ctx.shadowBlur = 12; ctx.shadowColor = '#906000';
+        text(ctx, banner.text, 380, 42, { size: 17, align: 'center', color: GOLD, shadow: false });
+        ctx.restore();
         ctx.restore();
       }
       if (A.rendererBusy(g.renderer)) text(ctx, 'any key: skip', 712, 700, { size: 11, align: 'right', color: DIM });
