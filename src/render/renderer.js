@@ -349,7 +349,11 @@ export function createRenderer(canvas, opts = {}) {
           if (h[0] !== 'm') continue;
           if (!kind || findUnit(h)?.kind === kind) { mk = h; break; }
         }
-        if (mk) hiddenUnits.delete(mk);
+        if (mk) {
+          hiddenUnits.delete(mk);
+          const SPAWN_COLORS = { VAC: '#50aadc', OOZ: '#3cc850', FNG: '#dca040', WYRM: '#8c3cdc' };
+          addSparkles(mk, SPAWN_COLORS[kind] ?? '#cc3a22');
+        }
         shake = ev.type === 'monsterSpawned' ? shake : { t: 0, dur: 400, mag: 2 };
         break;
       }
