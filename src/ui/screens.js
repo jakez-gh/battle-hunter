@@ -2151,6 +2151,19 @@ export function makeResultsScreen(app, g) {
     rot: (i * 0.44) % (Math.PI * 2),
     spin: ((i % 7) - 3) * 0.04,
   })) : [];
+  // Ash motes drift slowly downward on failure
+  const ASH_COLORS = ['#3c2030', '#4a2828', '#302030', '#483838', '#201820'];
+  const ashMotes = !win ? Array.from({ length: 28 }, (_, i) => ({
+    x: (i * 179.13) % app.W,
+    y: (i * 83.7) % app.H,
+    vx: ((i % 5) - 2) * 0.15,
+    vy: 0.35 + (i % 4) * 0.12,
+    color: ASH_COLORS[i % ASH_COLORS.length],
+    w: 4 + (i % 3) * 2,
+    h: 4 + (i % 3) * 2,
+    rot: (i * 0.71) % (Math.PI * 2),
+    spin: ((i % 5) - 2) * 0.012,
+  })) : [];
   return {
     enter() { app.music(win ? 'results' : 'gameover'); },
     update(dt) {
@@ -2161,6 +2174,13 @@ export function makeResultsScreen(app, g) {
           c.y += c.vy;
           c.rot += c.spin;
           if (c.y > app.H + 20) c.y = -20;
+        }
+      } else {
+        for (const m of ashMotes) {
+          m.x += m.vx;
+          m.y += m.vy;
+          m.rot += m.spin;
+          if (m.y > app.H + 20) m.y = -20;
         }
       }
     },
@@ -2174,7 +2194,7 @@ export function makeResultsScreen(app, g) {
     onClick() { this.onKey('confirm'); },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
-      // Confetti particles on win
+      // Confetti particles on win; ash motes on fail
       if (win) {
         ctx.save();
         for (const c of confetti) {
@@ -2184,6 +2204,18 @@ export function makeResultsScreen(app, g) {
           ctx.globalAlpha = 0.82;
           ctx.fillStyle = c.color;
           ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+          ctx.restore();
+        }
+        ctx.restore();
+      } else {
+        ctx.save();
+        for (const m of ashMotes) {
+          ctx.save();
+          ctx.translate(m.x, m.y);
+          ctx.rotate(m.rot);
+          ctx.globalAlpha = 0.55;
+          ctx.fillStyle = m.color;
+          ctx.fillRect(-m.w / 2, -m.h / 2, m.w, m.h);
           ctx.restore();
         }
         ctx.restore();
