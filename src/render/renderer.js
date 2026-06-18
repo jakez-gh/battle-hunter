@@ -1175,8 +1175,11 @@ export function createRenderer(canvas, opts = {}) {
     const w = img.width * s;
     const h = img.height * s;
     const dx = p.x + (TILE * s - w) / 2;
-    // Active unit gets a gentle idle bob (±1.5 px)
-    const bobPx = k === activeKey() ? Math.round(Math.sin(clock / 650) * 1.5) * s : 0;
+    // Active unit bobs faster; others breathe subtly so nothing looks frozen
+    const uid = u?.id ?? 0;
+    const bobPx = k === activeKey()
+      ? Math.round(Math.sin(clock / 650) * 1.5) * s
+      : Math.round(Math.sin(clock / 2800 + uid * 1.37) * 0.5) * s;
     const dy = p.y + (TILE * s - h) - bobPx;
     // Motion trail: ghost copies while sliding for a blur effect
     if (slides.has(k) && anim) {
