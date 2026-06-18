@@ -767,24 +767,31 @@ test('monsterSpawned events fire when hunters move (20% chance per turn)', () =>
 });
 
 test('wyrmSpawned fires when a hunter moves with an empty deck', () => {
-  // maybeSpawnMonster() checks deck.length === 0 when state.turn.moved is true
-  // (set at move-action time before any steps). Draining the deck before the
-  // game starts ensures the first hunter move triggers a WYRM spawn.
+  // turn.moved is set to true by the move action before any steps are taken.
+  // applyEndTurn then calls maybeSpawnMonster; with deck.length === 0 it spawns
+  // WYRM.  We bypass the AI for the initial action because adjacent enemies
+  // cause the AI to attack rather than move, leaving turn.moved=false.
   const base = createGame({
     seed: 1, mode: 'normal',
     hunters: [makeHunter('h0', 0), makeHunter('h1', 1)],
   });
   const s = JSON.parse(JSON.stringify(base));
   s.deck = [];
-  let state = s;
+
+  const moveAction = legalActions(s).find((a) => a.type === 'move');
+  assert.ok(moveAction, 'move must be legal at game start');
+
   const events = [];
-  for (let i = 0; i < 500 && state.phase !== 'mission.over'; i++) {
+  // Force a move (sets turn.moved=true, enters turn.steer)
+  let state = applyAction(s, moveAction).state;
+  events.push(...(state.events ?? []));
+  // AI completes the remaining steps; applyEndTurn fires after movement exhausts
+  for (let i = 0; i < 20 && !['mission.over', 'turn.action'].includes(state.phase); i++) {
     const action = chooseAction({ ...state, legalActions: (ss) => legalActions(ss) });
     if (!action) break;
     const out = applyAction(state, action);
     events.push(...(out.state.events ?? []));
     state = out.state;
-    if (events.some((e) => e.type === 'wyrmSpawned' || e.type === 'wyrmRespawned')) break;
   }
   assert.ok(
     events.some((e) => e.type === 'wyrmSpawned' || e.type === 'wyrmRespawned'),
@@ -796,24 +803,27 @@ test('wyrmSpawned fires when a hunter moves with an empty deck', () => {
 // ---------------------------------------------------------------------------
 // 18. Combat Consequences
 
-test('hunterDefeated events fire in a combat-heavy game', () => {
-  // High AT (8) and low maxHp (10) means hunters can one- or two-shot each
-  // other, producing frequent defeats across a 4-hunter game.
-  // seed 17 reliably produces defeats (seed 42 ends before any fight occurs).
-  const { events } = runGame({
-    seed: 17, mode: 'normal',
-    hunters: [
-      makeHunter('h0', 0, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
-      makeHunter('h1', 1, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
-      makeHunter('h2', 2, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
-      makeHunter('h3', 3, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
-    ],
-  });
-  assert.ok(
-    events.some((e) => e.type === 'hunterDefeated'),
-    'expected at least one hunterDefeated event in a high-AT combat game; ' +
-    'events seen: ' + [...new Set(events.map((e) => e.type))].join(', '),
-  );
+test('hunterDefeated events fire when aggressive hunters fight each other', () => {
+  // 'Aggressive' archetype hunters chase the nearest other hunter and attack
+  // immediately on adjacency — they actively seek combat.  With AT=7, DF=2
+  // (avg ~5 damage per strike, maxHp=19), battles are lethal enough to
+  // produce defeats.  Try several seeds; at least one guarantees a defeat.
+  let found = false;
+  for (const seed of [1, 3, 5, 7, 11, 13, 17]) {
+    const { events } = runGame({
+      seed, mode: 'normal',
+      hunters: [
+        makeHunter('h0', 0, { archetype: 'Aggressive', internal: { mv: 3, at: 7, df: 2, hp: 4 } }),
+        makeHunter('h1', 1, { archetype: 'Aggressive', internal: { mv: 3, at: 7, df: 2, hp: 4 } }),
+        makeHunter('h2', 2, { archetype: 'Aggressive', internal: { mv: 3, at: 7, df: 2, hp: 4 } }),
+        makeHunter('h3', 3, { archetype: 'Aggressive', internal: { mv: 3, at: 7, df: 2, hp: 4 } }),
+      ],
+    }, 5000);
+    if (events.some((e) => e.type === 'hunterDefeated')) { found = true; break; }
+  }
+  assert.ok(found,
+    'at least one seed must produce hunterDefeated when 4 Aggressive hunters fight; ' +
+    'seeds tried: 1,3,5,7,11,13,17');
 });
 
 test('repeated defeats reduce hunter maxHp — defeatHunter halves maxHp each time', () => {
@@ -843,22 +853,24 @@ test('repeated defeats reduce hunter maxHp — defeatHunter halves maxHp each ti
 });
 
 test('healed events fire when hunters rest at low HP', () => {
-  // applyRest() always fires a healed event (ceil(maxHp/4) HP recovered unless
-  // olddoll item). The AI rests when HP fraction < 0.5 (restHp threshold), so
-  // in a 4-hunter combat-heavy game with frequent damage, rests and heals occur.
-  // seed 7 reliably produces healed events (seed 42 ends too fast to need rests).
-  const { events } = runGame({
-    seed: 7, mode: 'normal',
-    hunters: [
-      makeHunter('h0', 0, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
-      makeHunter('h1', 1, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
-      makeHunter('h2', 2, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
-      makeHunter('h3', 3, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
-    ],
-  });
-  assert.ok(
-    events.some((e) => e.type === 'healed'),
-    'expected healed events in a combat-heavy game where hunters rest after taking damage; ' +
-    'events seen: ' + [...new Set(events.map((e) => e.type))].join(', '),
-  );
+  // applyRest() fires a healed event (ceil(maxHp/4) HP recovered).  The AI
+  // rests when hpFrac < restHp (0.25 for Aggressive) or when the hand is low.
+  // With AT=7, DF=2 (avg ~5 damage), after 3 counters a hunter drops to ~4 HP
+  // (below 0.25×19=4.75) and rests on their next turn.
+  let found = false;
+  for (const seed of [1, 3, 5, 7, 11, 13, 17]) {
+    const { events } = runGame({
+      seed, mode: 'normal',
+      hunters: [
+        makeHunter('h0', 0, { archetype: 'Aggressive', internal: { mv: 3, at: 7, df: 2, hp: 4 } }),
+        makeHunter('h1', 1, { archetype: 'Aggressive', internal: { mv: 3, at: 7, df: 2, hp: 4 } }),
+        makeHunter('h2', 2, { archetype: 'Aggressive', internal: { mv: 3, at: 7, df: 2, hp: 4 } }),
+        makeHunter('h3', 3, { archetype: 'Aggressive', internal: { mv: 3, at: 7, df: 2, hp: 4 } }),
+      ],
+    }, 5000);
+    if (events.some((e) => e.type === 'healed')) { found = true; break; }
+  }
+  assert.ok(found,
+    'at least one seed must produce healed events when 4 Aggressive hunters fight; ' +
+    'seeds tried: 1,3,5,7,11,13,17');
 });

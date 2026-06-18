@@ -56,3 +56,16 @@ rather than testing individual mechanics in isolation (those already live in gam
 ### [x] 8. Win/Loss Conditions
 - [x] At least one of seeds {42,1,7,13,100} produces a win
 - [x] `mission.over` is terminal: legalActions = [{type:'confirm'}]
+
+### [x] 16. All 15 Story Missions — Parametric Simulation
+- [x] Every STORY_MISSIONS entry runs to mission.over within 5000 steps
+- [x] `_missionEnd.win` is always a boolean (covers win and loss outcomes)
+
+### [x] 17. Monster Lifecycle
+- [x] `monsterSpawned` events fire in a long 4-hunter game (20% per moved-turn)
+- [x] `wyrmSpawned` fires when a hunter moves with an empty deck (deck.length === 0)
+
+### [x] 18. Combat Consequences
+- [x] `hunterDefeated` fires when Aggressive hunters fight each other
+- [x] Repeated defeats reduce `hunter.maxHp` (defeatHunter halves it)
+- [x] `healed` events fire when Aggressive hunters rest after taking damage
