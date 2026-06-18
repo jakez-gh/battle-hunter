@@ -677,6 +677,12 @@ export function createRenderer(canvas, opts = {}) {
               const cs = cam.scale;
               const etx = ewp.x + (((wh >> 4) & 0xF) + 1) * cs;
               const ety = ewp.y + 9 * cs;
+              // Warm glow bloom behind torch
+              const tgr = ctx.createRadialGradient(etx + cs * 0.5, ety, 0, etx + cs * 0.5, ety, cs * 5);
+              const tgp = 0.10 + 0.05 * Math.sin(clock / 850 + wh * 0.031);
+              tgr.addColorStop(0, 'rgba(255,155,45,' + tgp.toFixed(2) + ')'); tgr.addColorStop(1, 'transparent');
+              ctx.fillStyle = tgr;
+              ctx.fillRect((etx - cs * 4.5) | 0, (ety - cs * 5) | 0, cs * 10, cs * 9);
               // Iron torch bracket: vertical stem + horizontal arm
               ctx.fillStyle = '#6e4e22';
               ctx.fillRect(etx | 0, ety | 0, cs, cs * 3);
@@ -684,16 +690,22 @@ export function createRenderer(canvas, opts = {}) {
               // Amber torch cup at bracket top
               ctx.save(); ctx.globalAlpha = 0.80; ctx.fillStyle = '#9a6c28';
               ctx.fillRect((etx - cs) | 0, (ety - cs) | 0, cs * 3, cs); ctx.restore();
-              // Animated flame
+              // Animated flame: persistent wick base + three staggered rising streams
               const eper = 1600 + (wh & 3) * 400;
-              const eph = ((clock + wh * 41) % eper) / eper;
-              if (eph < 0.40) {
-                const ex = etx;
-                const ey = ety - eph / 0.40 * cs * 4 - cs;
-                const ea = Math.min(eph, 0.40 - eph) / 0.20 * 0.55;
-                ctx.save(); ctx.globalAlpha = ea;
-                ctx.fillStyle = eph < 0.20 ? '#ffb040' : '#cc5020';
-                ctx.fillRect(ex | 0, ey | 0, cs, cs);
+              const fbw = cs * (1.4 + 0.5 * Math.sin(clock / 190 + wh * 0.72));
+              ctx.save(); ctx.globalAlpha = 0.78; ctx.fillStyle = '#fff090';
+              ctx.fillRect((etx + cs * 0.5 - fbw * 0.5) | 0, (ety - cs * 1.6) | 0, fbw, cs * 1.2);
+              ctx.restore();
+              for (let fi = 0; fi < 3; fi++) {
+                const eph = ((clock + wh * 41 + fi * (eper / 3 | 0)) % eper) / eper;
+                if (eph >= 0.52) continue;
+                const frac = eph / 0.52;
+                const fey = ety - cs * 1.4 - frac * cs * (3.2 - fi * 0.5);
+                const fea = Math.min(frac * 3.5, (1 - frac) * 2.1) * 0.52;
+                const ffw = cs * (1.8 - fi * 0.5);
+                ctx.save(); ctx.globalAlpha = fea;
+                ctx.fillStyle = fi === 0 ? '#ffca40' : (fi === 1 ? '#ff8820' : '#dd3812');
+                ctx.fillRect((etx + cs * 0.5 - ffw * 0.5) | 0, fey | 0, ffw, cs);
                 ctx.restore();
               }
             }
