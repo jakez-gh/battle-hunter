@@ -864,6 +864,15 @@ export function createRenderer(canvas, opts = {}) {
     // Active unit gets a gentle idle bob (±1.5 px)
     const bobPx = k === activeKey() ? Math.round(Math.sin(clock / 650) * 1.5) * s : 0;
     const dy = p.y + (TILE * s - h) - bobPx;
+    // Low-HP danger glow: pulsing red around tile edges at ≤25% HP
+    if (k[0] === 'h' && u && u.maxHp && u.hp / u.maxHp <= 0.25) {
+      const danger = 0.18 + 0.18 * Math.sin(clock / 260);
+      const ts = TILE * s;
+      ctx.save(); ctx.globalAlpha = danger * alpha;
+      ctx.strokeStyle = '#ff4a3a'; ctx.lineWidth = s * 0.7;
+      ctx.strokeRect(p.x + s * 0.4, p.y + s * 0.4, ts - s * 0.8, ts - s * 0.8);
+      ctx.restore();
+    }
     ctx.save();
     ctx.globalAlpha = alpha;
     if (facing.get(k) === -1) {
