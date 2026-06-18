@@ -1187,7 +1187,8 @@ export function makeClientScreen(app) {
       const rec = currentHunter(app);
       if (rec) drawHunterCard(app, rec, 540, 90, 380);
       host.menus.forEach((m, i) => drawMenu(ctx, m, 60 + i * 30, 100 + i * 40, 440, { lineH: 26 }));
-      if (note) text(ctx, note, app.W / 2, 640, { size: 16, align: 'center', color: OK });
+      if (note) { ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = OK;
+        text(ctx, note, app.W / 2, 640, { size: 16, align: 'center', color: OK, shadow: false }); ctx.restore(); }
       if (app.bootNote) text(ctx, app.bootNote, app.W / 2, 668, { size: 13, align: 'center', color: BAD });
     },
   };
@@ -1302,7 +1303,8 @@ export function makeHospitalScreen(app) {
       const rec = currentHunter(app);
       if (rec) drawHunterCard(app, rec, 540, 90, 380);
       host.menus.forEach((m, i) => drawMenu(ctx, m, 60 + i * 30, 100 + i * 40, 440, { lineH: 26 }));
-      if (note) text(ctx, note, app.W / 2, 640, { size: 16, align: 'center', color: OK });
+      if (note) { ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = OK;
+        text(ctx, note, app.W / 2, 640, { size: 16, align: 'center', color: OK, shadow: false }); ctx.restore(); }
       const fees = LEVEL_UP_FEES.map((f, i) => `L${i + 1}>${i + 2}: ${f}`).slice(Math.max(0, (rec?.level ?? 1) - 2), (rec?.level ?? 1) + 2);
       text(ctx, fees.join('   '), app.W / 2, 668, { size: 12, align: 'center', color: DIM });
     },
@@ -1444,7 +1446,8 @@ export function makeOptionsScreen(app) {
         drawSlider(v, 500, y + 4, 200, sel ? '#d8b83a' : '#7e9fee');
         text(ctx, `${Math.round(v * 100)}%`, 712, y, { size: 14, color: DIM });
       });
-      if (note) text(ctx, note, app.W / 2, 590, { size: 14, align: 'center', color: OK });
+      if (note) { ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = OK;
+        text(ctx, note, app.W / 2, 590, { size: 14, align: 'center', color: OK, shadow: false }); ctx.restore(); }
       text(ctx, 'left/right to adjust - Enter on export/import - Esc saves and exits', app.W / 2, 618, { size: 12, align: 'center', color: DIM });
     },
   };
