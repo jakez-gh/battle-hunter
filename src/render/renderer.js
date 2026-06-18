@@ -706,7 +706,9 @@ export function createRenderer(canvas, opts = {}) {
     const w = img.width * s;
     const h = img.height * s;
     const dx = p.x + (TILE * s - w) / 2;
-    const dy = p.y + (TILE * s - h);
+    // Active unit gets a gentle idle bob (±1.5 px)
+    const bobPx = k === activeKey() ? Math.round(Math.sin(clock / 650) * 1.5) * s : 0;
+    const dy = p.y + (TILE * s - h) - bobPx;
     ctx.save();
     ctx.globalAlpha = alpha;
     if (facing.get(k) === -1) {
@@ -729,16 +731,17 @@ export function createRenderer(canvas, opts = {}) {
       if (u.hasTarget) blit('ui.targetMark', p.x + 4 * s, dy - 9 * s);
       const active = Object.entries(u.status ?? {}).filter(([, v]) => v).map(([n]) => n);
       let ix = p.x + (TILE * s - active.length * 8 * s) / 2;
+      const statusY = p.y - bobPx;
       for (const st of active) {
         if (atlas[`status.${st}`]) {
           if (STATUS_GLOW[st]) {
             ctx.save();
             ctx.globalAlpha = 0.42;
             ctx.fillStyle = STATUS_GLOW[st];
-            ctx.fillRect(ix - s, p.y - 9 * s, 8 * s + 2 * s, 8 * s + 2 * s);
+            ctx.fillRect(ix - s, statusY - 9 * s, 8 * s + 2 * s, 8 * s + 2 * s);
             ctx.restore();
           }
-          blit(`status.${st}`, ix, p.y - 8 * s);
+          blit(`status.${st}`, ix, statusY - 8 * s);
         }
         ix += 8 * s;
       }
@@ -984,6 +987,18 @@ export function createRenderer(canvas, opts = {}) {
     ctx.lineWidth = s;
     ctx.beginPath();
     ctx.ellipse(cx, cy, 7 * s, 2 * s, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    // sonar ping: expands outward and fades every 2.2s
+    const pingPhase = (clock / 2200) % 1;
+    const pingRx = (7 + pingPhase * 6) * s;
+    const pingRy = (2 + pingPhase * 1.8) * s;
+    ctx.save();
+    ctx.globalAlpha = (1 - pingPhase) * 0.40;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(1, s * 0.5);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, pingRx, pingRy, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }
