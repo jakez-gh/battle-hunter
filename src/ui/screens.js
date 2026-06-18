@@ -690,7 +690,17 @@ export function makeRosterScreen(app, opts = {}) {
             `Missions ${rec.record.missions}   Wins ${rec.record.wins}`,
             `Items: ${rec.items.length}/6`,
           ];
-          lines.forEach((s, i) => text(ctx, s, 680, 226 + i * 26, { size: 15 }));
+          const lineColors = [FG, OK, FG, rec.maxHp < baseMaxHp(rec) ? '#d8cc88' : FG, null, FG, FG];
+          lines.forEach((s, i) => {
+            const ly = 226 + i * 26;
+            if (i === 4) {
+              ctx.save(); ctx.shadowBlur = 4; ctx.shadowColor = '#906000';
+              text(ctx, s, 680, ly, { size: 15, color: GOLD, shadow: false });
+              ctx.restore();
+            } else {
+              text(ctx, s, 680, ly, { size: 15, color: lineColors[i] ?? FG });
+            }
+          });
           drawItemList(ctx, rec.items, 520, 372, rt);
         }
       }
