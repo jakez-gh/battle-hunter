@@ -361,10 +361,22 @@ export function createRenderer(canvas, opts = {}) {
         popOverride(standingFlags, ev.pos ? key(ev.pos.x, ev.pos.y) : null);
         if (ev.pos) addSparklesAt(ev.pos.x, ev.pos.y, '#e8c040');
         break;
-      case 'exitWarpedAway':
+      case 'exitWarpedAway': {
         unitFlash = { key: k, t: 0, dur: EVENT_DURATIONS.exitWarpedAway, color: '#f7f7ff' };
         addSparkles(k, '#7ee8a0');
+        // Portal eruption at the exit tile
+        const ex = state?.board?.exit;
+        if (ex) {
+          addSparklesAt(ex.x, ex.y, '#7ee8a0');
+          for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * Math.PI * 2;
+            sparkles.push({ wx: ex.x + 0.5, wy: ex.y + 0.5,
+              vx: Math.cos(a) * 3.2, vy: Math.sin(a) * 3.2 - 0.5,
+              t: 0, ttl: 480, color: '#fff' });
+          }
+        }
         break;
+      }
       case 'drewBlank':
         addFloat(k, 'NO CARD', '#8d8d9e');
         break;
