@@ -1219,6 +1219,7 @@ export function makeGameScreen(app, g) {
   let infoIndex = 0;
   let banner = null;       // { text, t }
   let inBattleMusic = false;
+  let fadeIn = 0;          // seconds since screen entered; drives entry fade
   let frameDt = 1 / 60;
   let broken = false;
   let finished = false;
@@ -1410,9 +1411,11 @@ export function makeGameScreen(app, g) {
     enter() {
       g.songBase = Math.random() < 0.5 ? 'dungeon1' : 'dungeon2';
       app.music(g.songBase);
+      fadeIn = 0;
     },
     update(dt) {
       frameDt = dt;
+      fadeIn += dt;
       if (banner && (banner.t -= dt) <= 0) banner = null;
       if (broken || finished) return;
       const st = g.state;
@@ -1557,6 +1560,11 @@ export function makeGameScreen(app, g) {
         ctx.restore();
       }
       if (A.rendererBusy(g.renderer)) text(ctx, 'any key: skip', 712, 700, { size: 11, align: 'right', color: DIM });
+      // Entry fade-in from black (0.75s)
+      if (fadeIn < 0.75) {
+        ctx.save(); ctx.globalAlpha = Math.max(0, 1 - fadeIn / 0.75);
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, app.W, app.H); ctx.restore();
+      }
     },
   };
 
