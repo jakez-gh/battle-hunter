@@ -2338,7 +2338,16 @@ export function makeResultsScreen(app, g) {
               ctx.fillRect(bx2, 188 + j * 40, bFill, 2); ctx.restore();
             }
           }); }
-        vals.forEach((v, j) => text(ctx, String(cnt(v)), x + 84, 170 + j * 40, { size: 15, align: 'center' }));
+        vals.forEach((v, j) => {
+          const counted = cnt(v);
+          if (t < 1.8 && v > 0) {
+            ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = SLOT_COLORS[h.slot ?? i];
+            text(ctx, String(counted), x + 84, 170 + j * 40, { size: 15, align: 'center', shadow: false });
+            ctx.restore();
+          } else {
+            text(ctx, String(counted), x + 84, 170 + j * 40, { size: 15, align: 'center' });
+          }
+        });
         // Winner total score: glowing gold text
         if (isFirst) {
           ctx.save(); ctx.shadowBlur = 18 + 8 * Math.sin(t * 1.8); ctx.shadowColor = '#c8960a';
