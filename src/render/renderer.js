@@ -962,13 +962,30 @@ export function createRenderer(canvas, opts = {}) {
     const u = findUnit(k);
     if (u) {
       text(u.name ?? u.kind ?? '', cx, y + sh + 4, '#f0f4ff', 12, 'center');
-      text(`HP ${u.hp}`, cx, y + sh + 18, '#8fd17e', 12, 'center');
+      // HP bar
+      const ratio = u.maxHp ? clamp(u.hp / u.maxHp, 0, 1) : 0;
+      const bw2 = sw;
+      const barX = x;
+      const barY = y + sh + 20;
+      ctx.fillStyle = '#131520';
+      ctx.fillRect(barX, barY, bw2, 5);
+      ctx.fillStyle = ratio > 0.5 ? '#3aa84a' : ratio > 0.25 ? '#d8b83a' : '#cc4a3a';
+      ctx.fillRect(barX, barY, Math.round(bw2 * ratio), 5);
+      // shine on bar
+      if (Math.round(bw2 * ratio) > 2) {
+        ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#fff';
+        ctx.fillRect(barX, barY, Math.round(bw2 * ratio), 2); ctx.restore();
+      }
+      const hpColor = ratio <= 0.25
+        ? (0.5 + 0.5 * Math.sin(clock / 240)) > 0.5 ? '#ff8866' : '#cc4a3a'
+        : '#8fd17e';
+      text(`${u.hp}/${u.maxHp}`, cx, barY + 8, hpColor, 11, 'center');
     }
   }
 
   function drawBattle() {
     const bw = Math.min(canvas.width - 24, 380);
-    const bh = Math.min(canvas.height - HUD_H - 24, 210);
+    const bh = Math.min(canvas.height - HUD_H - 24, 230);
     const bx = (canvas.width - bw) / 2 | 0;
     const by = (canvas.height - HUD_H - bh) / 2 | 0;
     // Background
@@ -1008,16 +1025,16 @@ export function createRenderer(canvas, opts = {}) {
     drawCombatant(battle.a, bx + 24, by + 28, false);
     drawCombatant(battle.d, bx + bw - 24 - defW, by + 28, true);
     // VS with gold glow
-    { const vcx = bx + bw / 2, vcy = by + 44;
+    { const vcx = bx + bw / 2, vcy = by + 50;
       const vg = ctx.createRadialGradient(vcx, vcy, 0, vcx, vcy, 26);
       vg.addColorStop(0, 'rgba(220,190,60,0.38)'); vg.addColorStop(1, 'transparent');
       ctx.fillStyle = vg; ctx.fillRect(vcx - 26, vcy - 18, 52, 36); }
-    text('VS', bx + bw / 2, by + 36, '#ffe98a', 16, 'center');
-    if (battle.response) text(String(battle.response).toUpperCase(), bx + bw / 2, by + 60, '#9adfe8', 12, 'center');
+    text('VS', bx + bw / 2, by + 42, '#ffe98a', 16, 'center');
+    if (battle.response) text(String(battle.response).toUpperCase(), bx + bw / 2, by + 64, '#9adfe8', 12, 'center');
     if (battle.escape) {
       const e = battle.escape;
       text(`ESCAPE ${e.dTotal ?? '?'} vs ${e.aTotal ?? '?'} ${e.escaped ? 'FLED!' : 'CAUGHT'}`,
-        bx + bw / 2, by + 78, e.escaped ? '#8fd17e' : '#ff6a5a', 12, 'center');
+        bx + bw / 2, by + 84, e.escaped ? '#8fd17e' : '#ff6a5a', 12, 'center');
     }
     if (battle.strike) {
       const st = battle.strike;
@@ -1026,14 +1043,14 @@ export function createRenderer(canvas, opts = {}) {
       dice.slice(0, 4).forEach((d, i) => {
         const v = rolling ? 1 + Math.floor(clock / 70 + i * 3) % 6 : d;
         const side = i < dice.length / 2 ? bx + 24 + i * 20 : bx + bw - 64 + (i - dice.length / 2) * 20;
-        blit(`chip.${v}`, side, by + 100, 2);
+        blit(`chip.${v}`, side, by + 120, 2);
       });
       if (!rolling) {
         if (st.totals) {
           const tv = Object.values(st.totals).filter((v) => typeof v === 'number');
-          text(tv.join(' vs '), bx + bw / 2, by + 104, '#f0f4ff', 12, 'center');
+          text(tv.join(' vs '), bx + bw / 2, by + 124, '#f0f4ff', 12, 'center');
         }
-        text(`-${st.damage}`, bx + bw / 2, by + 128, '#ff6a5a', 24, 'center');
+        text(`-${st.damage}`, bx + bw / 2, by + 150, '#ff6a5a', 24, 'center');
         if (st.crit && anim?.ev.type === 'strikeRolled') {
           const p = anim.t / anim.dur;
           if (p > 0.5 && p < 0.72) {
