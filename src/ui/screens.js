@@ -672,6 +672,11 @@ export function makeCreationScreen(app) {
           sg.addColorStop(0, 'rgba(80,100,220,0.42)'); sg.addColorStop(1, 'rgba(80,100,220,0.10)');
           ctx.fillStyle = sg; ctx.fillRect(56, y - 8, 488, 48);
           ctx.fillStyle = 'rgba(120,150,255,0.72)'; ctx.fillRect(56, y - 8, 2, 48);
+          const shX = 56 + ((state.t % 2.4) / 2.4) * (488 + 40) - 20;
+          const sh = ctx.createLinearGradient(shX - 16, 0, shX + 16, 0);
+          sh.addColorStop(0, 'transparent'); sh.addColorStop(0.5, 'rgba(180,200,255,0.22)'); sh.addColorStop(1, 'transparent');
+          ctx.save(); ctx.beginPath(); ctx.rect(56, y - 8, 488, 48); ctx.clip();
+          ctx.fillStyle = sh; ctx.fillRect(shX - 16, y - 8, 32, 48); ctx.restore();
         }
         const [lab, val] = labels[row];
         if (lab) text(ctx, lab, 70, y, { size: 18, color: sel ? '#fff' : DIM });
