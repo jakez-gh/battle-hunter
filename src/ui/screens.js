@@ -1903,18 +1903,18 @@ export function makeManualScreen(app) {
       sections: [
         { head: 'Stun', body: 'Your next turn is skipped. You cannot counter-attack while stunned. Caused by Stun traps or WYRM critical hits.' },
         { head: 'Leg Damage', body: 'Movement bonus drops to +0 (+1 with a Crutch item). Cured by: landing on EXIT, playing a Blue E card, or a Blue Flag roll of 5 or 6.' },
-        { head: 'Panic', body: 'Caused by Critical Hits (if you miss the negate window). AI controls your turn, cycling behaviour patterns each round. A Releaser item clears Panic at the start of your turn.' },
-        { head: 'Empty', body: 'Your entire hand is discarded. You cannot draw new cards while Empty. Clears at end of the current round. Caused by Empty traps or FNG (Cleaner) critical hits.' },
+        { head: 'Panic', body: 'Caused by Critical Hits (if you miss the negate window). AI controls your turn, cycling behaviour patterns each round. A Calmant item clears Panic at the start of your turn.' },
+        { head: 'Empty', body: 'Your entire hand is discarded. You cannot draw new cards while Empty. Clears at end of the current round. Caused by Empty traps or FNG critical hits.' },
       ],
     },
     {
       title: 'MONSTERS',
       sections: [
-        { head: 'Spawning', body: 'Up to 2 regular monsters can be present at once. One may appear next to you when you finish a move turn. An identified Folklore (Bible) item prevents spawns near you.' },
-        { head: 'FNG  (Cleaner)', body: 'Balanced stats. Critical hit inflicts Empty status. Counter item: Controller.' },
-        { head: 'BRO  (Blob)', body: 'High HP, low attack. No special critical rider. Counter item: Fragrance.' },
-        { head: 'RAD  (Predator)', body: 'Fast and hard-hitting. No special critical rider. Counter item: Chip.' },
-        { head: 'WYRM  (Dragon)', body: 'Appears when the deck runs out. Very high HP. Critical hit inflicts Stun. If WYRM defeats the Target holder: Story = game over; Normal = all players lose items and credits. Counter item: Buster.' },
+        { head: 'Spawning', body: 'Up to 2 regular monsters can be present at once. One may appear next to you when you finish a move turn. An identified Wardstone item prevents spawns near you.' },
+        { head: 'FNG  (Hunter-Killer)', body: 'Balanced stats. Critical hit inflicts Empty status. Counter item: Patch.' },
+        { head: 'OOZ  (Slime)', body: 'High HP, low attack. No special critical rider. Counter item: Repellent.' },
+        { head: 'VAC  (Cleaner Bot)', body: 'Fast movement. No special critical rider. Counter item: Override.' },
+        { head: 'WYRM  (Dragon)', body: 'Appears when the deck runs out. Very high HP. Critical hit inflicts Stun. If WYRM defeats the Target holder the mission ends as a loss. Counter item: Tamer.' },
       ],
     },
     {
