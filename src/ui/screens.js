@@ -2258,8 +2258,10 @@ export function makeManualScreen(app) {
   ];
 
   let page = 0;
+  let mt = 0;
 
   return {
+    update(dt) { mt += dt; },
     onKey(k) {
       if (k === 'cancel' || k === 'confirm') { sfx.menuCancel(); app.stack.pop(); }
       else if (k === 'right' || k === 'down') { if (page < PAGES.length - 1) { page++; sfx.menuMove(); } }
@@ -2273,6 +2275,7 @@ export function makeManualScreen(app) {
     draw(ctx) {
       const BX = 44, BY = 44, BW = 872, BH = 614;
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      drawGoldBloom(ctx, app.W / 2);
       box(ctx, BX, BY, BW, BH, { title: 'HOW TO PLAY' });
 
       const pg = PAGES[page];
@@ -2309,9 +2312,16 @@ export function makeManualScreen(app) {
       const spacing = 14;
       const dotsX = app.W / 2 - ((PAGES.length - 1) * spacing) / 2;
       for (let di = 0; di < PAGES.length; di++) {
-        ctx.fillStyle = di === page ? GOLD : '#3c4364';
+        const isCur = di === page;
+        const dpulse = isCur ? 3.5 + 1.5 * Math.sin(mt * 3.2) : 3;
+        if (isCur) {
+          ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = GOLD;
+          ctx.beginPath(); ctx.arc(dotsX + di * spacing, navY + 34, dpulse + 5, 0, Math.PI * 2);
+          ctx.fill(); ctx.restore();
+        }
+        ctx.fillStyle = isCur ? GOLD : '#3c4364';
         ctx.beginPath();
-        ctx.arc(dotsX + di * spacing, navY + 34, di === page ? 4 : 3, 0, Math.PI * 2);
+        ctx.arc(dotsX + di * spacing, navY + 34, dpulse, 0, Math.PI * 2);
         ctx.fill();
       }
     },
