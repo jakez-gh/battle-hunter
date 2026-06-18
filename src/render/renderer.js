@@ -1315,6 +1315,20 @@ export function createRenderer(canvas, opts = {}) {
       ctx.fillRect(fp.x - 2 * cam.scale, fp.y + 4 * cam.scale, TILE * cam.scale + 4 * cam.scale, 14 * cam.scale);
       const img = atlas[`tile.flag${cap}`];
       if (img) ctx.drawImage(img, (fp.x + swayH * cam.scale) | 0, (fp.y + sway * cam.scale) | 0, img.width * cam.scale, img.height * cam.scale);
+      // Sparkles drifting off the flag cloth tip (right side, rows 4-6 of sprite)
+      const FLAG_EMBER = { Red: '#ff8a6a', Blue: '#80a8ff', Green: '#70e898', Yellow: '#fff070' };
+      const fec = FLAG_EMBER[cap] ?? '#ffe0a0';
+      for (let fi = 0; fi < 2; fi++) {
+        const feh = (f.x * 1847 + f.y * 3529 + fi * 7) & 0x3FFF;
+        const feperiod = 1900 + (feh & 0x3FF);
+        const fephase = ((clock + fi * (feperiod / 2)) % feperiod) / feperiod;
+        const fea = Math.sin(fephase * Math.PI) * 0.50;
+        if (fea < 0.06) continue;
+        const fesx = (fp.x + (10.5 + fi - fephase * 1.5 + swayH) * cam.scale) | 0;
+        const fesy = (fp.y + (4 - fephase * 6 + sway) * cam.scale) | 0;
+        ctx.save(); ctx.globalAlpha = fea; ctx.fillStyle = fi % 2 === 0 ? fec : '#fffce0';
+        ctx.fillRect(fesx, fesy, cam.scale, cam.scale); ctx.restore();
+      }
     }
   }
 
@@ -2115,9 +2129,9 @@ export function createRenderer(canvas, opts = {}) {
     if (h.hasTarget) blit('ui.targetMark', cx + 2, y + 3, 1);
     // Active status condition indicators: pulsing colored glyph chips after hand
     let sdx = cx + (h.hasTarget ? 12 : 2);
-    for (const sk of ['stun', 'leg', 'panic']) {
+    for (const sk of ['stun', 'leg', 'panic', 'empty']) {
       if (!(h.status?.[sk] > 0)) continue;
-      const sp = 0.55 + 0.45 * Math.sin(clock / 350 + (sk === 'stun' ? 0 : sk === 'leg' ? 2.1 : 4.2));
+      const sp = 0.55 + 0.45 * Math.sin(clock / 350 + (sk === 'stun' ? 0 : sk === 'leg' ? 2.1 : sk === 'panic' ? 4.2 : 1.05));
       ctx.save(); ctx.globalAlpha = sp * 0.85; ctx.fillStyle = STATUS_GLOW[sk];
       ctx.fillRect(sdx, y + 4, 8, 8); ctx.restore();
       const sicon = atlas[`status.${sk}`];
