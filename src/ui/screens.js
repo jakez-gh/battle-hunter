@@ -1819,11 +1819,26 @@ export function makeResultsScreen(app, g) {
           ctx.fillRect(lx + fi * cw, 95, cw, 435); ctx.restore(); }
       }
       const labels = ['', 'Movement', 'Damage', 'Flags', 'Kills', 'Handicap', 'Items', 'TOTAL', 'Place', 'Credits'];
-      labels.forEach((s, i) => text(ctx, s, x0, 130 + i * 40, { size: 16, color: i >= 7 ? GOLD : DIM }));
+      // Subtle alternating row tints
+      labels.forEach((s, i) => {
+        if (i % 2 === 0 && i > 0 && i < 7) {
+          ctx.save(); ctx.fillStyle = 'rgba(255,255,255,0.025)';
+          ctx.fillRect(x0, 122 + i * 40, app.W - x0 * 2, 40); ctx.restore();
+        }
+        text(ctx, s, x0, 130 + i * 40, { size: 16, color: i >= 7 ? GOLD : DIM });
+      });
       rows.forEach((r, i) => {
         const x = lx + i * cw;
         const h = st.hunters[i];
+        const isFirst = win && placeOf(r.id) === 0;
+        // Left border per column in slot color
+        ctx.save(); ctx.globalAlpha = 0.38; ctx.fillStyle = SLOT_COLORS[h.slot ?? i];
+        ctx.fillRect(x, 95, 2, 435); ctx.restore();
         sprite(app, `hunter${h.spriteId}.${h.palette}.icon`, x + 30, 96, 4);
+        if (isFirst) {
+          ctx.save(); ctx.globalAlpha = 0.15; ctx.fillStyle = GOLD;
+          ctx.fillRect(x + 2, 95, cw - 2, 48); ctx.restore();
+        }
         text(ctx, r.name, x + 84, 130, { size: 15, align: 'center', color: SLOT_COLORS[h.slot ?? i] });
         const vals = [r.moved, r.damage, r.flagPts, r.killPts, r.handicap, r.itemPts];
         vals.forEach((v, j) => text(ctx, String(v), x + 84, 170 + j * 40, { size: 15, align: 'center' }));
