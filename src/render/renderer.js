@@ -746,11 +746,13 @@ export function createRenderer(canvas, opts = {}) {
       ctx.restore();
     }
     for (const sp of sparkles) {
-      const p = worldToScreen(sp.wx + sp.vx * (sp.t / 600), sp.wy + sp.vy * (sp.t / 600), cam);
+      const frac = sp.t / sp.ttl;
+      const p = worldToScreen(sp.wx + sp.vx * frac, sp.wy + sp.vy * frac, cam);
+      const sz = Math.max(0.5, (1 - frac) * 2) * cam.scale;
       ctx.save();
-      ctx.globalAlpha = Math.max(0, 1 - sp.t / sp.ttl);
+      ctx.globalAlpha = Math.max(0, 1 - frac);
       ctx.fillStyle = sp.color;
-      ctx.fillRect(p.x, p.y, 2 * cam.scale, 2 * cam.scale);
+      ctx.fillRect(p.x - sz / 2, p.y - sz / 2, sz, sz);
       ctx.restore();
     }
   }
@@ -810,12 +812,15 @@ export function createRenderer(canvas, opts = {}) {
     const p = worldToScreen(pos.x, pos.y, cam);
     const cx = p.x + TILE * s / 2;
     const cy = p.y + (TILE - 1) * s;
+    const sg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 6 * s);
+    sg.addColorStop(0, 'rgba(0,0,0,0.52)');
+    sg.addColorStop(0.5, 'rgba(0,0,0,0.24)');
+    sg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.save();
-    ctx.globalAlpha = 0.42 * alpha;
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, 5 * s, 1.5 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.globalAlpha = alpha;
+    ctx.scale(1, 0.32);
+    ctx.fillStyle = sg;
+    ctx.fillRect(cx - 6 * s, (cy / 0.32) - 6 * s, 12 * s, 12 * s);
     ctx.restore();
   }
 
@@ -917,7 +922,14 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillRect(0, y0, canvas.width, HUD_H);
     const _ak = activeKey();
     const _ah = _ak?.[0] === 'h' ? findUnit(_ak) : null;
-    ctx.fillStyle = _ah ? (SLOT_COLORS[(_ah.slot ?? 0) % 4] ?? '#2a2c3a') : '#2a2c3a';
+    const _sc = _ah ? (SLOT_COLORS[(_ah.slot ?? 0) % 4] ?? '#2a2c3a') : '#2a2c3a';
+    // Glow above separator
+    const sepGlow = ctx.createLinearGradient(0, y0 - 6, 0, y0 + 1);
+    sepGlow.addColorStop(0, 'transparent');
+    sepGlow.addColorStop(1, _sc + '55');
+    ctx.fillStyle = sepGlow;
+    ctx.fillRect(0, y0 - 6, canvas.width, 7);
+    ctx.fillStyle = _sc;
     ctx.fillRect(0, y0, canvas.width, 1);
     (state.hunters ?? []).slice(0, 4).forEach((h, i) => drawHunterWindow(h, i, y0 + 3 + i * 18));
     // deck counter, top-right
@@ -1041,10 +1053,17 @@ export function createRenderer(canvas, opts = {}) {
     const by = (canvas.height - HUD_H) / 2 - 20;
     ctx.fillStyle = 'rgba(10, 10, 18, 0.88)';
     ctx.fillRect(0, by, bw, 40);
-    // Color wash — tints the banner strip with its own color
+    // Color wash
     ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = banner.color;
     ctx.fillRect(0, by, bw, 40); ctx.restore();
-    // top & bottom accent lines in the banner's own color
+    // Horizontal shimmer scan that sweeps across the banner
+    const scanX = ((clock % 1800) / 1800) * (bw + 80) - 40;
+    const scan = ctx.createLinearGradient(scanX - 40, 0, scanX + 40, 0);
+    scan.addColorStop(0, 'transparent');
+    scan.addColorStop(0.5, 'rgba(255,255,255,0.12)');
+    scan.addColorStop(1, 'transparent');
+    ctx.save(); ctx.fillStyle = scan; ctx.fillRect(0, by, bw, 40); ctx.restore();
+    // top & bottom accent lines
     ctx.save();
     ctx.globalAlpha = 0.65;
     ctx.fillStyle = banner.color;
