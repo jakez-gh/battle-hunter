@@ -396,6 +396,26 @@ const itemName = (slot) => {
   const m = slot.identified && it.effect ? /^(?:at|df|escape)\+(\d)$/.exec(it.effect) : null;
   return m ? `${it.name} +${m[1]}` : it.name;
 };
+const itemTier = (slot) => {
+  const it = ITEMS[slot.itemId];
+  const m = slot.identified && it?.effect ? /^(?:at|df|escape)\+(\d)$/.exec(it.effect) : null;
+  return m ? +m[1] : 0;
+};
+function drawItemList(ctx, items, x, y0, hudT) {
+  items.slice(0, 6).forEach((slot, i) => {
+    const tier = itemTier(slot);
+    const label = '- ' + itemName(slot);
+    const ly = y0 + i * 18;
+    if (slot.identified && tier >= 3) {
+      ctx.save(); ctx.shadowBlur = 4 + 2 * Math.sin(hudT * 1.8 + i * 1.1); ctx.shadowColor = '#906000';
+      text(ctx, label, x, ly, { size: 12, color: GOLD, shadow: false });
+      ctx.restore();
+    } else {
+      const col = !slot.identified ? DIM : tier >= 2 ? '#d8cc88' : '#b8c0d0';
+      text(ctx, label, x, ly, { size: 12, color: col });
+    }
+  });
+}
 
 function drawGoldBloom(ctx, cx) {
   const bt = typeof performance !== 'undefined' ? performance.now() / 1000 : 0;
@@ -671,8 +691,7 @@ export function makeRosterScreen(app, opts = {}) {
             `Items: ${rec.items.length}/6`,
           ];
           lines.forEach((s, i) => text(ctx, s, 680, 226 + i * 26, { size: 15 }));
-          rec.items.slice(0, 6).forEach((slot, i) =>
-            text(ctx, '- ' + itemName(slot), 520, 372 + i * 18, { size: 12, color: DIM }));
+          drawItemList(ctx, rec.items, 520, 372, rt);
         }
       }
       if (!app.roster.hunters.length) {
@@ -976,8 +995,7 @@ export function makeHubScreen(app) {
         ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = OK;
         text(ctx, `${app.session.mode === 'story' ? `STORY - next mission ${Math.min(15, rec.storyProgress + 1)}` : 'NORMAL free-play'}`, 120, 500, { size: 15, color: OK, shadow: false });
         ctx.restore();
-        rec.items.slice(0, 6).forEach((slot, i) =>
-          text(ctx, '- ' + itemName(slot), 640, 412 + i * 18, { size: 12, color: DIM }));
+        drawItemList(ctx, rec.items, 640, 412, t);
       } else {
         ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = BAD;
         text(ctx, 'No active hunter - visit the OFFICE first.', 120, 430, { size: 16, color: BAD, shadow: false });
