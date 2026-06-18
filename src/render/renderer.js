@@ -1021,11 +1021,18 @@ export function createRenderer(canvas, opts = {}) {
     for (const sp of sparkles) {
       const frac = sp.t / sp.ttl;
       const p = worldToScreen(sp.wx + sp.vx * frac, sp.wy + sp.vy * frac, cam);
-      const sz = Math.max(0.5, (1 - frac) * 2) * cam.scale;
+      const sz = Math.max(0.5, (1 - frac) * 2.2) * cam.scale;
+      const alpha = Math.max(0, 1 - frac);
       ctx.save();
-      ctx.globalAlpha = Math.max(0, 1 - frac);
+      ctx.globalAlpha = alpha;
       ctx.fillStyle = sp.color;
-      ctx.fillRect(p.x - sz / 2, p.y - sz / 2, sz, sz);
+      ctx.fillRect(p.x - sz * 0.35, p.y - sz * 1.1, sz * 0.7, sz * 2.2);
+      ctx.fillRect(p.x - sz * 1.1, p.y - sz * 0.35, sz * 2.2, sz * 0.7);
+      if (frac < 0.28) {
+        ctx.globalAlpha = alpha * (1 - frac / 0.28) * 0.85;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(p.x - sz * 0.35, p.y - sz * 0.35, sz * 0.7, sz * 0.7);
+      }
       ctx.restore();
     }
   }
