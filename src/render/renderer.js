@@ -1248,7 +1248,8 @@ export function createRenderer(canvas, opts = {}) {
     }
     for (const box of b.boxes ?? []) {
       const closed = !box.opened || closedBoxes.has(key(box.x, box.y));
-      blitTile(closed ? 'tile.boxClosed' : 'tile.boxOpen', box.x, box.y);
+      const worn = (((box.x * 1847 + box.y * 3529) ^ 743) & 0xFF) < 100; // ~39% worn
+      blitTile(closed ? (worn ? 'tile.boxWorn' : 'tile.boxClosed') : (worn ? 'tile.boxWornOpen' : 'tile.boxOpen'), box.x, box.y);
       if (closed) {
         const bp = worldToScreen(box.x, box.y, cam);
         const pulse = 0.10 + 0.08 * Math.sin(clock / 1100 + box.x * 3.7 + box.y * 2.3);

@@ -379,6 +379,19 @@ const BOX_OPEN = [
   '..OBBBBBBBBBBO..', '..OBBBYYBBBBBO..', '..OBBBYYBBBBBO..', '..ObBBBBBBBbBO..',
   '..OBBBBBBBBBBO..', '...OOOOOOOOOO...', '................', '................',
 ];
+// Worn/aged chest variant — same shape, added crack pixels ('d') for weathered look
+const BOX_WORN = [
+  '................', '................', '................', '....OOOOOOOO....',
+  '...OBBdBBBBBO...', '..OBbBBBBBBbBO..', '..OBBBBBdBBBBO..', '..OOOOOOOOOOOO..',
+  '..OBBdYYBBBBBO..', '..OBBBYYBBBdBO..', '..ObBBBBBBBbBO..', '..OBBBdBBBBBBO..',
+  '..ObBBBBdBBBbO..', '...OOOOOOOOOO...', '................', '................',
+];
+const BOX_WORN_OPEN = [
+  '................', '................', '..OOOOOOOOOOOO..', '..OXXXXXXXXXXO..',
+  '..OXXXXXXXXXXO..', '..OOOOOOOOOOOO..', '..OBBBBBdBBBBO..', '..OBbBBBBBBbBO..',
+  '..OBBdBBBBBBBO..', '..OBBBYYBBBBdO..', '..OBBBYYBBBdBO..', '..ObBBBBBBBbBO..',
+  '..OBBBBBBdBBBO..', '...OOOOOOOOOO...', '................', '................',
+];
 const FLAG = [ // key F recolored per flag color
   '................', '.....OO.........', '....OFFO........', '....OFFFFO......',
   '....OFFFFFFO....', '....OFFFFFFFO...', '....OFFFFFO.....', '....OFFFO.......',
@@ -650,6 +663,8 @@ export const TILES = {
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
+  boxWorn: { grid: BOX_WORN, palette: TILE_PALETTE },
+  boxWornOpen: { grid: BOX_WORN_OPEN, palette: TILE_PALETTE },
   flagRed: { grid: FLAG, palette: recolor(TILE_PALETTE, { F: '#cc3333' }) },
   flagBlue: { grid: FLAG, palette: recolor(TILE_PALETTE, { F: '#3a6ee0' }) },
   flagGreen: { grid: FLAG, palette: recolor(TILE_PALETTE, { F: '#3aa84a' }) },
