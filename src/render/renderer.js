@@ -260,6 +260,12 @@ export function createRenderer(canvas, opts = {}) {
           const tc = SLOT_COLORS[(tu?.slot ?? 0) % 4] ?? '#c8d0ff';
           addSparkles(k, tc);
           turnFlash = { color: tc, t: 0, dur: 520 };
+        } else if (k?.[0] === 'm') {
+          // Monster turn: type-colored edge flash to signal the threat is moving
+          const MONSTER_TURN_COL = { VAC: '#2890c8', OOZ: '#28a838', FNG: '#c87020', WYRM: '#6c1cac' };
+          const mu = findUnit(k);
+          const mc = MONSTER_TURN_COL[mu?.kind] ?? '#c83a3a';
+          turnFlash = { color: mc, t: 0, dur: mu?.kind === 'WYRM' ? 560 : 420 };
         }
         break;
       case 'stepped': {
@@ -504,9 +510,19 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'drewBlank':
+      case 'drewBlank': {
         addFloat(k, 'NO CARD', '#8d8d9e');
+        const dbp = displayPos(k);
+        if (dbp) {
+          // Downward scatter — empty hand, spirits fall
+          for (let i = 0; i < 6; i++) {
+            sparkles.push({ wx: dbp.x + 0.25 + i * 0.1, wy: dbp.y + 0.3,
+              vx: (i - 2.5) * 0.22, vy: 0.8 + (i % 3) * 0.3,
+              t: 0, ttl: 460, color: i % 2 === 0 ? '#8d8d9e' : '#555568' });
+          }
+        }
         break;
+      }
       case 'battleStarted':
         battle = { a: k ?? unitKey(ev.attacker), d: unitKey(ev.defender ?? ev.target),
           response: null, escape: null, strike: null };
