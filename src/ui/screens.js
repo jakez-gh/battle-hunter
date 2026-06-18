@@ -747,6 +747,20 @@ export function makeHubScreen(app) {
     },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      // Ambient drifting motes behind icons (gold, cobalt, orchid)
+      { const MOTE_C = [GOLD, '#4a6dd1', '#8b3dc1', '#3aa9b8'];
+        for (let i = 0; i < 10; i++) {
+          const bx = ((i * 173 + 47) % 760) + 100;
+          const by = ((i * 251 + 83) % 520) + 60;
+          const sp = 0.038 + (i % 4) * 0.018;
+          const mx = bx + Math.sin(t * sp + i * 1.3) * 20;
+          const my = by + Math.cos(t * sp * 0.7 + i * 0.9) * 12;
+          const ma = 0.07 + 0.06 * Math.sin(t * 0.9 + i * 1.1);
+          ctx.save(); ctx.globalAlpha = Math.max(0, ma); ctx.fillStyle = MOTE_C[i % 4];
+          const ms = i % 3 === 0 ? 4 : 3;
+          ctx.fillRect((mx - ms / 2) | 0, (my - ms / 2) | 0, ms, ms);
+          ctx.restore();
+        } }
       // Gold bloom behind hub header
       const hcx = app.W / 2;
       const hbloom = ctx.createRadialGradient(hcx, 60, 8, hcx, 60, 130);
@@ -1668,10 +1682,22 @@ export function makeGameScreen(app, g) {
 
   function drawSteerHint(ctx, st) {
     box(ctx, 724, 420, 232, 84, { title: 'STEER' });
-    const rem = st.move?.remaining;
-    text(ctx, `Steps left: ${rem ?? '?'}`, 736, 448, { size: 15 });
-    text(ctx, 'arrows: step', 736, 468, { size: 12, color: DIM });
-    text(ctx, 'Enter: stop here', 736, 484, { size: 12, color: DIM });
+    const rem = st.move?.remaining ?? 0;
+    const used = st.move?.path?.length ?? 0;
+    const total = Math.max(rem + used, 1);
+    // Step progress dots: green→yellow→red as steps drain
+    const dotW = 11, dotH = 7, n = Math.min(total, 8);
+    for (let d = 0; d < n; d++) {
+      const filled = d < rem;
+      ctx.fillStyle = filled ? (rem <= 2 ? BAD : rem <= Math.ceil(total / 2) ? '#f2df4a' : OK) : '#1e2134';
+      ctx.fillRect(736 + d * 14, 439, dotW, dotH);
+      if (filled) {
+        ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#fff';
+        ctx.fillRect(736 + d * 14, 439, dotW, 3); ctx.restore();
+      }
+    }
+    text(ctx, `${rem} step${rem !== 1 ? 's' : ''} left`, 736, 456, { size: 12, color: rem <= 2 ? BAD : DIM });
+    text(ctx, 'arrows: step \xb7 Enter: stop', 736, 472, { size: 11, color: DIM });
   }
 
   function drawHud(ctx, st) {
@@ -1734,6 +1760,10 @@ export function makeGameScreen(app, g) {
         ctx.fillStyle = mmg; ctx.fillRect(X + 52, my + 2, mfill, 7);
         ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#fff';
         ctx.fillRect(X + 52, my + 2, mfill, 3); ctx.restore();
+        if (mr <= 0.25) {
+          ctx.save(); ctx.globalAlpha = 0.10 + 0.09 * Math.sin(hudT * 6);
+          ctx.fillStyle = '#ff2020'; ctx.fillRect(X + 52, my, 88, 11); ctx.restore();
+        }
       }
       text(ctx, `${mo.hp}/${mo.maxHp}`, X + W - 8, my, { size: 10, align: 'right', color: '#8d4040' });
     });
@@ -1778,6 +1808,13 @@ export function makeGameScreen(app, g) {
         try { color = cardColor(cid); } catch { /* unknown id */ }
         ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = '#000';
         ctx.fillRect(cx + 3, cy + 3, 42, 60); ctx.restore();
+        if (i === 0) {
+          const cpulse = 0.10 + 0.08 * Math.sin(hudT * 2.2);
+          const cg = ctx.createRadialGradient(cx + 21, cy + 28, 2, cx + 21, cy + 28, 30);
+          cg.addColorStop(0, GOLD); cg.addColorStop(1, 'transparent');
+          ctx.save(); ctx.globalAlpha = cpulse; ctx.fillStyle = cg;
+          ctx.fillRect(cx - 6, cy - 4, 54, 68); ctx.restore();
+        }
         sprite(app, `card.${color}`, cx, cy, 3);
         text(ctx, String(cid).slice(1), cx + 21, cy + 22, { size: 14, align: 'center', color: CARD_HEX[color] ?? FG });
       });
