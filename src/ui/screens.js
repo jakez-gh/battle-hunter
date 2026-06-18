@@ -355,6 +355,15 @@ function drawHunterCard(app, rec, x, y, w) {
   const pg = ctx.createRadialGradient(x + 38, y + 38, 4, x + 38, y + 38, 38);
   pg.addColorStop(0, accent + '44'); pg.addColorStop(1, accent + '00');
   ctx.fillStyle = pg; ctx.fillRect(x + 5, y + 4, 66, 68);
+  // Animated shimmer scan across the card
+  const ct = typeof performance !== 'undefined' ? performance.now() / 1000 : 0;
+  const shX = x + ((ct % 3.0) / 3.0) * (w + 60) - 30;
+  const sh = ctx.createLinearGradient(shX - 24, 0, shX + 24, 0);
+  sh.addColorStop(0, 'transparent');
+  sh.addColorStop(0.5, 'rgba(180,200,255,0.12)');
+  sh.addColorStop(1, 'transparent');
+  ctx.save(); ctx.beginPath(); ctx.rect(x + 2, y + 2, w - 4, 72); ctx.clip();
+  ctx.fillStyle = sh; ctx.fillRect(shX - 24, y + 2, 48, 72); ctx.restore();
   sprite(app, `hunter${rec.spriteId}.${rec.palette}.icon`, x + 8, y + 8, 5);
   const d = displayStats(rec.internal, rec.level);
   text(ctx, rec.name, x + 76, y + 8, { size: 18, color: GOLD });
@@ -543,7 +552,9 @@ export function makeRosterScreen(app, opts = {}) {
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
       drawGoldBloom(ctx, app.W / 2);
-      text(ctx, 'HUNTER ROSTER', app.W / 2, 30, { size: 36, align: 'center', color: GOLD });
+      ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = '#b07a08';
+      text(ctx, 'HUNTER ROSTER', app.W / 2, 30, { size: 36, align: 'center', color: GOLD, shadow: false });
+      ctx.restore();
       if (!host.menus[0]) return;
       drawMenu(ctx, host.menus[0], 60, 100, 380, { lineH: 28, size: 16 });
       if (host.menus.length > 1) drawMenu(ctx, host.top(), 200, 200, 320);
@@ -793,8 +804,9 @@ export function makeHubScreen(app) {
           const my = by + Math.cos(t * sp * 0.7 + i * 0.9) * 12;
           const ma = 0.07 + 0.06 * Math.sin(t * 0.9 + i * 1.1);
           ctx.save(); ctx.globalAlpha = Math.max(0, ma); ctx.fillStyle = MOTE_C[i % 4];
-          const ms = i % 3 === 0 ? 4 : 3;
-          ctx.fillRect((mx - ms / 2) | 0, (my - ms / 2) | 0, ms, ms);
+          const ms = i % 3 === 0 ? 2 : 1.5;
+          ctx.fillRect((mx - ms * 0.3) | 0, (my - ms) | 0, Math.max(1, ms * 0.6) | 0, ms * 2);
+          ctx.fillRect((mx - ms) | 0, (my - ms * 0.3) | 0, ms * 2, Math.max(1, ms * 0.6) | 0);
           ctx.restore();
         } }
       // Gold bloom behind hub header
@@ -804,7 +816,9 @@ export function makeHubScreen(app) {
       hbloom.addColorStop(1, 'transparent');
       ctx.fillStyle = hbloom;
       ctx.fillRect(hcx - 130, 10, 260, 100);
-      text(ctx, 'GUILD HUB', app.W / 2, 40, { size: 40, align: 'center', color: GOLD });
+      ctx.save(); ctx.shadowBlur = 22; ctx.shadowColor = '#b07a08';
+      text(ctx, 'GUILD HUB', app.W / 2, 40, { size: 40, align: 'center', color: GOLD, shadow: false });
+      ctx.restore();
       ICONS.forEach((ic, i) => {
         const r = iconRect(i);
         const sel = i === idx;
@@ -1058,7 +1072,9 @@ export function makeClientScreen(app) {
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
       drawGoldBloom(ctx, app.W / 2);
-      text(ctx, 'CLIENT DESK', app.W / 2, 30, { size: 34, align: 'center', color: GOLD });
+      ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = '#b07a08';
+      text(ctx, 'CLIENT DESK', app.W / 2, 30, { size: 34, align: 'center', color: GOLD, shadow: false });
+      ctx.restore();
       const rec = currentHunter(app);
       if (rec) drawHunterCard(app, rec, 540, 90, 380);
       host.menus.forEach((m, i) => drawMenu(ctx, m, 60 + i * 30, 100 + i * 40, 440, { lineH: 26 }));
@@ -1154,7 +1170,9 @@ export function makeHospitalScreen(app) {
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
       drawGoldBloom(ctx, app.W / 2);
-      text(ctx, 'HOSPITAL', app.W / 2, 30, { size: 34, align: 'center', color: GOLD });
+      ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = '#b07a08';
+      text(ctx, 'HOSPITAL', app.W / 2, 30, { size: 34, align: 'center', color: GOLD, shadow: false });
+      ctx.restore();
       const rec = currentHunter(app);
       if (rec) drawHunterCard(app, rec, 540, 90, 380);
       host.menus.forEach((m, i) => drawMenu(ctx, m, 60 + i * 30, 100 + i * 40, 440, { lineH: 26 }));
@@ -1247,7 +1265,9 @@ export function makeOptionsScreen(app) {
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, opts.wallpaper);
       drawGoldBloom(ctx, app.W / 2);
-      text(ctx, 'OPTIONS', app.W / 2, 30, { size: 36, align: 'center', color: GOLD });
+      ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = '#b07a08';
+      text(ctx, 'OPTIONS', app.W / 2, 30, { size: 36, align: 'center', color: GOLD, shadow: false });
+      ctx.restore();
       rows.forEach((row, i) => {
         const y = 124 + i * 56;
         const sel = i === idx;
