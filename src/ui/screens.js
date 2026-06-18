@@ -1693,8 +1693,33 @@ export function makeResultsScreen(app, g) {
     app.save();
   }
 
+  let t = 0;
+  // pre-seed celebration particles so they're deterministic (same positions every draw before t updates)
+  const CONFETTI_COLORS = ['#ffe98a', '#7ee8a0', '#9adfe8', '#e88aff', '#ff9a7e'];
+  const confetti = win ? Array.from({ length: 60 }, (_, i) => ({
+    x: (i * 137.508) % app.W,
+    y: -((i * 47) % app.H),
+    vx: ((i % 7) - 3) * 0.4,
+    vy: 1.2 + (i % 5) * 0.35,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    w: 6 + (i % 4) * 2,
+    h: 4 + (i % 3),
+    rot: (i * 0.44) % (Math.PI * 2),
+    spin: ((i % 7) - 3) * 0.04,
+  })) : [];
   return {
     enter() { app.music(win ? 'results' : 'gameover'); },
+    update(dt) {
+      t += dt / 1000;
+      if (win) {
+        for (const c of confetti) {
+          c.x += c.vx;
+          c.y += c.vy;
+          c.rot += c.spin;
+          if (c.y > app.H + 20) c.y = -20;
+        }
+      }
+    },
     onKey(k) {
       if (k === 'confirm' || k === 'cancel') {
         sfx.menuConfirm();
@@ -1705,6 +1730,20 @@ export function makeResultsScreen(app, g) {
     onClick() { this.onKey('confirm'); },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      // Confetti particles on win
+      if (win) {
+        ctx.save();
+        for (const c of confetti) {
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.rotate(c.rot);
+          ctx.globalAlpha = 0.82;
+          ctx.fillStyle = c.color;
+          ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+          ctx.restore();
+        }
+        ctx.restore();
+      }
       // Atmospheric bloom behind the result header
       const rcx = app.W / 2;
       const rbloom = ctx.createRadialGradient(rcx, 42, 8, rcx, 42, 200);
