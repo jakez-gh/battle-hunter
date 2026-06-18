@@ -1384,6 +1384,17 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillStyle = '#fff';
     ctx.fillRect(cx - s, cy - s, 2 * s, 2 * s);
     ctx.restore();
+    // 4 orbiting sentinel markers — slow mechanical rotation signals it's armed
+    const orbR = 5.2 * s;
+    const orbAng = clock / 3200;
+    for (let oi = 0; oi < 4; oi++) {
+      const oa = orbAng + oi * Math.PI / 2;
+      ctx.save();
+      ctx.globalAlpha = pulse * 0.55;
+      ctx.fillStyle = col;
+      ctx.fillRect(((cx + Math.cos(oa) * orbR) - s * 0.5) | 0, ((cy + Math.sin(oa) * orbR) - s * 0.5) | 0, s, s);
+      ctx.restore();
+    }
   }
 
   function drawOverlays() {
