@@ -421,9 +421,15 @@ export function makeTitleScreen(app) {
       for (const [dx, dy, c] of [[8, 8, '#000'], [4, 4, '#5c1d8f'], [0, 0, FG]]) {
         text(ctx, 'BATTLE', cx + dx, 110 + dy + bob, { size: 84, align: 'center', shadow: false, color: c });
       }
+      ctx.save(); ctx.shadowBlur = 28; ctx.shadowColor = '#7030c0';
+      text(ctx, 'BATTLE', cx, 110 + bob, { size: 84, align: 'center', shadow: false, color: FG });
+      ctx.restore();
       for (const [dx, dy, c] of [[8, 8, '#000'], [4, 4, '#8f6f1d'], [0, 0, GOLD]]) {
         text(ctx, 'HUNTER', cx + dx, 200 + dy + bob, { size: 84, align: 'center', shadow: false, color: c });
       }
+      ctx.save(); ctx.shadowBlur = 28; ctx.shadowColor = '#c07800';
+      text(ctx, 'HUNTER', cx, 200 + bob, { size: 84, align: 'center', shadow: false, color: GOLD });
+      ctx.restore();
       // Horizontal shimmer sweep over the title area (repeats every 3.2s)
       { const scanX = cx - 260 + ((t % 3.2) / 3.2) * (520 + 80) - 40;
         const scan = ctx.createLinearGradient(scanX - 50, 0, scanX + 50, 0);
@@ -684,7 +690,9 @@ export function makeCreationScreen(app) {
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
       drawGoldBloom(ctx, app.W / 2);
-      text(ctx, 'REGISTER HUNTER', app.W / 2, 26, { size: 32, align: 'center', color: GOLD });
+      ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = '#b07a08';
+      text(ctx, 'REGISTER HUNTER', app.W / 2, 26, { size: 32, align: 'center', color: GOLD, shadow: false });
+      ctx.restore();
       const d = displayStats(state.internal, 1);
       const labels = {
         name: ['Name', state.name + (ROWS[state.row] === 'name' && Math.floor(state.t * 2) % 2 ? '_' : '')],
