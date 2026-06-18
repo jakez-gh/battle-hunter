@@ -1877,6 +1877,17 @@ export function createRenderer(canvas, opts = {}) {
       cx += 7;
     }
     if (h.hasTarget) blit('ui.targetMark', cx + 2, y + 3, 1);
+    // Active status condition indicators: pulsing colored glyph chips after hand
+    let sdx = cx + (h.hasTarget ? 12 : 2);
+    for (const sk of ['stun', 'leg', 'panic']) {
+      if (!(h.status?.[sk] > 0)) continue;
+      const sp = 0.55 + 0.45 * Math.sin(clock / 350 + (sk === 'stun' ? 0 : sk === 'leg' ? 2.1 : 4.2));
+      ctx.save(); ctx.globalAlpha = sp * 0.85; ctx.fillStyle = STATUS_GLOW[sk];
+      ctx.fillRect(sdx, y + 4, 8, 8); ctx.restore();
+      const sicon = atlas[`status.${sk}`];
+      if (sicon) { ctx.save(); ctx.globalAlpha = sp; ctx.drawImage(sicon, sdx, y + 4, 8, 8); ctx.restore(); }
+      sdx += 10;
+    }
   }
 
   function drawHud() {
