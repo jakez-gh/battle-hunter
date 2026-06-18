@@ -475,7 +475,19 @@ export function createRenderer(canvas, opts = {}) {
         const gk = k != null && ghosts.has(k) ? k : ghosts.keys().next().value;
         if (gk != null) ghosts.get(gk).dyingKey = gk;
         addFloat(k ?? gk, ev.drop != null ? `DROP ${ev.drop}` : '', '#ffe98a');
-        addSparkles(k ?? gk, '#ff8866');
+        // Type-colored explosion: 20 particles spread at varied speeds
+        const deadGhost = ghosts.get(gk ?? k);
+        const KILL_COLORS = { VAC: '#2890c8', OOZ: '#28a838', FNG: '#c87020', WYRM: '#7c1cc8' };
+        const killCol = KILL_COLORS[deadGhost?.kind] ?? '#ff8866';
+        const kpos = deadGhost?.pos ?? displayPos(gk ?? k);
+        if (kpos) {
+          for (let i = 0; i < 20; i++) {
+            const a = (i / 20) * Math.PI * 2;
+            const spd = 1.0 + (i % 4) * 0.6;
+            sparkles.push({ wx: kpos.x + 0.5, wy: kpos.y + 0.5, vx: Math.cos(a) * spd,
+              vy: Math.sin(a) * spd - 0.5, t: 0, ttl: 550, color: i % 4 === 0 ? '#fff' : killCol });
+          }
+        }
         break;
       }
       case 'healed':
