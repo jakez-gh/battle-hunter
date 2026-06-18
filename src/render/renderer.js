@@ -344,6 +344,7 @@ export function createRenderer(canvas, opts = {}) {
       case 'targetFound':
         addSparkles(k);
         addFloat(k, 'TARGET!', '#ffe98a', { big: true, ttl: 1100 });
+        turnFlash = { color: '#ffe98a', t: 0, dur: 700 };
         break;
       case 'flagClaimed':
         popOverride(standingFlags, ev.pos ? key(ev.pos.x, ev.pos.y) : null);
@@ -417,7 +418,12 @@ export function createRenderer(canvas, opts = {}) {
           const SPAWN_COLORS = { VAC: '#50aadc', OOZ: '#3cc850', FNG: '#dca040', WYRM: '#8c3cdc' };
           addSparkles(mk, SPAWN_COLORS[kind] ?? '#cc3a22');
         }
-        shake = ev.type === 'monsterSpawned' ? shake : { t: 0, dur: 400, mag: 2 };
+        if (ev.type === 'wyrmSpawned' || ev.type === 'wyrmRespawned') {
+          shake = { t: 0, dur: 520, mag: 3.5 };
+          turnFlash = { color: '#6c1cac', t: 0, dur: 620 };
+        } else if (ev.type !== 'monsterSpawned') {
+          shake = { t: 0, dur: 400, mag: 2 };
+        }
         break;
       }
       case 'monsterKilled': {
