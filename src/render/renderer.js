@@ -480,6 +480,7 @@ export function createRenderer(canvas, opts = {}) {
       case 'missionLost':
         banner = { text: 'MISSION FAILED', color: '#ff6a5a', startMs: clock };
         turnFlash = { color: '#cc3333', t: 0, dur: 700 };
+        shake = { t: 0, dur: 400, mag: 3 };
         break;
       case 'scoreTallied':
         banner = banner ?? { text: 'RESULTS', color: '#f0f4ff', startMs: clock };

@@ -1635,12 +1635,19 @@ export function makeGameScreen(app, g) {
       if (banner) {
         const w = Math.max(280, banner.text.length * 12 + 60);
         const bAlpha = Math.min(1, banner.t * 2.5);
+        const bx0 = (680 - w) / 2 + 40;
         ctx.save(); ctx.globalAlpha = bAlpha;
-        box(ctx, (680 - w) / 2 + 40, 30, w, 44, { stroke: GOLD });
+        box(ctx, bx0, 30, w, 44, { stroke: GOLD });
         // Banner gold bloom behind text
         const bc = ctx.createRadialGradient(380, 52, 4, 380, 52, 80);
         bc.addColorStop(0, 'rgba(200,160,30,0.22)'); bc.addColorStop(1, 'transparent');
-        ctx.fillStyle = bc; ctx.fillRect((680 - w) / 2 + 40, 30, w, 44);
+        ctx.fillStyle = bc; ctx.fillRect(bx0, 30, w, 44);
+        // Shimmer scan across banner
+        const shX = bx0 + ((hudT % 1.8) / 1.8) * (w + 40) - 20;
+        const sh = ctx.createLinearGradient(shX - 16, 0, shX + 16, 0);
+        sh.addColorStop(0, 'transparent'); sh.addColorStop(0.5, 'rgba(255,240,160,0.20)'); sh.addColorStop(1, 'transparent');
+        ctx.save(); ctx.beginPath(); ctx.rect(bx0, 30, w, 44); ctx.clip();
+        ctx.fillStyle = sh; ctx.fillRect(shX - 16, 30, 32, 44); ctx.restore();
         text(ctx, banner.text, 380, 42, { size: 17, align: 'center', color: GOLD });
         ctx.restore();
       }
