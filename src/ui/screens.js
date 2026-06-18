@@ -1986,8 +1986,17 @@ export function makeGameScreen(app, g) {
     };
     const goalLine = GOAL_TEXT[st.missionType] ?? ('Grab ' + targetName + ' → EXIT');
     const rivalHold = st.missionType === 'rescue' && (st.rescueHoldRounds ?? 0) > 0;
-    box(ctx, X, 424, W, rivalHold ? 60 : 44, { title: st.missionTitle ?? 'GOAL' });
-    text(ctx, goalLine, X + 10, 450, { size: 11, color: DIM });
+    const targetHeld = (st.hunters || []).some((h) => h.hasTarget);
+    if (targetHeld) {
+      // Gold pulse behind GOAL box — signals Target is live on the board
+      const tgp = 0.10 + 0.08 * Math.sin(hudT * 2.5);
+      const tgr = ctx.createRadialGradient(X + W / 2, 446, 6, X + W / 2, 446, W * 0.55);
+      tgr.addColorStop(0, GOLD); tgr.addColorStop(1, 'transparent');
+      ctx.save(); ctx.globalAlpha = tgp; ctx.fillStyle = tgr;
+      ctx.fillRect(X, 424, W, rivalHold ? 60 : 44); ctx.restore();
+    }
+    box(ctx, X, 424, W, rivalHold ? 60 : 44, { title: st.missionTitle ?? 'GOAL', stroke: targetHeld ? GOLD : undefined });
+    text(ctx, goalLine, X + 10, 450, { size: 11, color: targetHeld ? GOLD : DIM });
     if (rivalHold) {
       const rivalsFree = st.round > (st.rescueHoldRounds ?? 0);
       const holdText = rivalsFree ? 'rivals active!' : ('rivals hold R1-R' + st.rescueHoldRounds);
