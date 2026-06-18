@@ -2544,6 +2544,14 @@ export function createRenderer(canvas, opts = {}) {
                 vy: -0.55 - Math.random() * 0.25,
                 t: 0, ttl: 1600 + Math.random() * 700,
                 color: wh & 1 ? '#241420' : '#1c1428', round: true, alpha0: 0.26 });
+              // Rare glowing ember: ~5% chance, faster rise and warm amber
+              if (Math.random() < 0.05) {
+                sparkles.push({ wx, wy: y + 0.82,
+                  vx: (Math.random() - 0.5) * 0.10,
+                  vy: -0.90 - Math.random() * 0.35,
+                  t: 0, ttl: 500 + Math.random() * 320,
+                  color: Math.random() < 0.5 ? '#ff9030' : '#ffc840', round: true, alpha0: 0.60 });
+              }
             }
           }
         }
