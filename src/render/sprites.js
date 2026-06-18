@@ -327,6 +327,12 @@ const FLOOR_D = [
   'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
   'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGgGG', 'GGGGGGGGGGGGGGGG',
 ];
+const FLOOR_E = [ // diamond groove carved into center of tile
+  'GGGGGGGGGGGGGGGG', 'GgGGGGGGGGGGGGgG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGdGGGGGGGG',
+  'GGGGGGdGdGGGGGGG', 'GGGGGdGGGdGGGGGG', 'GGGGdGGGGGdGGGGG', 'GGGdGGGGGGGdGGGG',
+  'GGGGdGGGGGdGGGGG', 'GGGGGdGGGdGGGGGG', 'GGGGGGdGdGGGGGGG', 'GGGGGGGdGGGGGGGG',
+  'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGgGG', 'GGGGGGGGGGGGGgGG', 'GGGGGGGGGGGGGGGG',
+];
 const PIT = Array.from({ length: 16 }, (_, y) =>
   y === 0 ? 'XXXdXXXXXXXdXXXX' : 'X'.repeat(16));
 const EXIT = [
@@ -389,6 +395,7 @@ export const TILES = {
   floorB: { grid: FLOOR_B, palette: TILE_PALETTE },
   floorC: { grid: FLOOR_C, palette: TILE_PALETTE },
   floorD: { grid: FLOOR_D, palette: TILE_PALETTE },
+  floorE: { grid: FLOOR_E, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },

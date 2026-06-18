@@ -396,7 +396,14 @@ export function createRenderer(canvas, opts = {}) {
         if (battle) battle.strike = { dice: flattenDice(ev.dice), totals: ev.totals,
           damage: ev.damage ?? 0, crit: !!ev.crit };
         if ((ev.damage ?? 0) > 0) addFloat(battle?.d ?? k, `-${ev.damage}`, '#ff6a5a', { big: true });
-        if (ev.crit) addSparkles(battle?.d ?? k, '#ffe98a');
+        if (ev.crit) {
+          addSparkles(battle?.d ?? k, '#ffe98a');
+          shake = { t: 0, dur: 450, mag: 3.0 };
+        } else if ((ev.damage ?? 0) >= 5) {
+          shake = { t: 0, dur: 350, mag: 2.5 };
+        } else if ((ev.damage ?? 0) >= 3) {
+          shake = { t: 0, dur: 250, mag: 1.5 };
+        }
         break;
       case 'statusInflicted': {
         addFloat(k, '', '#f0f4ff', { icon: `status.${ev.kind}`, ttl: 700 });
@@ -410,6 +417,7 @@ export function createRenderer(canvas, opts = {}) {
         break;
       case 'hunterDefeated': {
         unitFlash = { key: k, t: 0, dur: EVENT_DURATIONS.hunterDefeated, color: '#f7f7ff' };
+        shake = { t: 0, dur: 500, mag: 4 };
         addFloat(k, 'DEFEATED', '#ff6a5a', { big: true, ttl: 900 });
         const dp = displayPos(k);
         if (dp) {
@@ -586,7 +594,7 @@ export function createRenderer(canvas, opts = {}) {
     const y0 = Math.max(0, Math.floor(cam.y / TILE));
     const x1 = Math.min(b.w - 1, Math.ceil((cam.x + vw) / TILE));
     const y1 = Math.min(b.h - 1, Math.ceil((cam.y + vh) / TILE));
-    const floors = ['floorA', 'floorB', 'floorC', 'floorD'];
+    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE'];
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
