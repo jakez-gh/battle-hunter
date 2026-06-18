@@ -654,7 +654,8 @@ export function createRenderer(canvas, opts = {}) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
           // Show stone wall face where the wall borders a walkable floor below it.
-          blitTile(b.floor[y + 1]?.[x] ? 'tile.wall' : 'tile.pit', x, y);
+          const wallV = ((x * 2341 + y * 1013) ^ 571) & 1;
+          blitTile(b.floor[y + 1]?.[x] ? (wallV ? 'tile.wall' : 'tile.wallB') : 'tile.pit', x, y);
           // Moisture drip: ~8% of visible wall faces get an animated droplet
           if (b.floor[y + 1]?.[x]) {
             const wh = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;

@@ -416,6 +416,25 @@ const WALL = [ // stone-block face — front face of a wall, viewed from corrido
   'GGGGGGGGGGGGGGGG',  // bottom ledge — transitions to floor
 ];
 
+const WALL_B = [ // stone-block face — three narrow sub-blocks in lower band
+  'XXXXXXXXXXXXXXXX',  // ceiling cap
+  'XcGGGGGGGGGGGGgX',  // upper block, lit corner
+  'XGgGGGGGGGGGGGGX',  // texture fleck
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XgGGGGGGGGGGGGgX',  // base shadows
+  'XXXXXXXXXXXXXXXX',  // mortar joint
+  'XcGGGGXcGGGXcGGX',  // three-block row — lit corners
+  'XGGGGGXGGGGXGGdX',  // faces, dark accent on right sub-block
+  'XGGGGGXGGGGXGGGX',
+  'XgGGGGXGGGGXgGGX',  // base shadows
+  'XXXXXXXXXXXXXXXX',  // mortar joint
+  'XcGGGGGGGGGGGGgX',  // thin ledge
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',  // mortar cap
+  'GGGGGGGGGGGGGGGG',  // floor transition
+];
+
 export const TILES = {
   floorA: { grid: FLOOR_A, palette: TILE_PALETTE },
   floorB: { grid: FLOOR_B, palette: TILE_PALETTE },
@@ -427,6 +446,7 @@ export const TILES = {
   floorH: { grid: FLOOR_H, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
+  wallB: { grid: WALL_B, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
