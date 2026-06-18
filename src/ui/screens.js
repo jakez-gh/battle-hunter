@@ -2167,6 +2167,15 @@ export function makeResultsScreen(app, g) {
         }
         text(ctx, s, x0, 130 + i * 40, { size: 16, color: i >= 7 ? GOLD : DIM });
       });
+      // Per-category maximum for proportional score bars
+      const maxVals = [
+        Math.max(1, ...rows.map(r => r.moved)),
+        Math.max(1, ...rows.map(r => r.damage)),
+        Math.max(1, ...rows.map(r => r.flagPts)),
+        Math.max(1, ...rows.map(r => r.killPts)),
+        Math.max(1, ...rows.map(r => r.handicap)),
+        Math.max(1, ...rows.map(r => r.itemPts)),
+      ];
       rows.forEach((r, i) => {
         const x = lx + i * cw;
         const h = st.hunters[i];
@@ -2210,6 +2219,13 @@ export function makeResultsScreen(app, g) {
         // Score count-up animation: values tick from 0 to final over 1.8s
         const cnt = (v) => Math.round(v * Math.min(1, t / 1.8));
         const vals = [r.moved, r.damage, r.flagPts, r.killPts, r.handicap, r.itemPts];
+        // Slot-colored fill bars behind each score value, proportional to per-category leader
+        { const bw = cw - 32, bx = x + 16;
+          vals.forEach((v, j) => {
+            const fill = maxVals[j] > 0 ? cnt(v) / maxVals[j] : 0;
+            if (fill > 0) { ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = SLOT_COLORS[h.slot ?? i];
+              ctx.fillRect(bx, 188 + j * 40, (bw * fill) | 0, 3); ctx.restore(); }
+          }); }
         vals.forEach((v, j) => text(ctx, String(cnt(v)), x + 84, 170 + j * 40, { size: 15, align: 'center' }));
         text(ctx, String(cnt(r.total)), x + 84, 410, { size: 18, align: 'center', color: GOLD });
         { const pl = placeOf(r.id);
