@@ -1243,6 +1243,7 @@ export function makeGameScreen(app, g) {
   let banner = null;       // { text, t }
   let inBattleMusic = false;
   let fadeIn = 0;          // seconds since screen entered; drives entry fade
+  let hudT = 0;            // running clock for HUD animations
   let frameDt = 1 / 60;
   let broken = false;
   let finished = false;
@@ -1439,6 +1440,7 @@ export function makeGameScreen(app, g) {
     update(dt) {
       frameDt = dt;
       fadeIn += dt;
+      hudT += dt;
       if (banner && (banner.t -= dt) <= 0) banner = null;
       if (broken || finished) return;
       const st = g.state;
@@ -1659,6 +1661,15 @@ export function makeGameScreen(app, g) {
       const y = 42 + i * 62;
       const activeNow = st.current?.kind === 'hunter' && st.current.index === i;
       box(ctx, X, y, W, 58, { stroke: activeNow ? GOLD : '#3c4364' });
+      // Slot-color glow wash behind active hunter panel
+      if (activeNow) {
+        const sc = SLOT_COLORS[h.slot ?? i];
+        const pulse = 0.08 + 0.06 * Math.sin(hudT * 2.4);
+        ctx.save(); ctx.globalAlpha = pulse;
+        const ag = ctx.createLinearGradient(X + 4, y, X + W - 4, y);
+        ag.addColorStop(0, sc); ag.addColorStop(1, 'transparent');
+        ctx.fillStyle = ag; ctx.fillRect(X + 4, y + 2, W - 8, 54); ctx.restore();
+      }
       sprite(app, `hunter${h.spriteId}.${h.palette}.icon`, X + 6, y + 6, 4);
       text(ctx, h.name ?? `P${i + 1}`, X + 60, y + 6, { size: 14, color: SLOT_COLORS[h.slot ?? i] });
       if (h.hasTarget) sprite(app, 'ui.targetMark', X + W - 24, y + 6, 2);
@@ -1673,7 +1684,8 @@ export function makeGameScreen(app, g) {
         ctx.fillStyle = hg;
         ctx.fillRect(X + 60, y + 26, 120 * ratio, 10);
       }
-      text(ctx, `${h.hp}/${h.maxHp}`, X + 186, y + 22, { size: 11, color: DIM });
+      const hpCol = ratio <= 0.25 ? (0.5 + 0.5 * Math.sin(hudT * 6)) > 0.5 ? BAD : '#9d2a2a' : DIM;
+      text(ctx, `${h.hp}/${h.maxHp}`, X + 186, y + 22, { size: 11, color: hpCol });
       text(ctx, `hand ${h.hand?.length ?? 0}  bag ${h.items?.length ?? 0}`, X + 60, y + 40, { size: 11, color: DIM });
       // status glyphs
       let sx = X + 160;
