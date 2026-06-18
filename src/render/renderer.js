@@ -119,6 +119,7 @@ export function createRenderer(canvas, opts = {}) {
   let sparkles = [];                   // {wx,wy,vx,vy,t,ttl,color}
   let shake = null;                    // {t,dur,mag}
   let unitFlash = null;                // {key,t,dur,color}
+  let turnFlash = null;                // {color,t,dur} — screen-edge glow on turn start
   let battle = null;                   // battle overlay model
   let banner = null;                   // {text,color}
 
@@ -252,7 +253,12 @@ export function createRenderer(canvas, opts = {}) {
     switch (ev.type) {
       case 'turnStarted':
         manualPan = null;
-        if (k?.[0] === 'h') addSparkles(k, '#c8d0ff');
+        if (k?.[0] === 'h') {
+          addSparkles(k, '#c8d0ff');
+          const tu = findUnit(k);
+          const tc = SLOT_COLORS[(tu?.slot ?? 0) % 4] ?? '#c8d0ff';
+          turnFlash = { color: tc, t: 0, dur: 520 };
+        }
         break;
       case 'stepped': {
         const fromPos = ev.from ?? null;
@@ -1307,6 +1313,7 @@ export function createRenderer(canvas, opts = {}) {
       floats = floats.filter((f) => (f.t += dtMs) < f.ttl);
       sparkles = sparkles.filter((s) => (s.t += dtMs) < s.ttl);
       if (shake && (shake.t += dtMs) >= shake.dur) shake = null;
+      if (turnFlash && (turnFlash.t += dtMs) >= turnFlash.dur) turnFlash = null;
       moveCamera(dtMs);
     },
 
@@ -1330,6 +1337,15 @@ export function createRenderer(canvas, opts = {}) {
       drawCursor();
       ctx.restore();
       drawVignette();
+      if (turnFlash) {
+        const fa = (1 - turnFlash.t / turnFlash.dur) * 0.28;
+        const fw = canvas.width, fh = canvas.height - HUD_H;
+        const tg = ctx.createRadialGradient(fw / 2, fh / 2, fh * 0.25, fw / 2, fh / 2, fh * 0.85);
+        tg.addColorStop(0, 'transparent');
+        tg.addColorStop(1, turnFlash.color);
+        ctx.save(); ctx.globalAlpha = fa; ctx.fillStyle = tg;
+        ctx.fillRect(0, 0, fw, fh); ctx.restore();
+      }
       drawHud();
       if (battle) drawBattle();
       if (banner) drawBanner();
@@ -1354,6 +1370,7 @@ export function createRenderer(canvas, opts = {}) {
       floats = [];
       sparkles = [];
       shake = null;
+      turnFlash = null;
       unitFlash = null;
       if (state) idleSync();
       const t = camTarget();
