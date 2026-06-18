@@ -1339,12 +1339,20 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillStyle = _sc;
     ctx.fillRect(0, y0, canvas.width, 1);
     (state.hunters ?? []).slice(0, 4).forEach((h, i) => drawHunterWindow(h, i, y0 + 3 + i * 18));
-    // deck counter, top-right
+    // deck counter, top-right; pulses red when deck is nearly empty (WYRM spawns below 20)
+    const deckLow = deckShown < 20;
+    const deckUrgent = deckShown < 5;
+    const deckPulse = deckLow ? 0.5 + 0.5 * Math.sin(clock / (deckUrgent ? 220 : 550)) : 0;
+    if (deckLow) {
+      ctx.save(); ctx.globalAlpha = deckPulse * 0.25; ctx.fillStyle = deckUrgent ? '#cc3333' : '#cc8833';
+      ctx.fillRect(canvas.width - 80, 2, 78, 22); ctx.restore();
+    }
     ctx.fillStyle = 'rgba(13, 14, 22, 0.8)';
     ctx.fillRect(canvas.width - 78, 4, 74, 18);
     ctx.fillStyle = CARD_MINI.B;
     ctx.fillRect(canvas.width - 74, 7, 8, 12);
-    text(`x${deckShown}`, canvas.width - 8, 8, '#f0f4ff', 12, 'right');
+    const deckColor = deckUrgent ? '#ff6a5a' : deckLow ? '#e0a850' : '#f0f4ff';
+    text(`x${deckShown}`, canvas.width - 8, 8, deckColor, 12, 'right');
   }
 
   function drawCombatant(k, x, y, flip) {
