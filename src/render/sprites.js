@@ -505,6 +505,25 @@ const WALL_F = [ // mossy stone — scattered dark-green lichen patches on block
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_G = [ // cracked stone — a jagged fissure cuts diagonally through the block face
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGdGGGGGgX',
+  'XGgGGGGdGGGGGGGX',
+  'XGGGGGdGGGGGGGGX',
+  'XGGGGGGdGGGGGGGX',
+  'XgGGGGdGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGdGXcGGGGgX',
+  'XGgGGdGGXGGGGGGX',
+  'XGGGGdGGXGGGGGGX',
+  'XgGGdGGGXGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_B = [ // stone-block face — three narrow sub-blocks in lower band
   'XXXXXXXXXXXXXXXX',  // ceiling cap
   'XcGGGGGGGGGGGGgX',  // upper block, lit corner
@@ -680,6 +699,7 @@ export const TILES = {
   wallD: { grid: WALL_D, palette: TILE_PALETTE },
   wallE: { grid: WALL_E, palette: TILE_PALETTE },
   wallF: { grid: WALL_F, palette: TILE_PALETTE },
+  wallG: { grid: WALL_G, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
