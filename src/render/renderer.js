@@ -1885,7 +1885,7 @@ export function createRenderer(canvas, opts = {}) {
     ctx.beginPath(); ctx.ellipse(cx, y + sh + 3, sw * 0.38 * shadowScale, 5 * shadowScale, 0, 0, Math.PI * 2);
     ctx.fill(); ctx.restore();
     // Unit-color aura behind sprite
-    { const auraCol = k[0] === 'h' && u ? (SLOT_COLORS[(u.slot ?? 0) % 4]) : '#9060d8';
+    { const auraCol = k[0] === 'h' && u ? (SLOT_COLORS[(u.slot ?? 0) % 4]) : (u ? (MONSTER_LABEL_COLOR[u.kind] ?? '#9060d8') : '#9060d8');
       const ag = ctx.createRadialGradient(cx, y + bobY + sh * 0.52, 0, cx, y + bobY + sh * 0.52, sw * 0.55);
       ag.addColorStop(0, auraCol + '50'); ag.addColorStop(1, 'transparent');
       ctx.fillStyle = ag; ctx.fillRect(x - 4, y + bobY - 4, sw + 8, sh + 8); }
