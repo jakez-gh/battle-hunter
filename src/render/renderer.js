@@ -1261,19 +1261,26 @@ export function createRenderer(canvas, opts = {}) {
     const sw = img.width * s3;
     const sh = img.height * s3;
     const cx = x + sw / 2;
+    const u = findUnit(k);
+    const bobY = Math.round(Math.sin(clock / 650 + (flip ? 1.1 : 0)) * 2);
+    const shadowScale = 1 - Math.abs(bobY) * 0.04;
     ctx.save(); ctx.globalAlpha = 0.38; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(cx, y + sh + 3, sw * 0.38, 5, 0, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.ellipse(cx, y + sh + 3, sw * 0.38 * shadowScale, 5 * shadowScale, 0, 0, Math.PI * 2);
     ctx.fill(); ctx.restore();
+    // Unit-color aura behind sprite
+    { const auraCol = k[0] === 'h' && u ? (SLOT_COLORS[(u.slot ?? 0) % 4]) : '#9060d8';
+      const ag = ctx.createRadialGradient(cx, y + bobY + sh * 0.52, 0, cx, y + bobY + sh * 0.52, sw * 0.55);
+      ag.addColorStop(0, auraCol + '50'); ag.addColorStop(1, 'transparent');
+      ctx.fillStyle = ag; ctx.fillRect(x - 4, y + bobY - 4, sw + 8, sh + 8); }
     ctx.save();
     if (flip) {
-      ctx.translate(x + sw, y);
+      ctx.translate(x + sw, y + bobY);
       ctx.scale(-1, 1);
       ctx.drawImage(img, 0, 0, sw, sh);
     } else {
-      ctx.drawImage(img, x, y, sw, sh);
+      ctx.drawImage(img, x, y + bobY, sw, sh);
     }
     ctx.restore();
-    const u = findUnit(k);
     if (u) {
       text(u.name ?? u.kind ?? '', cx, y + sh + 4, '#f0f4ff', 12, 'center');
       // HP bar
