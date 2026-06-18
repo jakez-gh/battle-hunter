@@ -1001,16 +1001,35 @@ export function createRenderer(canvas, opts = {}) {
               }
             }
           }
-          // Void depth: slow purple pulse + rare brief spark on pit tiles
+          // Void depth: dark center + purple pulse + rising motes + rare spark on pit tiles
           if (!b.floor[y + 1]?.[x]) {
             const vp = worldToScreen(x, y, cam);
             const ts = TILE * cam.scale;
             const vh = ((x * 3571 + y * 1637) ^ 1013) & 0xFFFF;
+            const vcx = vp.x + ts * 0.5, vcy = vp.y + ts * 0.5;
+            // Deep black center — gives the pit actual visual depth
+            const vdg = ctx.createRadialGradient(vcx, vcy, 0, vcx, vcy, ts * 0.52);
+            vdg.addColorStop(0, 'rgba(0,0,0,0.42)'); vdg.addColorStop(0.5, 'rgba(0,0,0,0.22)'); vdg.addColorStop(1, 'transparent');
+            ctx.fillStyle = vdg; ctx.fillRect(vp.x | 0, vp.y | 0, ts, ts);
+            // Purple void aura (original pulse)
             const vpulse = 0.05 + 0.03 * Math.sin(clock / (4800 + (vh & 0x7FF)) + vh * 0.009);
-            const vgr = ctx.createRadialGradient(vp.x + ts * 0.5, vp.y + ts * 0.5, 0,
-              vp.x + ts * 0.5, vp.y + ts * 0.5, ts * 0.6);
+            const vgr = ctx.createRadialGradient(vcx, vcy, 0, vcx, vcy, ts * 0.6);
             vgr.addColorStop(0, 'rgba(65,20,120,' + vpulse.toFixed(3) + ')'); vgr.addColorStop(1, 'transparent');
             ctx.fillStyle = vgr; ctx.fillRect(vp.x | 0, vp.y | 0, ts, ts);
+            // Void motes: 3 tiny purple pixels rising slowly from depth
+            const cs = cam.scale;
+            for (let vi = 0; vi < 3; vi++) {
+              const vmperiod = 3200 + vi * 700 + (vh & 0x3FF);
+              const vmphase = ((clock + vi * (vmperiod / 3) + vh * 17) % vmperiod) / vmperiod;
+              const vmx = vp.x + (2 + ((vh + vi * 5) & 11)) * cs;
+              const vmy = vp.y + ts * (0.85 - vmphase * 0.75);
+              const vma = Math.sin(vmphase * Math.PI) * 0.38;
+              if (vma < 0.04) continue;
+              ctx.save(); ctx.globalAlpha = vma; ctx.fillStyle = vi % 2 === 0 ? '#4a18a0' : '#7030c8';
+              ctx.fillRect(vmx | 0, vmy | 0, Math.max(1, cs) | 0, Math.max(1, cs) | 0);
+              ctx.restore();
+            }
+            // Rare brief spark
             const vperiod = 7000 + (vh & 0x1FFF);
             const vphase = ((clock + vh * 23) % vperiod) / vperiod;
             if (vphase < 0.012) {
@@ -1522,6 +1541,21 @@ export function createRenderer(canvas, opts = {}) {
           ctx.save(); ctx.globalAlpha = Math.max(0, pa) * alpha;
           ctx.fillStyle = i % 2 === 0 ? '#ff3820' : '#ff9040';
           ctx.fillRect((scx + Math.cos(a) * pr - s * 0.5) | 0, (scy + Math.sin(a) * pr * 0.55 - s * 0.5) | 0, Math.max(1, s) | 0, Math.max(1, s) | 0);
+          ctx.restore();
+        }
+      }
+      if (u.status?.empty) {
+        // Empty/drained: 5 grey wisps drifting outward, representing energy leaking away
+        for (let i = 0; i < 5; i++) {
+          const dperiod = 2200 + i * 280;
+          const dphase = ((clock + i * (dperiod / 5)) % dperiod) / dperiod;
+          const da = (i / 5) * Math.PI * 2 + clock / 3200;
+          const dr = dphase * 9 * s;
+          const deAlpha = Math.sin(dphase * Math.PI) * 0.45;
+          if (deAlpha < 0.04) continue;
+          ctx.save(); ctx.globalAlpha = deAlpha * alpha;
+          ctx.fillStyle = i % 2 === 0 ? '#8d8d9e' : '#b0b0bc';
+          ctx.fillRect((scx + Math.cos(da) * dr - s * 0.5) | 0, (scy - 8 * s + Math.sin(da) * dr * 0.6 - s * 0.5) | 0, Math.max(1, s) | 0, Math.max(1, s) | 0);
           ctx.restore();
         }
       }
