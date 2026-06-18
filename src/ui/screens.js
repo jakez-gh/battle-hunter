@@ -411,6 +411,17 @@ export function makeTitleScreen(app) {
         ctx.fillStyle = gr;
         ctx.fillRect(gcx - 34, gcy - 34, 68, 68);
         ctx.restore();
+        // Floating dust motes drifting upward around each hunter
+        for (let j = 0; j < 4; j++) {
+          const phase = ((t * 0.38 + i * 0.7 + j * 1.4) % 1 + 1) % 1;
+          const sx = gcx + Math.sin(t * 0.9 + j * 2.2 + i * 0.5) * 16;
+          const sy = gcy - phase * 54 - 8;
+          const ma = Math.min(phase, 1 - phase) * 2 * 0.5;
+          ctx.save(); ctx.globalAlpha = ma;
+          ctx.fillStyle = HUNTER_GLOWS[i];
+          ctx.fillRect(sx | 0, sy | 0, 3, 3);
+          ctx.restore();
+        }
         sprite(app, `hunter${i}.${pal}.${step}`, hx, 354, 5);
       });
       drawMenu(ctx, menu, cx - 130, 480, 260, { lineH: 34, size: 22 });
@@ -1635,9 +1646,16 @@ export function makeGameScreen(app, g) {
       const my = 290 + i * 22;
       text(ctx, mo.kind, X + 10, my, { size: 11, color: BAD });
       const mr = Math.max(0, mo.maxHp ? mo.hp / mo.maxHp : 0);
+      const mfill = Math.round(88 * mr);
       ctx.fillStyle = '#151828'; ctx.fillRect(X + 52, my + 2, 88, 7);
-      ctx.fillStyle = mr > 0.5 ? '#cc4a3a' : mr > 0.25 ? '#e07020' : '#ff3a2a';
-      ctx.fillRect(X + 52, my + 2, Math.round(88 * mr), 7);
+      if (mfill > 0) {
+        const [mc0, mc1] = mr > 0.5 ? ['#e05a3a', '#a02820'] : mr > 0.25 ? ['#f07020', '#a04810'] : ['#ff4a3a', '#c02020'];
+        const mmg = ctx.createLinearGradient(X + 52, my + 2, X + 52, my + 9);
+        mmg.addColorStop(0, mc0); mmg.addColorStop(1, mc1);
+        ctx.fillStyle = mmg; ctx.fillRect(X + 52, my + 2, mfill, 7);
+        ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#fff';
+        ctx.fillRect(X + 52, my + 2, mfill, 3); ctx.restore();
+      }
       text(ctx, `${mo.hp}/${mo.maxHp}`, X + W - 8, my, { size: 10, align: 'right', color: '#8d4040' });
     });
 
