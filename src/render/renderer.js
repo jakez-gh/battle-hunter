@@ -2242,6 +2242,17 @@ export function createRenderer(canvas, opts = {}) {
         ? (0.5 + 0.5 * Math.sin(clock / 240)) > 0.5 ? '#ff8866' : '#cc4a3a'
         : '#8fd17e';
       text(`${u.hp}/${u.maxHp}`, cx, barY + 8, hpColor, 11, 'center');
+      // Active status chips centered below HP readout
+      { const sts = ['stun', 'leg', 'panic', 'empty'].filter((sk) => u.status?.[sk] > 0);
+        let ssx = Math.round(cx - (sts.length * 10 - 2) / 2);
+        for (const sk of sts) {
+          const sp2 = 0.55 + 0.45 * Math.sin(clock / 350);
+          ctx.save(); ctx.globalAlpha = sp2 * 0.80; ctx.fillStyle = STATUS_GLOW[sk];
+          ctx.fillRect(ssx, barY + 20, 8, 8); ctx.restore();
+          const sicon = atlas[`status.${sk}`];
+          if (sicon) { ctx.save(); ctx.globalAlpha = sp2; ctx.drawImage(sicon, ssx, barY + 20, 8, 8); ctx.restore(); }
+          ssx += 10;
+        } }
     }
   }
 
