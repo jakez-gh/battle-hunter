@@ -337,6 +337,7 @@ export function createRenderer(canvas, opts = {}) {
         break;
       case 'trapSet':
         addFloat(k, 'SET', '#8fd17e');
+        if (ev.pos) addSparklesAt(ev.pos.x, ev.pos.y, '#8fd17e');
         break;
       case 'boxOpened': {
         popOverride(closedBoxes, ev.pos ? key(ev.pos.x, ev.pos.y) : null);
@@ -404,6 +405,7 @@ export function createRenderer(canvas, opts = {}) {
       }
       case 'critNegated':
         addFloat(k, 'NEGATED', '#9adfe8');
+        addSparkles(k, '#9adfe8');
         break;
       case 'hunterDefeated': {
         unitFlash = { key: k, t: 0, dur: EVENT_DURATIONS.hunterDefeated, color: '#f7f7ff' };
@@ -425,6 +427,7 @@ export function createRenderer(canvas, opts = {}) {
         break;
       case 'surrendered':
         addFloat(k, 'SURRENDER', '#8d8d9e');
+        addSparkles(k, '#8d8d9e');
         break;
       case 'monsterSpawned':
       case 'wyrmSpawned':
