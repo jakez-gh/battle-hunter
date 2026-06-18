@@ -290,6 +290,16 @@ export function createRenderer(canvas, opts = {}) {
               vx: Math.cos(a) * 0.6, vy: Math.sin(a) * 0.6,
               t: 0, ttl: 350, color: mc });
           }
+          // VAC sonar burst: fast ring of 12 cyan pixels radiating outward
+          if (mu?.kind === 'VAC') {
+            for (let i = 0; i < 12; i++) {
+              const a = (i / 12) * Math.PI * 2;
+              const spd = 2.2 + (i % 3) * 0.5;
+              sparkles.push({ wx: mfrom.x + 0.5, wy: mfrom.y + 0.5,
+                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+                t: 0, ttl: 420, color: i % 3 === 0 ? '#fff' : '#50b0e8' });
+            }
+          }
         }
         break;
       }
