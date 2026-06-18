@@ -1822,16 +1822,19 @@ export function createRenderer(canvas, opts = {}) {
       list.push({ k, u: null, pos: g.pos, alpha: ghostAlpha });
     }
     list.sort((a, b) => (a.pos?.y ?? 0) - (b.pos?.y ?? 0));
-    // Soft team-color glow beneath each hunter
+    // Soft team-color glow beneath each hunter — active hunter pulses brighter
     for (const d of list) {
       if (d.k[0] !== 'h' || !d.pos) continue;
       const hslot = d.u?.slot ?? 0;
       const sc = SLOT_COLORS[hslot % 4] ?? '#3a6ee0';
       const sp = worldToScreen(d.pos.x, d.pos.y, cam);
       const hcx = sp.x + TILE * cam.scale / 2, hcy = sp.y + (TILE - 1) * cam.scale;
-      const hg = ctx.createRadialGradient(hcx, hcy, 0, hcx, hcy, 7 * cam.scale);
+      const isActiveH = d.k === activeKey();
+      const hgAlpha = isActiveH ? (0.28 + 0.12 * Math.sin(clock / 550)) * d.alpha : 0.15 * d.alpha;
+      const hgR = isActiveH ? 8.5 * cam.scale : 6.5 * cam.scale;
+      const hg = ctx.createRadialGradient(hcx, hcy, 0, hcx, hcy, hgR);
       hg.addColorStop(0, sc); hg.addColorStop(1, 'transparent');
-      ctx.save(); ctx.globalAlpha = 0.22 * d.alpha; ctx.fillStyle = hg;
+      ctx.save(); ctx.globalAlpha = hgAlpha; ctx.fillStyle = hg;
       ctx.fillRect(sp.x, sp.y, TILE * cam.scale, TILE * cam.scale); ctx.restore();
     }
     drawMonsterAuras();
