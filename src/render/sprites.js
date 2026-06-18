@@ -568,6 +568,25 @@ const FLOOR_N = [ // V-chevron herringbone — two stacked V-grooves across the 
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_O = [ // double concentric square grooves — ornate flagstone panel
+  'GGGGGGGGGGGGGGGG',
+  'GgGGGGGGGGGGGGgG',
+  'GGddddddddddddGG',
+  'GGdGGGGGGGGGGdGG',
+  'GGdGGddddddGGdGG',
+  'GGdGGdGGGGdGGdGG',
+  'GGdGGdGGgGdGGdGG',
+  'GGdGGdGGGGdGGdGG',
+  'GGdGGdGGGGdGGdGG',
+  'GGdGGdGgGGdGGdGG',
+  'GGdGGdGGGGdGGdGG',
+  'GGdGGGddddddGdGG',
+  'GGdGGGGGGGGGGdGG',
+  'GGGddddddddddddG',
+  'GGGGGGGGGGGGGgGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const FLOOR_L = [ // corner bracket marks — layout survey marks at each quadrant corner
   'GGGGGGGGGGGGGGGG',
   'GgGGGGGGGGGGGGgG',
@@ -602,6 +621,7 @@ export const TILES = {
   floorL: { grid: FLOOR_L, palette: TILE_PALETTE },
   floorM: { grid: FLOOR_M, palette: TILE_PALETTE },
   floorN: { grid: FLOOR_N, palette: TILE_PALETTE },
+  floorO: { grid: FLOOR_O, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
