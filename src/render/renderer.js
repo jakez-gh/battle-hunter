@@ -1972,7 +1972,9 @@ export function createRenderer(canvas, opts = {}) {
           text(f.text, p.x, fy, f.color, fsz, 'center');
           ctx.restore();
         } else {
+          ctx.save(); ctx.shadowBlur = 4; ctx.shadowColor = f.color;
           text(f.text, p.x, fy, f.color, fsz, 'center');
+          ctx.restore();
         }
       }
       ctx.restore();

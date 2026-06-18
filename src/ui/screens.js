@@ -2011,7 +2011,9 @@ export function makeGameScreen(app, g) {
     (st.monsters || []).forEach((mo, i) => {
       const my = 290 + i * 22;
       const mkc = MONSTER_KIND_COLOR[mo.kind] ?? BAD;
-      text(ctx, mo.kind, X + 10, my, { size: 11, color: mkc });
+      ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = mkc;
+      text(ctx, mo.kind, X + 10, my, { size: 11, color: mkc, shadow: false });
+      ctx.restore();
       const mr = Math.max(0, mo.maxHp ? mo.hp / mo.maxHp : 0);
       const mfill = Math.round(88 * mr);
       ctx.fillStyle = '#151828'; ctx.fillRect(X + 52, my + 2, 88, 7);
@@ -2031,7 +2033,9 @@ export function makeGameScreen(app, g) {
           ctx.fillRect(X + 52, my, 88, 11); ctx.restore();
         }
       }
-      text(ctx, `${mo.hp}/${mo.maxHp}`, X + W - 8, my, { size: 10, align: 'right', color: mkc });
+      ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = mkc;
+      text(ctx, `${mo.hp}/${mo.maxHp}`, X + W - 8, my, { size: 10, align: 'right', color: mkc, shadow: false });
+      ctx.restore();
     });
 
     // info panel (Tab cycles)
