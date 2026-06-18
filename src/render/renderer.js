@@ -1152,6 +1152,14 @@ export function createRenderer(canvas, opts = {}) {
         }
       }
       if (m.kind === 'OOZ') {
+        // Slime puddle: wobbling translucent ellipse on the floor beneath OOZ
+        const slimeCy = p.y + TILE * s * 0.90;
+        const slimeRx = (5.5 + 2 * Math.sin(clock / 700 + m.id)) * s;
+        const slimeRy = (1.8 + 0.8 * Math.cos(clock / 500 + m.id * 1.3)) * s;
+        ctx.save(); ctx.globalAlpha = 0.28 + 0.10 * Math.sin(clock / 600 + m.id * 0.9);
+        ctx.fillStyle = '#1a6830';
+        ctx.beginPath(); ctx.ellipse(cx, slimeCy, slimeRx, slimeRy, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
         // Slime drips: 5 particles fall downward from sprite bottom, staggered phases
         const dripY0 = cy + TILE * s * 0.3;
         for (let j = 0; j < 5; j++) {
