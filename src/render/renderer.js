@@ -948,6 +948,43 @@ export function createRenderer(canvas, opts = {}) {
         ctx.stroke();
         ctx.restore();
       }
+      if (m.kind === 'OOZ') {
+        // Slime drips: 5 particles fall downward from sprite bottom, staggered phases
+        const dripY0 = cy + TILE * s * 0.3;
+        for (let j = 0; j < 5; j++) {
+          const phase = ((clock / 1100) + j * 0.22 + m.id * 0.41) % 1;
+          const dx = cx + (j - 2) * s * 1.6;
+          const dy = dripY0 + phase * s * 4.5;
+          const da = Math.sin(phase * Math.PI) * 0.55;
+          if (da < 0.05) continue;
+          ctx.save();
+          ctx.globalAlpha = da;
+          ctx.fillStyle = '#4fae3f';
+          ctx.fillRect((dx - s * 0.5) | 0, dy | 0, Math.max(1, s) | 0, Math.max(1, s * 1.5) | 0);
+          ctx.restore();
+        }
+      }
+      if (m.kind === 'VAC') {
+        // Radar sweep: thin rotating sector from center
+        const angle = (clock / 2200) * Math.PI * 2;
+        const sweepR = 9 * s;
+        ctx.save();
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = '#ffd23e';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, sweepR, angle - 0.3, angle);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 0.45;
+        ctx.strokeStyle = '#ffd23e';
+        ctx.lineWidth = s * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(angle) * sweepR, cy + Math.sin(angle) * sweepR);
+        ctx.stroke();
+        ctx.restore();
+      }
     }
   }
 
