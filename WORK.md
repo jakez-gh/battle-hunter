@@ -53,10 +53,8 @@ it's shaped this way) → `WORK.md` (what to do right now) → `docs/decisions/`
   play, replay mode) is greenlit. Format: epics with goal + acceptance criteria +
   phase breakdown.
 
-- [ ] **ADR-004: hunter record vs ref** — document the `.kind` field gotcha:
-  `state.hunters[i]` has no `.kind`; only `state.current` / `battle.attacker` /
-  `battle.defender` refs do. Currently in ARCHITECTURE.md; should be an ADR so
-  the decision (and its context) is discoverable by search.
+- [x] **ADR-004: hunter record vs ref** — `docs/decisions/004-hunter-record-vs-ref.md`.
+  `f606061`
 
 ---
 
@@ -68,22 +66,7 @@ none — claim one from the next section
 
 ### Visual polish pending
 
-- [ ] **Pit tile** — `tile.pit` currently falls through to a missing-sprite blank.
-  Design a 16×16 void/abyss tile (near-black with faint depth gradient suggestion).
-  Files: `src/render/sprites.js`, `src/render/renderer.js`
-
-- [ ] **HOW TO PLAY content audit** — manual pages exist (9 pages) but some are
-  placeholder-thin. Review against DESIGN.md and flesh out sparse pages.
-  Files: `src/ui/screens.js makeManualScreen`
-
-- [ ] **Item effect icons** — items in the INFO panel show names but no visual cue
-  for effect tier. A 1–3 dot or star rating next to ATK/DEF/ESC items would help.
-  Files: `src/ui/screens.js drawHud`
-
-- [ ] **Title screen music** — title screen has a `drawTitle` function but music
-  only starts once the hub screen loads. Hook `audio.playMusic('title')` into
-  the title-screen `enter()` callback.
-  Files: `src/ui/screens.js`, `src/audio/music.js`
+none — claim one from the backlog
 
 ---
 
@@ -101,6 +84,17 @@ none — claim one from the next section
   redesigned with gradient fill + single top-edge highlight, no corner squares;
   HP bars use top-to-bottom gradient (bright→dim per health tier).
   Commit: (this session)
+
+- [x] **Pit tile** — near-black void tile with mortar-joint hint. `sprites.js`. Already landed before audit.
+
+- [x] **Title screen music** — `enter()` calls `app.music('title')`. Already landed before audit.
+
+- [x] **HOW TO PLAY content audit** — fixed monster IDs (OOZ/VAC not BRO/RAD), counter item
+  names (Patch/Repellent/Override/Tamer), Calmant/Releaser, Wardstone spawning note.
+  Commit: `bd6c0c9`
+
+- [x] **Item effect icons** — `itemName()` appends `+N` tier tag for weapon/armor/escape items;
+  HUD INFO panel uses `itemName()` for consistency. Commit: `f606061`
 
 - [x] **Title screen parade** — 8 hunters (was 4), diamond decorations on separator.
   `screens.js drawTitle`.
