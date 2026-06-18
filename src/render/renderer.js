@@ -2412,11 +2412,18 @@ export function createRenderer(canvas, opts = {}) {
       vg.addColorStop(0, 'rgba(220,190,60,0.38)'); vg.addColorStop(1, 'transparent');
       ctx.fillStyle = vg; ctx.fillRect(vcx - 26, vcy - 18, 52, 36); }
     text('VS', bx + bw / 2, by + 42, '#ffe98a', 16, 'center');
-    if (battle.response) text(String(battle.response).toUpperCase(), bx + bw / 2, by + 64, '#9adfe8', 12, 'center');
+    if (battle.response) {
+      ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = '#9adfe8';
+      text(String(battle.response).toUpperCase(), bx + bw / 2, by + 64, '#9adfe8', 12, 'center');
+      ctx.restore();
+    }
     if (battle.escape) {
       const e = battle.escape;
+      const ec = e.escaped ? '#8fd17e' : '#ff6a5a';
+      ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = ec;
       text(`ESCAPE ${e.dTotal ?? '?'} vs ${e.aTotal ?? '?'} ${e.escaped ? 'FLED!' : 'CAUGHT'}`,
-        bx + bw / 2, by + 84, e.escaped ? '#8fd17e' : '#ff6a5a', 12, 'center');
+        bx + bw / 2, by + 84, ec, 12, 'center');
+      ctx.restore();
     }
     if (battle.strike) {
       const st = battle.strike;
@@ -2430,7 +2437,9 @@ export function createRenderer(canvas, opts = {}) {
       if (!rolling) {
         if (st.totals) {
           const tv = Object.values(st.totals).filter((v) => typeof v === 'number');
+          ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = '#6080b8';
           text(tv.join(' vs '), bx + bw / 2, by + 124, '#f0f4ff', 12, 'center');
+          ctx.restore();
         }
         { const dmgCx = (bx + bw / 2) | 0, dmgCy = (by + 150) | 0;
           // Bounce-in pop: scale from 1→1.4→1 over the first 35% of non-rolling phase
