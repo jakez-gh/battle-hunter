@@ -2013,8 +2013,11 @@ export function createRenderer(canvas, opts = {}) {
     const lp = ap
       ? worldToScreen(ap.x + 0.5, ap.y + 0.5, cam)
       : { x: canvas.width / 2, y: (canvas.height - HUD_H) / 2 };
-    const fr = Math.max(canvas.width, canvas.height) * 0.60;
-    const fg = ctx.createRadialGradient(lp.x, lp.y, fr * 0.15, lp.x, lp.y, fr);
+    // Slow breathing: outer radius ±2%, inner radius ±1.5% — gives a "living darkness" feel
+    const fogBreathe = 0.02 * Math.sin(clock / 4500);
+    const fr = Math.max(canvas.width, canvas.height) * (0.60 + fogBreathe);
+    const innerR = fr * (0.15 + 0.015 * Math.sin(clock / 2900 + 1.1));
+    const fg = ctx.createRadialGradient(lp.x, lp.y, innerR, lp.x, lp.y, fr);
     fg.addColorStop(0, 'rgba(0,0,0,0)');
     fg.addColorStop(0.45, 'rgba(0,0,0,0.12)');
     fg.addColorStop(0.75, 'rgba(0,0,0,0.38)');
