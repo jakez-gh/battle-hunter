@@ -270,6 +270,7 @@ export function createRenderer(canvas, opts = {}) {
         shake = { t: 0, dur: EVENT_DURATIONS.trapTriggered, mag: 3 };
         addFloat(k, ev.kind === 'damage' ? 'TRAP!' : '', '#ff6a5a',
           { icon: ['stun', 'leg', 'empty'].includes(ev.kind) ? `status.${ev.kind}` : null });
+        addSparkles(k, '#ff6a5a');
         break;
       case 'trapDodged':
         addFloat(k, 'DODGE', '#9adfe8');
@@ -351,6 +352,7 @@ export function createRenderer(canvas, opts = {}) {
       }
       case 'healed':
         addFloat(k, `+${ev.amount ?? ''}`, '#8fd17e');
+        addSparkles(k, '#8fd17e');
         break;
       case 'actAgain':
         addFloat(k, 'AGAIN!', '#ffe98a', { big: true });
@@ -358,6 +360,12 @@ export function createRenderer(canvas, opts = {}) {
         break;
       case 'missionWon':
         banner = { text: 'MISSION COMPLETE', color: '#ffe98a' };
+        // Multi-burst celebration across the board
+        for (const h of state?.hunters ?? []) {
+          const hk = `h${h.id}`;
+          addSparkles(hk, '#ffe98a');
+          addSparkles(hk, '#7ee8a0');
+        }
         break;
       case 'missionLost':
         banner = { text: 'MISSION FAILED', color: '#ff6a5a' };
