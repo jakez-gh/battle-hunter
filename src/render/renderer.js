@@ -333,14 +333,25 @@ export function createRenderer(canvas, opts = {}) {
         break;
       case 'trapDodged':
         addFloat(k, 'DODGE', '#9adfe8');
+        addSparkles(k, '#9adfe8');
         break;
       case 'trapSet':
         addFloat(k, 'SET', '#8fd17e');
         break;
-      case 'boxOpened':
+      case 'boxOpened': {
         popOverride(closedBoxes, ev.pos ? key(ev.pos.x, ev.pos.y) : null);
-        if (ev.pos) addSparklesAt(ev.pos.x, ev.pos.y, '#e8d87e');
+        if (ev.pos) {
+          addSparklesAt(ev.pos.x, ev.pos.y, '#e8d87e');
+          // Extra fast-moving white specks for a "burst open" feel
+          for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2;
+            sparkles.push({ wx: ev.pos.x + 0.5, wy: ev.pos.y + 0.5,
+              vx: Math.cos(a) * 3.8, vy: Math.sin(a) * 3.8 - 1.5,
+              t: 0, ttl: 420, color: '#fff' });
+          }
+        }
         break;
+      }
       case 'targetFound':
         addSparkles(k);
         addFloat(k, 'TARGET!', '#ffe98a', { big: true, ttl: 1100 });
