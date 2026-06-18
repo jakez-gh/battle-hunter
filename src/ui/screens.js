@@ -2061,9 +2061,26 @@ export function makeResultsScreen(app, g) {
         const iconBob = (isFirst && t >= 1.8) ? Math.round(Math.sin(t * 4) * 2) : 0;
         sprite(app, `hunter${h.spriteId}.${h.palette}.${rIconFrame}`, x + 30, 96 + iconBob, rIconFrame === 'icon' ? 4 : 3);
         if (isFirst) {
-          // Persistent soft winner tint
+          // Persistent soft winner tint + continuous column pulse after reveal
           ctx.save(); ctx.globalAlpha = 0.15; ctx.fillStyle = GOLD;
           ctx.fillRect(x + 2, 95, cw - 2, 48); ctx.restore();
+          if (t >= 2.4) {
+            const colPulse = 0.06 + 0.04 * Math.sin(t * 1.8);
+            ctx.save(); ctx.globalAlpha = colPulse; ctx.fillStyle = GOLD;
+            ctx.fillRect(x + 2, 95, cw - 2, 435); ctx.restore();
+            // Floating gold sparkles rising above the winner portrait
+            for (let sj = 0; sj < 5; sj++) {
+              const sphase = ((t * 0.55 + sj * 0.23) % 1 + 1) % 1;
+              const sx = x + 50 + Math.sin(t * 0.7 + sj * 1.9) * 22;
+              const sy = 130 - sphase * 60;
+              const sa = Math.min(sphase, 1 - sphase) * 2 * 0.65;
+              const ss = sj % 2 === 0 ? 2 : 1.5;
+              ctx.save(); ctx.globalAlpha = Math.max(0, sa); ctx.fillStyle = GOLD;
+              ctx.fillRect((sx - ss * 0.3) | 0, (sy - ss) | 0, Math.max(1, ss * 0.6) | 0, ss * 2);
+              ctx.fillRect((sx - ss) | 0, (sy - ss * 0.3) | 0, ss * 2, Math.max(1, ss * 0.6) | 0);
+              ctx.restore();
+            }
+          }
           // Reveal pulse when count-up finishes (t 1.8–2.4s)
           if (t >= 1.8 && t < 2.4) {
             const fp = Math.sin(((t - 1.8) / 0.6) * Math.PI);

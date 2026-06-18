@@ -985,6 +985,21 @@ export function createRenderer(canvas, opts = {}) {
         ctx.stroke();
         ctx.restore();
       }
+      if (m.kind === 'FNG') {
+        // Ember sparks: 6 orange/red particles kicked upward from engine exhaust
+        for (let j = 0; j < 6; j++) {
+          const phase = ((clock / 900) + j * 0.18 + m.id * 0.37) % 1;
+          const ex = cx + (j - 2.5) * s * 1.4 + Math.sin(phase * Math.PI * 2 + j) * s * 0.8;
+          const ey = cy + s * 2 - phase * s * 5.5;
+          const ea = Math.sin(phase * Math.PI) * 0.60;
+          if (ea < 0.05) continue;
+          ctx.save();
+          ctx.globalAlpha = ea;
+          ctx.fillStyle = phase < 0.5 ? '#ffb040' : '#cc4020';
+          ctx.fillRect((ex - s * 0.4) | 0, ey | 0, Math.max(1, s * 0.8) | 0, Math.max(1, s) | 0);
+          ctx.restore();
+        }
+      }
     }
   }
 
