@@ -494,6 +494,23 @@ export function createRenderer(canvas, opts = {}) {
         if (!b.floor[y]?.[x]) {
           // Show stone wall face where the wall borders a walkable floor below it.
           blitTile(b.floor[y + 1]?.[x] ? 'tile.wall' : 'tile.pit', x, y);
+          // Moisture drip: ~8% of visible wall faces get an animated droplet
+          if (b.floor[y + 1]?.[x]) {
+            const wh = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;
+            if ((wh & 0xFF) < 20) {
+              const period = 4000 + (wh & 3) * 1400;
+              const phase = ((clock + wh * 19) % period) / period;
+              if (phase < 0.72) {
+                const wp = worldToScreen(x, y, cam);
+                ctx.save(); ctx.globalAlpha = 0.40;
+                ctx.fillStyle = (wh & 1) ? '#1a2434' : '#14181e';
+                const dripX = wp.x + (((wh >> 3) & 7) + 3) * cam.scale;
+                const dripY = wp.y + Math.floor(phase / 0.72 * 13) * cam.scale;
+                ctx.fillRect(dripX | 0, dripY | 0, cam.scale, cam.scale);
+                ctx.restore();
+              }
+            }
+          }
           continue;
         }
         blitTile(`tile.${floors[(x * 7 + y * 13) % 4]}`, x, y);
@@ -843,6 +860,22 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillRect(p.x, p.y + ts - s, L, s); ctx.fillRect(p.x, p.y + ts - L, s, L);  // bottom-left
     ctx.fillRect(p.x + ts - L, p.y + ts - s, L, s); ctx.fillRect(p.x + ts - s, p.y + ts - L, s, L); // bottom-right
     ctx.restore();
+  }
+
+  function drawFog() {
+    const ak = activeKey();
+    const ap = ak ? displayPos(ak) : null;
+    const lp = ap
+      ? worldToScreen(ap.x + 0.5, ap.y + 0.5, cam)
+      : { x: canvas.width / 2, y: (canvas.height - HUD_H) / 2 };
+    const fr = Math.max(canvas.width, canvas.height) * 0.60;
+    const fg = ctx.createRadialGradient(lp.x, lp.y, fr * 0.15, lp.x, lp.y, fr);
+    fg.addColorStop(0, 'rgba(0,0,0,0)');
+    fg.addColorStop(0.45, 'rgba(0,0,0,0.12)');
+    fg.addColorStop(0.75, 'rgba(0,0,0,0.38)');
+    fg.addColorStop(1, 'rgba(0,0,0,0.65)');
+    ctx.fillStyle = fg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height - HUD_H);
   }
 
   function drawAmbientShimmer() {
@@ -1223,6 +1256,7 @@ export function createRenderer(canvas, opts = {}) {
         ctx.translate(Math.round((Math.random() * 2 - 1) * m), Math.round((Math.random() * 2 - 1) * m));
       }
       drawBoard();
+      drawFog();
       drawAmbientShimmer();
       drawOverlays();
       drawUnits();
