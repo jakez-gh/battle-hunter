@@ -117,7 +117,8 @@ export function createRenderer(canvas, opts = {}) {
   let overlays = { range: null, path: null };
   let cursor = null;
   let floats = [];                     // {text,color,icon,wx,wy,t,ttl,big}
-  let sparkles = [];                   // {wx,wy,vx,vy,t,ttl,color}
+  let sparkles = [];                   // {wx,wy,vx,vy,t,ttl,color[,round,alpha0]}
+  let smokeSeed = 0;                   // timer for torch-smoke emission
   let shake = null;                    // {t,dur,mag}
   let unitFlash = null;                // {key,t,dur,color}
   let turnFlash = null;                // {color,t,dur} — screen-edge glow on turn start
@@ -1192,17 +1193,20 @@ export function createRenderer(canvas, opts = {}) {
     for (const sp of sparkles) {
       const frac = sp.t / sp.ttl;
       const p = worldToScreen(sp.wx + sp.vx * frac, sp.wy + sp.vy * frac, cam);
-      const sz = Math.max(0.5, (1 - frac) * 2.2) * cam.scale;
-      const alpha = Math.max(0, 1 - frac);
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = sp.color;
-      ctx.fillRect(p.x - sz * 0.35, p.y - sz * 1.1, sz * 0.7, sz * 2.2);
-      ctx.fillRect(p.x - sz * 1.1, p.y - sz * 0.35, sz * 2.2, sz * 0.7);
-      if (frac < 0.28) {
-        ctx.globalAlpha = alpha * (1 - frac / 0.28) * 0.85;
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(p.x - sz * 0.35, p.y - sz * 0.35, sz * 0.7, sz * 0.7);
+      const alpha = Math.max(0, (sp.alpha0 ?? 1) * (1 - frac));
+      ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = sp.color;
+      if (sp.round) {
+        const sz = Math.max(0.5, (1.6 - frac) * 3.5) * cam.scale;
+        ctx.beginPath(); ctx.arc(p.x, p.y, sz, 0, Math.PI * 2); ctx.fill();
+      } else {
+        const sz = Math.max(0.5, (1 - frac) * 2.2) * cam.scale;
+        ctx.fillRect(p.x - sz * 0.35, p.y - sz * 1.1, sz * 0.7, sz * 2.2);
+        ctx.fillRect(p.x - sz * 1.1, p.y - sz * 0.35, sz * 2.2, sz * 0.7);
+        if (frac < 0.28) {
+          ctx.globalAlpha = alpha * (1 - frac / 0.28) * 0.85;
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(p.x - sz * 0.35, p.y - sz * 0.35, sz * 0.7, sz * 0.7);
+        }
       }
       ctx.restore();
     }
@@ -1670,6 +1674,33 @@ export function createRenderer(canvas, opts = {}) {
       if (!anim && !queue.length && state) idleSync();
       floats = floats.filter((f) => (f.t += dtMs) < f.ttl);
       sparkles = sparkles.filter((s) => (s.t += dtMs) < s.ttl);
+      // Torch smoke: periodically emit a wispy particle from wall torch tiles
+      if (state?.board) {
+        smokeSeed += dtMs;
+        while (smokeSeed > 200) {
+          smokeSeed -= 200;
+          const b = state.board;
+          const { w: vw, h: vh } = viewSize();
+          const x0 = Math.max(0, Math.floor(cam.x / TILE));
+          const y0 = Math.max(0, Math.floor(cam.y / TILE));
+          const x1 = Math.min(b.w - 1, Math.ceil((cam.x + vw) / TILE));
+          const y1 = Math.min(b.h - 1, Math.ceil((cam.y + vh) / TILE));
+          for (let y = y0; y <= y1; y++) {
+            for (let x = x0; x <= x1; x++) {
+              if (b.floor[y]?.[x] || !b.floor[y + 1]?.[x]) continue;
+              const wh = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;
+              if ((wh & 0xFF) < 20 || ((wh >> 8) & 0xFF) >= 16) continue;
+              if (Math.random() > 0.10) continue;
+              const wx = x + ((wh >> 4 & 0xF) + 1) / 16;
+              sparkles.push({ wx, wy: y + 0.85,
+                vx: (Math.random() - 0.5) * 0.18,
+                vy: -0.55 - Math.random() * 0.25,
+                t: 0, ttl: 1600 + Math.random() * 700,
+                color: wh & 1 ? '#241420' : '#1c1428', round: true, alpha0: 0.26 });
+            }
+          }
+        }
+      }
       if (shake && (shake.t += dtMs) >= shake.dur) shake = null;
       if (turnFlash && (turnFlash.t += dtMs) >= turnFlash.dur) turnFlash = null;
       moveCamera(dtMs);
