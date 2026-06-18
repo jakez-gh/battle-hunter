@@ -372,15 +372,29 @@ export function createRenderer(canvas, opts = {}) {
         if ((ev.damage ?? 0) > 0) addFloat(battle?.d ?? k, `-${ev.damage}`, '#ff6a5a', { big: true });
         if (ev.crit) addSparkles(battle?.d ?? k, '#ffe98a');
         break;
-      case 'statusInflicted':
+      case 'statusInflicted': {
         addFloat(k, '', '#f0f4ff', { icon: `status.${ev.kind}`, ttl: 700 });
+        const STATUS_COL = { stun: '#3ab8e8', panic: '#e87020', leg: '#cc3a40', empty: '#7a7a8e' };
+        addSparkles(k, STATUS_COL[ev.kind] ?? '#c0c8e0');
         break;
+      }
       case 'critNegated':
         addFloat(k, 'NEGATED', '#9adfe8');
         break;
-      case 'hunterDefeated':
+      case 'hunterDefeated': {
         unitFlash = { key: k, t: 0, dur: EVENT_DURATIONS.hunterDefeated, color: '#f7f7ff' };
+        addFloat(k, 'DEFEATED', '#ff6a5a', { big: true, ttl: 900 });
+        const dp = displayPos(k);
+        if (dp) {
+          for (let i = 0; i < 18; i++) {
+            const a = (i / 18) * Math.PI * 2;
+            const spd = 1.2 + (i % 3) * 0.5;
+            sparkles.push({ wx: dp.x + 0.5, wy: dp.y + 0.5, vx: Math.cos(a) * spd,
+              vy: Math.sin(a) * spd - 0.6, t: 0, ttl: 700, color: i % 3 === 0 ? '#f7f7ff' : '#9a5555' });
+          }
+        }
         break;
+      }
       case 'itemTaken':
         addFloat(k, ev.itemId != null ? `GOT ${ev.itemId}` : 'TAKEN', '#ffe98a', { big: true });
         addSparkles(k, '#e8d87e');

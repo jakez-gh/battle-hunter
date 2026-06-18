@@ -670,6 +670,23 @@ export function makeCreationScreen(app) {
       pglow.addColorStop(1, 'transparent');
       ctx.fillStyle = pglow;
       ctx.fillRect(610, 110, 280, 400);
+      // orbiting preview motes — 10 palette+gold sparkles behind the sprite
+      const pcx = 748, pcy = 240;
+      for (let i = 0; i < 10; i++) {
+        const freq = 0.32 + (i % 5) * 0.06;
+        const a = (i / 10) * Math.PI * 2 + state.t * freq;
+        const rx = 54 + Math.sin(state.t * 0.17 + i * 0.8) * 14;
+        const ry = 32 + Math.cos(state.t * 0.13 + i * 1.1) * 8;
+        const mx = pcx + Math.cos(a) * rx;
+        const my = pcy + Math.sin(a) * ry;
+        const ma = 0.18 + 0.20 * Math.sin(state.t * 1.8 + i * 1.4);
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, ma);
+        ctx.fillStyle = (i % 3 === 0) ? GOLD : prevAccent;
+        const ms = (i & 1) ? 2 : 3;
+        ctx.fillRect((mx - ms / 2) | 0, (my - ms / 2) | 0, ms, ms);
+        ctx.restore();
+      }
       sprite(app, `hunter${state.spriteId}.${pal}.${frame}`, 660, 150, 11);
       text(ctx, state.name || '-------', 750, 350, { size: 22, align: 'center', color: GOLD });
       text(ctx, fmtStats(d), 750, 385, { size: 14, align: 'center' });
