@@ -1089,6 +1089,17 @@ export function createRenderer(canvas, opts = {}) {
               }
             }
             ctx.restore();
+            // Ripple ring: periodic water-drop concentric ring expanding from puddle center
+            { const ripPeriod = 5200 + (ph & 0xFFF);
+              const ripPhase = ((clock + ph * 23) % ripPeriod) / ripPeriod;
+              if (ripPhase < 0.38) {
+                const rp = ripPhase / 0.38;
+                const rcx = px + pw2 * 0.45, rcy = py + ph2 * 0.40;
+                ctx.save(); ctx.globalAlpha = Math.sin(rp * Math.PI) * 0.45;
+                ctx.strokeStyle = '#c8e8ff'; ctx.lineWidth = Math.max(0.5, cam.scale * 0.4);
+                ctx.beginPath(); ctx.ellipse(rcx, rcy, pw2 * (0.10 + rp * 0.36), ph2 * (0.14 + rp * 0.30), 0, 0, Math.PI * 2); ctx.stroke();
+                ctx.restore();
+              } }
           }
           // Scorch mark: ~3% of floor tiles get a subtle dark radial burn
           { const sh = ((x * 2237 + y * 4507) ^ 1319) & 0xFFFF;
