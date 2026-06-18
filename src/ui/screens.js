@@ -846,17 +846,24 @@ export function makeCreationScreen(app) {
         hp: ['HP pts', `< ${state.internal.hp} >   max HP ${d.maxHp}`],
         done: ['', canDone() ? 'BEGIN CAREER' : `allocate ${left()} more pt${left() === 1 ? '' : 's'}${state.name ? '' : ' + name'}`],
       };
+      const STAT_RGB = { mv: [58,110,224], at: [204,74,58], df: [224,198,58], hp: [58,168,74] };
+      const STAT_HEX = { mv: '#3a6ee0', at: '#cc4a3a', df: '#e0c63a', hp: '#3aa84a' };
       ROWS.forEach((row, i) => {
         const y = 120 + i * 56;
         const sel = state.row === i;
         if (sel) {
+          const rgb = STAT_RGB[row] ?? [80, 100, 220];
+          const [ri, gi, bi] = rgb;
           const sg = ctx.createLinearGradient(56, 0, 56 + 488, 0);
-          sg.addColorStop(0, 'rgba(80,100,220,0.42)'); sg.addColorStop(1, 'rgba(80,100,220,0.10)');
+          sg.addColorStop(0, `rgba(${ri},${gi},${bi},0.42)`); sg.addColorStop(1, `rgba(${ri},${gi},${bi},0.10)`);
           ctx.fillStyle = sg; ctx.fillRect(56, y - 8, 488, 48);
-          ctx.fillStyle = 'rgba(120,150,255,0.72)'; ctx.fillRect(56, y - 8, 2, 48);
+          ctx.fillStyle = `rgba(${Math.min(255,ri+50)},${Math.min(255,gi+55)},${Math.min(255,bi+40)},0.72)`;
+          ctx.fillRect(56, y - 8, 2, 48);
           const shX = 56 + ((state.t % 2.4) / 2.4) * (488 + 40) - 20;
           const sh = ctx.createLinearGradient(shX - 16, 0, shX + 16, 0);
-          sh.addColorStop(0, 'transparent'); sh.addColorStop(0.5, 'rgba(180,200,255,0.22)'); sh.addColorStop(1, 'transparent');
+          sh.addColorStop(0, 'transparent');
+          sh.addColorStop(0.5, `rgba(${Math.min(255,ri+120)},${Math.min(255,gi+110)},${Math.min(255,bi+100)},0.22)`);
+          sh.addColorStop(1, 'transparent');
           ctx.save(); ctx.beginPath(); ctx.rect(56, y - 8, 488, 48); ctx.clip();
           ctx.fillStyle = sh; ctx.fillRect(shX - 16, y - 8, 32, 48); ctx.restore();
         }
@@ -871,7 +878,8 @@ export function makeCreationScreen(app) {
           text(ctx, val, 220, y, { size: 18, color: OK, shadow: false });
           ctx.restore();
         } else {
-          text(ctx, val, 220, y, { size: 18, color: row === 'done' ? BAD : FG });
+          const sc = sel ? STAT_HEX[row] : null;
+          text(ctx, val, 220, y, { size: 18, color: row === 'done' ? BAD : sc ?? FG });
         }
       });
       { const ptc = left() ? GOLD : OK;
@@ -911,7 +919,22 @@ export function makeCreationScreen(app) {
       ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = '#b07a08';
       text(ctx, state.name || '-------', 750, 350, { size: 22, align: 'center', color: GOLD, shadow: false });
       ctx.restore();
-      text(ctx, fmtStats(d), 750, 385, { size: 14, align: 'center' });
+      { const cSegs = [
+          { t: `MV+${d.mv}`, c: '#3a6ee0' },
+          { t: `  AT ${d.at}`, c: '#cc4a3a' },
+          { t: `  DF ${d.df}`, c: '#e0c63a' },
+          { t: `  HP ${d.maxHp}`, c: '#3aa84a' },
+        ];
+        ctx.font = font(14, true);
+        let cw = 0; for (const seg of cSegs) cw += Math.round(ctx.measureText(seg.t).width);
+        let csx = 750 - cw / 2;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        for (const seg of cSegs) {
+          const sw = Math.round(ctx.measureText(seg.t).width);
+          ctx.fillStyle = '#000'; ctx.fillText(seg.t, csx + 2, 387);
+          ctx.fillStyle = seg.c; ctx.fillText(seg.t, csx, 385);
+          csx += sw;
+        } }
       text(ctx, `displayed: MV ${d.mv}  DF ${d.df}  HP ${d.maxHp}`, 750, 420, { size: 12, align: 'center', color: DIM });
       text(ctx, 'type to name - arrows to adjust - Enter on BEGIN', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
     },
