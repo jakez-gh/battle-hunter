@@ -1906,6 +1906,11 @@ export function makeGameScreen(app, g) {
     }
     text(ctx, `R${st.round ?? '?'}`, X + 10, 13, { size: 13, color: GOLD });
     text(ctx, `deck ${_deckCount}`, X + 62, 13, { size: 13, color: _deckCol });
+    { const rp = 0.06 + 0.04 * Math.sin(hudT * 1.5);
+      const rrg = ctx.createRadialGradient(X + 164, 20, 2, X + 164, 20, 38);
+      rrg.addColorStop(0, '#a898c8'); rrg.addColorStop(1, 'transparent');
+      ctx.save(); ctx.globalAlpha = rp; ctx.fillStyle = rrg;
+      ctx.fillRect(X + 126, 6, 78, 26); ctx.restore(); }
     text(ctx, `relic L${st.relicLevel ?? '?'}`, X + 138, 13, { size: 13, color: '#a898c8' });
 
     (st.hunters || []).forEach((h, i) => {
@@ -2262,11 +2267,16 @@ export function makeResultsScreen(app, g) {
         const cnt = (v) => Math.round(v * Math.min(1, t / 1.8));
         const vals = [r.moved, r.damage, r.flagPts, r.killPts, r.handicap, r.itemPts];
         // Slot-colored fill bars behind each score value, proportional to per-category leader
-        { const bw = cw - 32, bx = x + 16;
+        { const bw2 = cw - 32, bx2 = x + 16;
           vals.forEach((v, j) => {
             const fill = maxVals[j] > 0 ? cnt(v) / maxVals[j] : 0;
-            if (fill > 0) { ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = SLOT_COLORS[h.slot ?? i];
-              ctx.fillRect(bx, 188 + j * 40, (bw * fill) | 0, 3); ctx.restore(); }
+            if (fill > 0) {
+              const bFill = (bw2 * fill) | 0;
+              ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = SLOT_COLORS[h.slot ?? i];
+              ctx.fillRect(bx2, 188 + j * 40, bFill, 5); ctx.restore();
+              ctx.save(); ctx.globalAlpha = 0.18; ctx.fillStyle = '#fff';
+              ctx.fillRect(bx2, 188 + j * 40, bFill, 2); ctx.restore();
+            }
           }); }
         vals.forEach((v, j) => text(ctx, String(cnt(v)), x + 84, 170 + j * 40, { size: 15, align: 'center' }));
         text(ctx, String(cnt(r.total)), x + 84, 410, { size: 18, align: 'center', color: GOLD });
