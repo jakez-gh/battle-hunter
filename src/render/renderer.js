@@ -2012,18 +2012,20 @@ export function createRenderer(canvas, opts = {}) {
     ctx.ellipse(cx, cy, 7 * s, 2 * s, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
-    // sonar ping: expands outward and fades every 2.2s
-    const pingPhase = (clock / 2200) % 1;
-    const pingRx = (7 + pingPhase * 6) * s;
-    const pingRy = (2 + pingPhase * 1.8) * s;
-    ctx.save();
-    ctx.globalAlpha = (1 - pingPhase) * 0.40;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = Math.max(1, s * 0.5);
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, pingRx, pingRy, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
+    // sonar ping: two interleaved rings expanding outward (staggered by half-period)
+    for (let pi = 0; pi < 2; pi++) {
+      const pingPhase = ((clock + pi * 1100) / 2200) % 1;
+      const pingRx = (7 + pingPhase * 6) * s;
+      const pingRy = (2 + pingPhase * 1.8) * s;
+      ctx.save();
+      ctx.globalAlpha = (1 - pingPhase) * 0.38;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = Math.max(1, s * 0.5);
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, pingRx, pingRy, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   function drawVignette() {
