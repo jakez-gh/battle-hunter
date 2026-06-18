@@ -1055,7 +1055,7 @@ export function createRenderer(canvas, opts = {}) {
           ctx.fillStyle = 'rgba(0,0,0,0.22)';
           ctx.fillRect(fp.x, fp.y + ts - 1, ts, 1);
           ctx.fillRect(fp.x + ts - 1, fp.y, 1, ts - 1);
-          const vs = 'rgba(10,10,18,0.38)'; const vd = 4 * cam.scale;
+          const vd = 6 * cam.scale;
           if (y > 0 && !b.floor[y - 1]?.[x]) {
             // Gradient wall-face shadow: stronger and smoother than flat strip
             const wsd = 10 * cam.scale;
@@ -1066,9 +1066,22 @@ export function createRenderer(canvas, opts = {}) {
             ctx.fillStyle = wsg;
             ctx.fillRect(fp.x, fp.y, ts, wsd);
           }
-          if (!b.floor[y + 1]?.[x]) { ctx.fillStyle = vs; ctx.fillRect(fp.x, fp.y + ts - vd, ts, vd); }
-          if (!b.floor[y]?.[x + 1]) { ctx.fillStyle = vs; ctx.fillRect(fp.x + ts - vd, fp.y, vd, ts); }
-          if (!b.floor[y]?.[x - 1]) { ctx.fillStyle = vs; ctx.fillRect(fp.x, fp.y, vd, ts); }
+          // Side & bottom edge AO: gradient to match top wall shadow style
+          if (!b.floor[y + 1]?.[x]) {
+            const bsg = ctx.createLinearGradient(0, fp.y + ts - vd, 0, fp.y + ts);
+            bsg.addColorStop(0, 'transparent'); bsg.addColorStop(1, 'rgba(0,0,0,0.45)');
+            ctx.fillStyle = bsg; ctx.fillRect(fp.x, fp.y + ts - vd, ts, vd);
+          }
+          if (!b.floor[y]?.[x + 1]) {
+            const rsg = ctx.createLinearGradient(fp.x + ts - vd, 0, fp.x + ts, 0);
+            rsg.addColorStop(0, 'transparent'); rsg.addColorStop(1, 'rgba(0,0,0,0.45)');
+            ctx.fillStyle = rsg; ctx.fillRect(fp.x + ts - vd, fp.y, vd, ts);
+          }
+          if (!b.floor[y]?.[x - 1]) {
+            const lsg = ctx.createLinearGradient(fp.x, 0, fp.x + vd, 0);
+            lsg.addColorStop(0, 'rgba(0,0,0,0.45)'); lsg.addColorStop(1, 'transparent');
+            ctx.fillStyle = lsg; ctx.fillRect(fp.x, fp.y, vd, ts);
+          }
         }
       }
     }
