@@ -307,9 +307,21 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'cardDrawn':
+      case 'cardDrawn': {
         deckShown = Math.max(0, deckShown - 1);
+        if (k?.[0] === 'h') {
+          const dp = displayPos(k);
+          if (dp) {
+            const dc = CARD_MINI[String(ev.card ?? '')[0]] ?? '#b8bce0';
+            for (let i = 0; i < 3; i++) {
+              sparkles.push({ wx: dp.x + 0.25 + i * 0.25, wy: dp.y + 0.5,
+                vx: (i - 1) * 0.35, vy: -0.7 - i * 0.15,
+                t: 0, ttl: 340, color: dc });
+            }
+          }
+        }
         break;
+      }
       case 'deckCount':
         deckShown = ev.count ?? ev.value ?? deckShown;
         break;
