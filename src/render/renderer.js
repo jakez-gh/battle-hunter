@@ -1263,7 +1263,11 @@ export function createRenderer(canvas, opts = {}) {
           && evKey(anim.ev) === k) alpha = Math.min(1, anim.t / anim.dur);
       list.push({ k, u: m, pos, alpha });
     }
-    for (const [k, g] of ghosts) list.push({ k, u: null, pos: g.pos, alpha: g.alpha });
+    for (const [k, g] of ghosts) {
+      const ghostAlpha = (g.dyingKey && anim?.ev.type === 'monsterKilled')
+        ? 1 - Math.min(1, anim.t / anim.dur) : g.alpha;
+      list.push({ k, u: null, pos: g.pos, alpha: ghostAlpha });
+    }
     list.sort((a, b) => (a.pos?.y ?? 0) - (b.pos?.y ?? 0));
     // Soft team-color glow beneath each hunter
     for (const d of list) {
