@@ -941,7 +941,13 @@ export function makeHubScreen(app) {
           ctx.restore(); ctx.restore();
         }
         sprite(app, ic.icon, r.x + r.w / 2 - 30, r.y + 16 + (sel ? Math.sin(t * 5) * 3 : 0), 5);
-        text(ctx, ic.label, r.x + r.w / 2, r.y + 96, { size: 16, align: 'center', color: sel ? GOLD : FG });
+        if (sel) {
+          ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = '#b07a08';
+          text(ctx, ic.label, r.x + r.w / 2, r.y + 96, { size: 16, align: 'center', color: GOLD, shadow: false });
+          ctx.restore();
+        } else {
+          text(ctx, ic.label, r.x + r.w / 2, r.y + 96, { size: 16, align: 'center', color: FG });
+        }
       });
       const INFO_ACCENT = { office: '#c07800', client: '#c09010', hospital: '#3aa84a', options: '#3a6ee0' };
       const infoAccent = INFO_ACCENT[ICONS[idx].id] ?? '#3c4364';
@@ -955,7 +961,9 @@ export function makeHubScreen(app) {
       const rec = currentHunter(app);
       if (rec) {
         drawHunterCard(app, rec, 120, 410, 480);
-        text(ctx, `${app.session.mode === 'story' ? `STORY - next mission ${Math.min(15, rec.storyProgress + 1)}` : 'NORMAL free-play'}`, 120, 500, { size: 15, color: OK });
+        ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = OK;
+        text(ctx, `${app.session.mode === 'story' ? `STORY - next mission ${Math.min(15, rec.storyProgress + 1)}` : 'NORMAL free-play'}`, 120, 500, { size: 15, color: OK, shadow: false });
+        ctx.restore();
         rec.items.slice(0, 6).forEach((slot, i) =>
           text(ctx, '- ' + itemName(slot), 640, 412 + i * 18, { size: 12, color: DIM }));
       } else {
