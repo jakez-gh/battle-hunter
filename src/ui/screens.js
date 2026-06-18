@@ -2033,7 +2033,11 @@ export function makeGameScreen(app, g) {
     // info panel (Tab cycles)
     const h = (st.hunters || [])[infoIndex];
     if (h) {
-      box(ctx, X, 344, W, 72, { title: `INFO: ${h.name} (Tab)` });
+      const infoAccent = PALETTE_ACCENT[h.palette] ?? '#3c4364';
+      box(ctx, X, 344, W, 72, { title: `INFO: ${h.name} (Tab)`, stroke: infoAccent + '88' });
+      { const ig = ctx.createLinearGradient(X + 4, 344, X + 70, 344);
+        ig.addColorStop(0, infoAccent + '22'); ig.addColorStop(1, 'transparent');
+        ctx.fillStyle = ig; ctx.fillRect(X + 4, 346, W - 8, 68); }
       const d = displayStats(h.internal ?? { mv: 1, at: 1, df: 1, hp: 1 }, h.level ?? 1);
       text(ctx, `Lv${h.level}  MV+${d.mv} AT${d.at} DF${d.df}`, X + 10, 370, { size: 12 });
       const names = (h.items || []).map((s) => itemName(s));
