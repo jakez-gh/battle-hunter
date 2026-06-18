@@ -2339,7 +2339,10 @@ export function makeResultsScreen(app, g) {
             ctx.fillRect(x + 2, 95, cw - 2, 435); ctx.restore();
           }
         }
-        text(ctx, r.name, x + 84, 130, { size: 15, align: 'center', color: SLOT_COLORS[h.slot ?? i] });
+        { const nc = SLOT_COLORS[h.slot ?? i];
+          ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = nc;
+          text(ctx, r.name, x + 84, 130, { size: 15, align: 'center', color: nc, shadow: false });
+          ctx.restore(); }
         // Score count-up animation: values tick from 0 to final over 1.8s
         const cnt = (v) => Math.round(v * Math.min(1, t / 1.8));
         const vals = [r.moved, r.damage, r.flagPts, r.killPts, r.handicap, r.itemPts];
@@ -2371,7 +2374,9 @@ export function makeResultsScreen(app, g) {
           text(ctx, String(cnt(r.total)), x + 84, 410, { size: 18, align: 'center', color: GOLD, shadow: false });
           ctx.restore();
         } else {
-          text(ctx, String(cnt(r.total)), x + 84, 410, { size: 18, align: 'center', color: GOLD });
+          ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = '#806010';
+          text(ctx, String(cnt(r.total)), x + 84, 410, { size: 18, align: 'center', color: GOLD, shadow: false });
+          ctx.restore();
         }
         { const pl = placeOf(r.id);
           const BADGE = ['#c8a020', '#9abce0', '#c87040', null];
