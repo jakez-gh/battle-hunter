@@ -1007,7 +1007,14 @@ export function createRenderer(canvas, opts = {}) {
         const fy = p.y - (rise + 10) * cam.scale;
         const fsz = Math.round((f.big ? 16 : 12) * pop);
         text(f.text, p.x + 1, fy + 1, 'rgba(0,0,0,0.65)', fsz, 'center');
-        text(f.text, p.x, fy, f.color, fsz, 'center');
+        if (f.big) {
+          const isNeg = String(f.text)[0] === '-';
+          ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = isNeg ? '#ff5050' : f.color;
+          text(f.text, p.x, fy, f.color, fsz, 'center');
+          ctx.restore();
+        } else {
+          text(f.text, p.x, fy, f.color, fsz, 'center');
+        }
       }
       ctx.restore();
     }
