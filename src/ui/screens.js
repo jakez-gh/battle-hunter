@@ -1846,8 +1846,12 @@ export function makeGameScreen(app, g) {
       mg.addColorStop(0, 'rgba(255,255,200,0.55)'); mg.addColorStop(1, 'transparent');
       ctx.save(); ctx.fillStyle = mg; ctx.fillRect(mx - 14, by - 6, 28, 30); ctx.restore();
     }
-    ctx.fillStyle = inZone ? '#ffe98a' : '#f0f4ff';
-    ctx.fillRect(mx - 3, by - 6, 6, 30);
+    if (inZone) {
+      ctx.save(); ctx.shadowBlur = 14; ctx.shadowColor = '#ffe98a';
+      ctx.fillStyle = '#ffe98a'; ctx.fillRect(mx - 3, by - 6, 6, 30); ctx.restore();
+    } else {
+      ctx.fillStyle = '#f0f4ff'; ctx.fillRect(mx - 3, by - 6, 6, 30);
+    }
   }
 
   function drawSteerHint(ctx, st) {
