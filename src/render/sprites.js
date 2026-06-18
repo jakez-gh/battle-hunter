@@ -406,7 +406,7 @@ export const TILES = {
 // UI — card frames (14x20, K = color band), icons, chips, statuses.
 const UI_PALETTE = {
   O: '#101018', K: '#888888', W: '#f0f4ff', X: '#23232e', Y: '#e8d87e',
-  R: '#cc4a3a', G: '#3aa84a',
+  R: '#cc4a3a', G: '#3aa84a', L: '#ffffff',
 };
 
 const CARD_FRAME = [
@@ -458,10 +458,15 @@ export function chipGrid(n) {
   const rows = Array.from({ length: 8 }, () => Array(8).fill('W'));
   for (let i = 0; i < 8; i++) { rows[0][i] = 'O'; rows[7][i] = 'O'; rows[i][0] = 'O'; rows[i][7] = 'O'; }
   for (const [r, c] of PIP_LAYOUTS[n].map((s) => [+s[0] + 1, +s[1] + 1])) rows[r][c] = 'X';
-  // Bottom-right inner bevel shadow where no pip exists — subtle 3-D depth
+  // Bottom-right inner bevel shadow; top-left highlight — subtle 3-D depth
   for (let i = 1; i < 7; i++) {
     if (rows[6][i] === 'W') rows[6][i] = 'K';
     if (rows[i][6] === 'W') rows[i][6] = 'K';
+  }
+  // Top & left highlight strip (key 'L' = near-white highlight)
+  for (let i = 1; i < 6; i++) {
+    if (rows[1][i] === 'W') rows[1][i] = 'L';
+    if (rows[i][1] === 'W') rows[i][1] = 'L';
   }
   return rows.map((r) => r.join(''));
 }
