@@ -2193,8 +2193,10 @@ export function makeMissionBriefingScreen(app, mission) {
       ctx.fillStyle = mbloom; ctx.fillRect(BX, BY - 20, BW, 120);
       box(ctx, BX, BY, BW, BH, { title: 'MISSION BRIEFING' });
 
+      ctx.save(); ctx.shadowBlur = 16; ctx.shadowColor = '#b07a08';
       text(ctx, 'M' + String(mission.id).padStart(2, '0') + '  ' + mission.title,
-        BX + 20, BY + 36, { size: 22, color: GOLD });
+        BX + 20, BY + 36, { size: 22, color: GOLD, shadow: false });
+      ctx.restore();
 
       text(ctx, 'Level ' + mission.level, BX + 20, BY + 70, { size: 14, color: DIM });
       text(ctx, mission.type.toUpperCase(), BX + 130, BY + 70,
@@ -2237,7 +2239,9 @@ export function makeMissionBriefingScreen(app, mission) {
       // Pulsing green glow along the top edge of the deploy button
       ctx.save(); ctx.globalAlpha = dpulse * 0.55; ctx.fillStyle = '#3aa84a';
       ctx.fillRect(BX + 20, depY, BW - 40, 2); ctx.restore();
-      text(ctx, 'Enter: DEPLOY', app.W / 2, depY + 6, { size: 17, align: 'center', color: OK });
+      ctx.save(); ctx.shadowBlur = Math.round(12 * dpulse); ctx.shadowColor = '#3aa84a';
+      text(ctx, 'Enter: DEPLOY', app.W / 2, depY + 6, { size: 17, align: 'center', color: OK, shadow: false });
+      ctx.restore();
       text(ctx, 'Esc: back', app.W / 2, depY + 26, { size: 12, align: 'center', color: DIM });
     },
   };
