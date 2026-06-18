@@ -1137,6 +1137,14 @@ export function createRenderer(canvas, opts = {}) {
       ctx.fillRect(p.x - s, p.y - s, TILE * s + 2 * s, TILE * s + 2 * s);
       ctx.restore();
       if (isWyrm) {
+        // Floor shadow: large pulsing dark ellipse beneath WYRM
+        const wyrmShadowCy = p.y + TILE * s * 0.92;
+        const wyrmSrx = (8.5 + 2.5 * Math.sin(clock / 1300 + m.id * 0.8)) * s;
+        const wyrmSry = (2.4 + 0.9 * Math.cos(clock / 1100 + m.id * 0.6)) * s;
+        ctx.save(); ctx.globalAlpha = 0.38 + 0.12 * Math.sin(clock / 950 + m.id);
+        ctx.fillStyle = '#120025';
+        ctx.beginPath(); ctx.ellipse(cx, wyrmShadowCy, wyrmSrx, wyrmSry, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
         for (let ri = 0; ri < 2; ri++) {
           const ringPhase = ((clock + ri * 1600) / 3200) % 1;
           const ringR = (9 + ringPhase * 18) * s;
