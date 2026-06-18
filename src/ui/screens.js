@@ -1541,13 +1541,37 @@ export function makeGameScreen(app, g) {
     const x = 160, y = 320, w = 400, h = 84;
     box(ctx, x, y, w, h, { stroke: GOLD, title: tm.kind === 'react.dodge' ? 'DODGE! press at center' : 'BRACE! press at center' });
     const bx = x + 20, bw = w - 40, by = y + 46;
-    ctx.fillStyle = '#23263a';
+    // Track
+    ctx.fillStyle = '#151828';
     ctx.fillRect(bx, by, bw, 18);
+    // Green zone with feathered glow
     const zw = bw * TIMING.window * 2;
+    const zx = bx + bw / 2 - zw / 2;
+    const zg = ctx.createLinearGradient(zx - 8, 0, zx + zw + 8, 0);
+    zg.addColorStop(0, 'transparent');
+    zg.addColorStop(0.2, '#3aa84a');
+    zg.addColorStop(0.8, '#3aa84a');
+    zg.addColorStop(1, 'transparent');
+    ctx.save();
     ctx.fillStyle = '#3aa84a';
-    ctx.fillRect(bx + bw / 2 - zw / 2, by, zw, 18);
+    ctx.fillRect(zx, by, zw, 18);
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = zg;
+    ctx.fillRect(zx - 8, by, zw + 16, 18);
+    ctx.restore();
+    // Shine on zone
+    ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#fff';
+    ctx.fillRect(zx, by, zw, 5); ctx.restore();
+    // Marker
     const mx = bx + markerPos(tm.t) * bw;
-    ctx.fillStyle = '#fff';
+    const inZone = Math.abs(markerPos(tm.t) - 0.5) <= TIMING.window;
+    // marker glow when in zone
+    if (inZone) {
+      const mg = ctx.createRadialGradient(mx, by + 9, 0, mx, by + 9, 14);
+      mg.addColorStop(0, 'rgba(255,255,200,0.55)'); mg.addColorStop(1, 'transparent');
+      ctx.save(); ctx.fillStyle = mg; ctx.fillRect(mx - 14, by - 6, 28, 30); ctx.restore();
+    }
+    ctx.fillStyle = inZone ? '#ffe98a' : '#f0f4ff';
     ctx.fillRect(mx - 3, by - 6, 6, 30);
   }
 
