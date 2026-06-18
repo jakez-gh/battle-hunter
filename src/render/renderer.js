@@ -648,16 +648,25 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'missionWon':
+      case 'missionWon': {
         banner = { text: 'MISSION COMPLETE', color: '#ffe98a', startMs: clock };
         turnFlash = { color: '#7ee8a0', t: 0, dur: 900 };
-        // Multi-burst celebration across the board
+        shake = { t: 0, dur: 380, mag: 2.5 };
+        // Fireworks: 24-particle burst from every hunter + center screen
+        const WIN_COLS = ['#fff', '#ffe98a', '#7ee8a0', '#f0a0ff', '#7ec8f8', '#ffc040'];
         for (const h of state?.hunters ?? []) {
-          const hk = `h${h.id}`;
-          addSparkles(hk, '#ffe98a');
-          addSparkles(hk, '#7ee8a0');
+          const wp2 = displayPos(`h${h.id}`);
+          if (!wp2) continue;
+          for (let i = 0; i < 24; i++) {
+            const a = (i / 24) * Math.PI * 2;
+            const spd = 1.6 + (i % 5) * 0.5;
+            sparkles.push({ wx: wp2.x + 0.5, wy: wp2.y + 0.3, vx: Math.cos(a) * spd,
+              vy: Math.sin(a) * spd - 0.7, t: 0, ttl: 750,
+              color: WIN_COLS[i % WIN_COLS.length] });
+          }
         }
         break;
+      }
       case 'missionLost':
         banner = { text: 'MISSION FAILED', color: '#ff6a5a', startMs: clock };
         turnFlash = { color: '#cc3333', t: 0, dur: 700 };
