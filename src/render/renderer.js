@@ -2364,8 +2364,14 @@ export function createRenderer(canvas, opts = {}) {
           const tv = Object.values(st.totals).filter((v) => typeof v === 'number');
           text(tv.join(' vs '), bx + bw / 2, by + 124, '#f0f4ff', 12, 'center');
         }
-        { ctx.save(); ctx.shadowBlur = 14; ctx.shadowColor = '#ff5050';
-          text(`-${st.damage}`, bx + bw / 2, by + 150, '#ff6a5a', 24, 'center');
+        { const dmgCx = (bx + bw / 2) | 0, dmgCy = (by + 150) | 0;
+          // Bounce-in pop: scale from 1→1.4→1 over the first 35% of non-rolling phase
+          const popP = (anim?.ev.type === 'strikeRolled') ? Math.min(1, (anim.t / anim.dur - 0.5) / 0.35) : 1;
+          const popScale = 1 + Math.sin(Math.max(0, popP) * Math.PI) * 0.40;
+          ctx.save();
+          ctx.translate(dmgCx, dmgCy); ctx.scale(popScale, popScale); ctx.translate(-dmgCx, -dmgCy);
+          ctx.shadowBlur = 14; ctx.shadowColor = '#ff5050';
+          text(`-${st.damage}`, dmgCx, dmgCy, '#ff6a5a', 24, 'center');
           ctx.restore(); }
         if (st.crit && anim?.ev.type === 'strikeRolled') {
           const p = anim.t / anim.dur;
