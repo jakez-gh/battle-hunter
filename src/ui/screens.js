@@ -71,6 +71,7 @@ const FG = '#e8e8f0', DIM = '#9aa0b4', GOLD = '#e8d87e', BAD = '#e06a5a', OK = '
 const SLOT_COLORS = ['#4a7dff', '#e05a4a', '#e0c63a', '#3aa84a']; // P1-P4 (§2.2)
 const CARD_HEX = { red: '#e05a4a', yellow: '#e0c63a', blue: '#4a7dff', green: '#3aa84a' };
 const MONSTER_KIND_COLOR = { VAC: '#50b0e8', OOZ: '#50c84a', FNG: '#e09040', WYRM: '#9870d8' };
+const STATUS_GLOW_COLORS = { stun: '#d8b83a', leg: '#4a7dff', panic: '#e05a4a', empty: '#9aa0b4' };
 
 // Battle respond hints — exported so layout tests can verify these fit in the
 // 232px game menu at size 13 (≈0.6em/char Courier New → 212px available for
@@ -1945,14 +1946,23 @@ export function makeGameScreen(app, g) {
         ctx.fillRect(X + 60, y + 26, 120 * ratio, 10);
         ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#fff';
         ctx.fillRect(X + 60, y + 26, 120 * ratio, 4); ctx.restore();
+        if (ratio <= 0.25) {
+          const urgency = 0.5 + 0.5 * Math.sin(hudT * 6.5);
+          ctx.save(); ctx.globalAlpha = urgency * 0.45; ctx.fillStyle = '#ff9a7e';
+          ctx.fillRect(X + 60, y + 26, Math.round(120 * ratio), 10); ctx.restore();
+        }
       }
       const hpCol = ratio <= 0.25 ? (0.5 + 0.5 * Math.sin(hudT * 6)) > 0.5 ? BAD : '#9d2a2a' : DIM;
       text(ctx, `${h.hp}/${h.maxHp}`, X + 186, y + 22, { size: 11, color: hpCol });
       text(ctx, `hand ${h.hand?.length ?? 0}  bag ${h.items?.length ?? 0}`, X + 60, y + 40, { size: 11, color: DIM });
-      // status glyphs
+      // status glyphs — pulsing colored background behind each icon
       let sx = X + 160;
       for (const sk of ['stun', 'leg', 'panic', 'empty']) {
-        if (h.status?.[sk]) { sprite(app, `status.${sk}`, sx, y + 40, 2); sx += 18; }
+        if (!h.status?.[sk]) continue;
+        const sp2 = 0.40 + 0.40 * Math.sin(hudT * 4.5 + (sk === 'stun' ? 0 : sk === 'leg' ? 2.1 : sk === 'panic' ? 4.2 : 1.05));
+        ctx.save(); ctx.globalAlpha = sp2 * 0.72; ctx.fillStyle = STATUS_GLOW_COLORS[sk] ?? '#9aa0b4';
+        ctx.fillRect(sx - 1, y + 39, 18, 16); ctx.restore();
+        sprite(app, `status.${sk}`, sx, y + 40, 2); sx += 18;
       }
     });
 

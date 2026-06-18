@@ -2138,9 +2138,10 @@ export function createRenderer(canvas, opts = {}) {
   function drawVignette() {
     const w = canvas.width;
     const h = canvas.height - HUD_H;
+    const breathe = 0.018 * Math.sin(clock / 5800);
     const grad = ctx.createRadialGradient(w / 2, h / 2, h * 0.2, w / 2, h / 2, h * 0.9);
     grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.48)');
+    grad.addColorStop(1, `rgba(0,0,0,${(0.48 + breathe).toFixed(3)})`);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
   }
