@@ -221,26 +221,46 @@ function drawWallpaper(ctx, W, H, index) {
     }
     ctx.restore();
   } else if (wp.pattern === 'dots') {
-    // Dots breathe slowly between 3 and 4.5px
+    // Dots breathe and drift on a per-dot Lissajous orbit
     const dr = 3 + 1.5 * Math.sin(t * 0.8);
-    for (let y = S / 2; y < H; y += S) for (let x = S / 2; x < W; x += S)
-      ctx.fillRect((x - dr) | 0, (y - dr) | 0, dr * 2 + 1 | 0, dr * 2 + 1 | 0);
+    for (let y = S / 2; y < H; y += S) for (let x = S / 2; x < W; x += S) {
+      const ph = (Math.round(x / S) * 7 + Math.round(y / S) * 11) * 0.47;
+      const dx = Math.sin(t * 0.24 + ph) * 3.5;
+      const dy = Math.cos(t * 0.19 + ph * 0.71) * 3.5;
+      ctx.fillRect((x + dx - dr) | 0, (y + dy - dr) | 0, (dr * 2 + 1) | 0, (dr * 2 + 1) | 0);
+    }
   } else if (wp.pattern === 'stripes') {
     // Stripes drift slowly upward — seamlessly wraps every S pixels
     const drift = (t * 8) % S;
     for (let y = -S + drift; y < H; y += S) ctx.fillRect(0, y | 0, W, 10);
   } else if (wp.pattern === 'diag') {
-    // Lines drift diagonally at 12px/s — S-periodic so it wraps seamlessly
+    // Forward lines drift right; faint back-slash cross lines at 0.32 alpha → diamond weave
     const drift = (t * 12) % S;
     ctx.beginPath();
     for (let x = -H - S + drift; x < W; x += S) { ctx.moveTo(x, 0); ctx.lineTo(x + H, H); }
     ctx.stroke();
+    ctx.save(); ctx.globalAlpha = 0.32;
+    const bdrift = ((-t * 8) % S + S) % S;
+    ctx.beginPath();
+    for (let x = -S + bdrift; x < W + H; x += S) { ctx.moveTo(x, 0); ctx.lineTo(x - H, H); }
+    ctx.stroke();
+    ctx.restore();
   } else if (wp.pattern === 'rings') {
-    // Rings breathe: radius oscillates ±4px on a slow cycle
+    // Rings breathe + each node fires an expanding pulse ring at a staggered phase offset
     const ringR = S / 3 + 4 * Math.sin(t * 0.55);
     ctx.lineWidth = 1.5;
     for (let y = S; y < H; y += S * 2) for (let x = S; x < W; x += S * 2) {
       ctx.beginPath(); ctx.arc(x, y, ringR, 0, Math.PI * 2); ctx.stroke();
+      const seed = (x * 31 + y * 17) & 0xFFF;
+      const period = 2600 + (seed % 1200);
+      const phase = ((t * 1000 + seed * 23) % period) / period;
+      if (phase < 0.50) {
+        const pr = ringR * 0.8 + phase * S * 1.2;
+        const pa = (1 - phase / 0.50) * 0.40;
+        ctx.save(); ctx.globalAlpha = pa; ctx.lineWidth = 1.0;
+        ctx.beginPath(); ctx.arc(x, y, pr, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
     }
   }
   // Radial vignette darkens edges and corners on every wallpaper
@@ -919,6 +939,7 @@ export function makeHubScreen(app) {
 export function makeClientScreen(app) {
   const host = makeMenuHost();
   let note = '';
+  let t = 0;
 
   function rootMenu() {
     const rec = currentHunter(app);
@@ -1113,10 +1134,26 @@ export function makeClientScreen(app) {
 
   return {
     enter() { host.push(rootMenu()); },
+    update(dt) { t += dt; },
     onKey(k) { host.key(k); },
     onClick(pos) { host.click(pos); },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      // Ambient motes: gold and cobalt, contracts/value theme
+      { const MOTE_C = [GOLD, '#4a6dd1', '#e8c050', '#8b6830'];
+        for (let i = 0; i < 8; i++) {
+          const bx = ((i * 173 + 47) % 660) + 100;
+          const by = ((i * 251 + 83) % 480) + 80;
+          const sp = 0.030 + (i % 4) * 0.015;
+          const mx = bx + Math.sin(t * sp + i * 1.3) * 18;
+          const my = by + Math.cos(t * sp * 0.7 + i * 0.9) * 10;
+          const ma = 0.06 + 0.05 * Math.sin(t * 0.8 + i * 1.1);
+          ctx.save(); ctx.globalAlpha = Math.max(0, ma); ctx.fillStyle = MOTE_C[i % 4];
+          const ms = i % 3 === 0 ? 2 : 1.5;
+          ctx.fillRect((mx - ms * 0.3) | 0, (my - ms) | 0, Math.max(1, ms * 0.6) | 0, ms * 2);
+          ctx.fillRect((mx - ms) | 0, (my - ms * 0.3) | 0, ms * 2, Math.max(1, ms * 0.6) | 0);
+          ctx.restore();
+        } }
       drawGoldBloom(ctx, app.W / 2);
       ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = '#b07a08';
       text(ctx, 'CLIENT DESK', app.W / 2, 30, { size: 34, align: 'center', color: GOLD, shadow: false });
@@ -1136,6 +1173,7 @@ export function makeClientScreen(app) {
 export function makeHospitalScreen(app) {
   const host = makeMenuHost();
   let note = '';
+  let t = 0;
 
   function rootMenu() {
     const rec = currentHunter(app);
@@ -1211,10 +1249,26 @@ export function makeHospitalScreen(app) {
 
   return {
     enter() { host.push(rootMenu()); },
+    update(dt) { t += dt; },
     onKey(k) { host.key(k); },
     onClick(pos) { host.click(pos); },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      // Ambient motes: green and white, healing/restoration theme
+      { const MOTE_C = ['#3aa84a', '#7ee8a0', '#a0f0c0', '#5ad870'];
+        for (let i = 0; i < 8; i++) {
+          const bx = ((i * 191 + 61) % 660) + 100;
+          const by = ((i * 239 + 97) % 480) + 80;
+          const sp = 0.025 + (i % 4) * 0.012;
+          const mx = bx + Math.sin(t * sp + i * 1.7) * 16;
+          const my = by + Math.cos(t * sp * 0.65 + i * 1.1) * 11;
+          const ma = 0.06 + 0.05 * Math.sin(t * 0.75 + i * 1.3);
+          ctx.save(); ctx.globalAlpha = Math.max(0, ma); ctx.fillStyle = MOTE_C[i % 4];
+          const ms = i % 3 === 0 ? 2 : 1.5;
+          ctx.fillRect((mx - ms * 0.3) | 0, (my - ms) | 0, Math.max(1, ms * 0.6) | 0, ms * 2);
+          ctx.fillRect((mx - ms) | 0, (my - ms * 0.3) | 0, ms * 2, Math.max(1, ms * 0.6) | 0);
+          ctx.restore();
+        } }
       drawGoldBloom(ctx, app.W / 2);
       ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = '#b07a08';
       text(ctx, 'HOSPITAL', app.W / 2, 30, { size: 34, align: 'center', color: GOLD, shadow: false });
