@@ -1333,6 +1333,21 @@ export function createRenderer(canvas, opts = {}) {
           ctx.fillRect((dx - s * 0.5) | 0, dy | 0, Math.max(1, s) | 0, Math.max(1, s * 1.5) | 0);
           ctx.restore();
         }
+        // Rising bubbles: 4 small circles float upward through the slime body
+        for (let j = 0; j < 4; j++) {
+          const bperiod = 1800 + j * 290;
+          const bphase = ((clock + j * (bperiod / 4) + m.id * 430) % bperiod) / bperiod;
+          const bx = cx + (j - 1.5) * s * 2.2;
+          const by = cy + s * 3 - bphase * s * 9;
+          const br = (0.7 + j % 2 * 0.5) * s;
+          const ba = Math.sin(bphase * Math.PI) * 0.50;
+          if (ba < 0.06) continue;
+          ctx.save(); ctx.globalAlpha = ba;
+          ctx.strokeStyle = j % 2 === 0 ? '#7ae87a' : '#a0f0a0';
+          ctx.lineWidth = Math.max(0.5, s * 0.4);
+          ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+        }
       }
       if (m.kind === 'VAC') {
         // Radar sweep: rotating sector with trailing ghost lines (cyan, consistent with aura)
@@ -1418,6 +1433,12 @@ export function createRenderer(canvas, opts = {}) {
         // Shine
         ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = '#fff';
         ctx.fillRect(barX, barY, fill, Math.max(1, barH >> 1)); ctx.restore();
+        // Low-HP urgency flash
+        if (ratio <= 0.25) {
+          const urgency = 0.5 + 0.5 * Math.sin(clock / 220 + m.id * 0.8);
+          ctx.save(); ctx.globalAlpha = urgency * 0.52; ctx.fillStyle = '#ff9a7e';
+          ctx.fillRect(barX, barY, fill, barH); ctx.restore();
+        }
       }
     }
   }
