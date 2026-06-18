@@ -258,9 +258,7 @@ function applyEndTurn(state, rng) {
       }
     }
     if (current.status?.empty > 0) current.status.empty = Math.max(0, current.status.empty - 1);
-    // Calmant: auto-cure panic at turn end.
-    if (hunterHasEffect(current, 'calmant')) current.status.panic = 0;
-    else if (current.status?.panic > 0) current.status.panic = Math.max(0, current.status.panic - 1);
+    if (current.status?.panic > 0) current.status.panic = Math.max(0, current.status.panic - 1);
     // Angel Feather: heal 1d6 HP after each own turn (blocked by Old Doll).
     if (hunterHasEffect(current, 'angelfeather') && !hunterHasEffect(current, 'olddoll')) {
       const heal = rng.d6();
@@ -306,6 +304,11 @@ function applyEndTurn(state, rng) {
   state.battle = null;
   state.pendingChoice = null;
   state.turn = { moved: false, rested: false, actAgain: false };
+  // Calmant: auto-cure panic at turn START (§2.14) — fires for incoming unit.
+  if (next.kind === 'hunter') {
+    const nextUnit = resolveUnit(state, next);
+    if (nextUnit && hunterHasEffect(nextUnit, 'calmant')) nextUnit.status.panic = 0;
+  }
   addEvent(state, { type: 'turnStarted', unit: state.current });
 }
 
@@ -1232,7 +1235,7 @@ export function applyAction(state, action) {
 
   try {
     if (next.phase === 'mission.over' && action.type === 'confirm') {
-      next.result = { win: !!next._missionEnd?.win };
+      next.result = { win: !!next._missionEnd?.win, wipe: /wyrm/i.test(String(next._missionEnd?.reason || '')) };
       next.phase = 'completed';
       return { state: next, events: next.events };
     }

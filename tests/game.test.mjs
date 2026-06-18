@@ -909,3 +909,52 @@ test('Longcoat (+3) raises escape dTotal more than Slick Boots (+1)', () => {
   assert.ok(bootsEv && coatEv, 'escape events emitted');
   assert.equal(coatEv.dTotal, bootsEv.dTotal + 2, 'Longcoat (+3) beats Slick Boots (+1) by +2');
 });
+
+// ---------------------------------------------------------------------------
+// state.result.wipe (§2.8): WYRM kill propagated to completed result
+
+test('result.wipe is true after WYRM kills target holder and mission is confirmed', () => {
+  const s = makeMonsterBattleState(1, 'WYRM', true);
+  s.monsters[0].at = 99; s.monsters[0].df = 0; s.monsters[0].mv = 3;
+  let r = applyAction(s, { type: 'respond', response: 'guard' });
+  r = applyAction(r.state, { type: 'battleCard', card: null });
+  r = applyAction(r.state, { type: 'battleCard', card: null });
+  assert.equal(r.state.phase, 'mission.over', 'WYRM kill triggers mission.over');
+  r = applyAction(r.state, { type: 'confirm' });
+  assert.equal(r.state.phase, 'completed');
+  assert.equal(r.state.result.win, false);
+  assert.equal(r.state.result.wipe, true, 'result.wipe=true for WYRM eliminating target holder');
+});
+
+test('result.wipe is false on a normal win (non-WYRM reason)', () => {
+  const state = makeGame(1);
+  const s = JSON.parse(JSON.stringify(state));
+  s.phase = 'mission.over';
+  s._missionEnd = { win: true, reason: 'hunter exited with target' };
+  const { state: after } = applyAction(s, { type: 'confirm' });
+  assert.equal(after.result.win, true);
+  assert.equal(after.result.wipe, false, 'wipe is false when reason is not WYRM');
+});
+
+// ---------------------------------------------------------------------------
+// Calmant: panic cleared at turn START (§2.14), not end
+
+test('calmant clears panic at turn start, not end', () => {
+  // h0's turn → rest → applyEndTurn → h1 becomes current → calmant fires for h1
+  const state = makeGame(1);
+  const s = JSON.parse(JSON.stringify(state));
+  s.hunters[0].items = [];
+  s.hunters[0].human = false;
+  s.hunters[1].items = [{ itemId: 'calmant', identified: true }];
+  s.hunters[1].status.panic = 2;
+  // Confirm h0 is currently acting (index 0)
+  assert.equal(s.current?.kind, 'hunter');
+  assert.equal(s.current?.index, 0);
+  // h0 rests — ends h0's turn, starts h1's turn with calmant active
+  const { state: after } = applyAction(s, { type: 'rest' });
+  // h1 is now current
+  assert.equal(after.current?.kind, 'hunter');
+  assert.equal(after.current?.index, 1);
+  // Calmant must have cleared h1's panic at the START of h1's turn
+  assert.equal(after.hunters[1].status.panic, 0, 'calmant cleared panic at h1 turn start');
+});

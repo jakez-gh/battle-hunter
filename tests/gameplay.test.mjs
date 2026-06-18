@@ -719,3 +719,146 @@ test('same seed produces identical final state (full-game determinism)', () => {
   assert.deepEqual(r1.state._missionEnd, r2.state._missionEnd,
     'same seed must produce the same mission end result');
 });
+
+// ---------------------------------------------------------------------------
+// 16. All 15 Story Missions — Parametric Simulation
+
+for (const mission of STORY_MISSIONS) {
+  test(`story mission ${mission.id} "${mission.title}" (${mission.type}, L${mission.level}) runs to completion`, () => {
+    const seed = 42 + mission.id;
+    const { state, steps } = runGame(
+      {
+        seed, mode: 'story', mission,
+        hunters: [
+          fastHunter('h0', 0), fastHunter('h1', 1),
+          fastHunter('h2', 2), fastHunter('h3', 3),
+        ],
+      },
+      5000,
+    );
+    assert.equal(state.phase, 'mission.over',
+      `mission ${mission.id} "${mission.title}" (seed ${seed}) stuck in '${state.phase}' after ${steps} steps`);
+    assert.ok(state._missionEnd,
+      `mission ${mission.id} "${mission.title}": _missionEnd not set at mission.over`);
+    assert.equal(typeof state._missionEnd.win, 'boolean',
+      `mission ${mission.id} "${mission.title}": _missionEnd.win must be boolean`);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 17. Monster Lifecycle
+
+test('monsterSpawned events fire when hunters move (20% chance per turn)', () => {
+  // Monsters spawn with 20% probability per moved-hunter-turn, capped at
+  // MAX_REGULAR_MONSTERS (2) simultaneously. In a long 4-hunter game, spawns
+  // recur as monsters are killed, producing many spawn events overall.
+  const { events } = runGame({
+    seed: 5, mode: 'normal',
+    hunters: [
+      makeHunter('h0', 0), makeHunter('h1', 1),
+      makeHunter('h2', 2), makeHunter('h3', 3),
+    ],
+  }, 5000);
+  assert.ok(
+    events.some((e) => e.type === 'monsterSpawned'),
+    'expected at least one monsterSpawned event in a long 4-hunter game; ' +
+    'events seen: ' + [...new Set(events.map((e) => e.type))].join(', '),
+  );
+});
+
+test('wyrmSpawned fires when a hunter moves with an empty deck', () => {
+  // maybeSpawnMonster() checks deck.length === 0 when state.turn.moved is true
+  // (set at move-action time before any steps). Draining the deck before the
+  // game starts ensures the first hunter move triggers a WYRM spawn.
+  const base = createGame({
+    seed: 1, mode: 'normal',
+    hunters: [makeHunter('h0', 0), makeHunter('h1', 1)],
+  });
+  const s = JSON.parse(JSON.stringify(base));
+  s.deck = [];
+  let state = s;
+  const events = [];
+  for (let i = 0; i < 500 && state.phase !== 'mission.over'; i++) {
+    const action = chooseAction({ ...state, legalActions: (ss) => legalActions(ss) });
+    if (!action) break;
+    const out = applyAction(state, action);
+    events.push(...(out.state.events ?? []));
+    state = out.state;
+    if (events.some((e) => e.type === 'wyrmSpawned' || e.type === 'wyrmRespawned')) break;
+  }
+  assert.ok(
+    events.some((e) => e.type === 'wyrmSpawned' || e.type === 'wyrmRespawned'),
+    'wyrmSpawned/wyrmRespawned must fire after a hunter moves with an empty deck; ' +
+    'events seen: ' + [...new Set(events.map((e) => e.type))].join(', '),
+  );
+});
+
+// ---------------------------------------------------------------------------
+// 18. Combat Consequences
+
+test('hunterDefeated events fire in a combat-heavy game', () => {
+  // High AT (8) and low maxHp (10) means hunters can one- or two-shot each
+  // other, producing frequent defeats across a 4-hunter game.
+  // seed 17 reliably produces defeats (seed 42 ends before any fight occurs).
+  const { events } = runGame({
+    seed: 17, mode: 'normal',
+    hunters: [
+      makeHunter('h0', 0, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
+      makeHunter('h1', 1, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
+      makeHunter('h2', 2, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
+      makeHunter('h3', 3, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
+    ],
+  });
+  assert.ok(
+    events.some((e) => e.type === 'hunterDefeated'),
+    'expected at least one hunterDefeated event in a high-AT combat game; ' +
+    'events seen: ' + [...new Set(events.map((e) => e.type))].join(', '),
+  );
+});
+
+test('repeated defeats reduce hunter maxHp — defeatHunter halves maxHp each time', () => {
+  // defeatHunter() calls Math.floor(maxHp / 2) on the victim. In a long combat-
+  // heavy game at least one hunter accumulates enough defeats to have visibly
+  // reduced maxHp compared to their starting value of 10.
+  const originalMaxHp = 10;
+  const { state } = runGame({
+    seed: 17, mode: 'normal',
+    hunters: [
+      makeHunter('h0', 0, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: originalMaxHp }),
+      makeHunter('h1', 1, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: originalMaxHp }),
+      makeHunter('h2', 2, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: originalMaxHp }),
+      makeHunter('h3', 3, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: originalMaxHp }),
+    ],
+  });
+  const reduced = state.hunters.filter((h) => h.maxHp < originalMaxHp);
+  assert.ok(
+    reduced.length > 0,
+    'at least one hunter must have reduced maxHp after a combat-heavy game; ' +
+    'final maxHp values: ' + state.hunters.map((h) => `${h.id}=${h.maxHp}`).join(', '),
+  );
+  for (const h of reduced) {
+    assert.ok(h.maxHp >= 1,
+      `hunter ${h.id} maxHp must remain ≥ 1 after defeat(s), got ${h.maxHp}`);
+  }
+});
+
+test('healed events fire when hunters rest at low HP', () => {
+  // applyRest() always fires a healed event (ceil(maxHp/4) HP recovered unless
+  // olddoll item). The AI rests when HP fraction < 0.5 (restHp threshold), so
+  // in a 4-hunter combat-heavy game with frequent damage, rests and heals occur.
+  // seed 7 reliably produces healed events (seed 42 ends too fast to need rests).
+  const { events } = runGame({
+    seed: 7, mode: 'normal',
+    hunters: [
+      makeHunter('h0', 0, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
+      makeHunter('h1', 1, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
+      makeHunter('h2', 2, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
+      makeHunter('h3', 3, { internal: { mv: 3, at: 8, df: 1, hp: 3 }, maxHp: 10 }),
+    ],
+  });
+  assert.ok(
+    events.some((e) => e.type === 'healed'),
+    'expected healed events in a combat-heavy game where hunters rest after taking damage; ' +
+    'events seen: ' + [...new Set(events.map((e) => e.type))].join(', '),
+  );
+});
