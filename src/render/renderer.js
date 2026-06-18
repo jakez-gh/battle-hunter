@@ -291,6 +291,21 @@ export function createRenderer(canvas, opts = {}) {
             }
           }
         }
+        // Puddle splash: blue circular ripple when landing on a wet tile
+        { const toPos = ev.to ?? ev.pos ?? null;
+          if (toPos) {
+            const pudH = ((toPos.x * 1637 + toPos.y * 3571) ^ 997) & 0xFFFF;
+            if ((pudH & 0xFF) < 30) {
+              for (let i = 0; i < 8; i++) {
+                const a = (i / 8) * Math.PI * 2;
+                const spd = 0.55 + (i % 3) * 0.28;
+                sparkles.push({ wx: toPos.x + 0.5, wy: toPos.y + 0.68,
+                  vx: Math.cos(a) * spd, vy: Math.sin(a) * spd * 0.35 - 0.1,
+                  t: 0, ttl: 300, color: i % 3 === 0 ? '#c8e8f8' : i % 3 === 1 ? '#7aabe0' : '#a0c8ec',
+                  round: true });
+              }
+            }
+          } }
         break;
       }
       case 'monsterMoved': {
@@ -349,6 +364,21 @@ export function createRenderer(canvas, opts = {}) {
             }
           }
         }
+        // Puddle splash for monster landing tile
+        { const mto = ev.to ?? ev.pos ?? (Array.isArray(ev.path) ? ev.path[ev.path.length - 1] : null);
+          if (mto) {
+            const pudH = ((mto.x * 1637 + mto.y * 3571) ^ 997) & 0xFFFF;
+            if ((pudH & 0xFF) < 30) {
+              for (let i = 0; i < 8; i++) {
+                const a = (i / 8) * Math.PI * 2;
+                const spd = 0.55 + (i % 3) * 0.28;
+                sparkles.push({ wx: mto.x + 0.5, wy: mto.y + 0.68,
+                  vx: Math.cos(a) * spd, vy: Math.sin(a) * spd * 0.35 - 0.1,
+                  t: 0, ttl: 300, color: i % 3 === 0 ? '#c8e8f8' : i % 3 === 1 ? '#7aabe0' : '#a0c8ec',
+                  round: true });
+              }
+            }
+          } }
         break;
       }
       case 'cardPlayed': {
