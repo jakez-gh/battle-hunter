@@ -1861,7 +1861,10 @@ export function makeGameScreen(app, g) {
       const mfill = Math.round(88 * mr);
       ctx.fillStyle = '#151828'; ctx.fillRect(X + 52, my + 2, 88, 7);
       if (mfill > 0) {
-        const [mc0, mc1] = mr > 0.5 ? ['#e05a3a', '#a02820'] : mr > 0.25 ? ['#f07020', '#a04810'] : ['#ff4a3a', '#c02020'];
+        const isWyrm = mo.kind === 'WYRM';
+        const [mc0, mc1] = isWyrm
+          ? (mr > 0.5 ? ['#9850d8', '#6030a8'] : mr > 0.25 ? ['#c060f0', '#8030c0'] : ['#e050ff', '#a020d0'])
+          : (mr > 0.5 ? ['#e05a3a', '#a02820'] : mr > 0.25 ? ['#f07020', '#a04810'] : ['#ff4a3a', '#c02020']);
         const mmg = ctx.createLinearGradient(X + 52, my + 2, X + 52, my + 9);
         mmg.addColorStop(0, mc0); mmg.addColorStop(1, mc1);
         ctx.fillStyle = mmg; ctx.fillRect(X + 52, my + 2, mfill, 7);
@@ -1869,7 +1872,8 @@ export function makeGameScreen(app, g) {
         ctx.fillRect(X + 52, my + 2, mfill, 3); ctx.restore();
         if (mr <= 0.25) {
           ctx.save(); ctx.globalAlpha = 0.10 + 0.09 * Math.sin(hudT * 6);
-          ctx.fillStyle = '#ff2020'; ctx.fillRect(X + 52, my, 88, 11); ctx.restore();
+          ctx.fillStyle = isWyrm ? '#c020ff' : '#ff2020';
+          ctx.fillRect(X + 52, my, 88, 11); ctx.restore();
         }
       }
       text(ctx, `${mo.hp}/${mo.maxHp}`, X + W - 8, my, { size: 10, align: 'right', color: mkc });
