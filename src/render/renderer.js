@@ -1930,6 +1930,15 @@ export function createRenderer(canvas, opts = {}) {
     ctx.save(); ctx.globalAlpha = 0.38; ctx.fillStyle = '#000';
     ctx.fillRect(cx + chipScale * 0.5, cy + chipScale * 0.5, 8 * chipScale, 8 * chipScale);
     ctx.restore();
+    // High-roll glow: gold for 6, warm amber for 5 — reinforces landing a strong die
+    if (settled && v >= 5) {
+      const gcol = v >= 6 ? '#ffe98a' : '#ffc840';
+      const gcx = cx + 4 * chipScale, gcy = cy + 4 * chipScale;
+      const cg = ctx.createRadialGradient(gcx, gcy, 0, gcx, gcy, 8 * chipScale);
+      cg.addColorStop(0, gcol); cg.addColorStop(1, 'transparent');
+      ctx.save(); ctx.globalAlpha = v >= 6 ? 0.42 : 0.28; ctx.fillStyle = cg;
+      ctx.fillRect(cx - 4 * chipScale, cy - 4 * chipScale, 16 * chipScale, 16 * chipScale); ctx.restore();
+    }
     blit(`chip.${clamp(v, 1, 6) | 0}`, cx, cy, chipScale);
     // Diagonal gloss — top-left specular highlight fading to transparent
     { const cw = 8 * chipScale;
