@@ -2103,11 +2103,23 @@ export function makeGameScreen(app, g) {
       ctx.fillRect(X, 424, W, rivalHold ? 60 : 44); ctx.restore();
     }
     box(ctx, X, 424, W, rivalHold ? 60 : 44, { title: st.missionTitle ?? 'GOAL', stroke: targetHeld ? GOLD : undefined });
-    text(ctx, goalLine, X + 10, 450, { size: 11, color: targetHeld ? GOLD : DIM });
+    if (targetHeld) {
+      ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = '#906000';
+      text(ctx, goalLine, X + 10, 450, { size: 11, color: GOLD, shadow: false });
+      ctx.restore();
+    } else {
+      text(ctx, goalLine, X + 10, 450, { size: 11, color: DIM });
+    }
     if (rivalHold) {
       const rivalsFree = st.round > (st.rescueHoldRounds ?? 0);
       const holdText = rivalsFree ? 'rivals active!' : ('rivals hold R1-R' + st.rescueHoldRounds);
-      text(ctx, holdText, X + 10, 466, { size: 10, color: rivalsFree ? BAD : DIM });
+      if (rivalsFree) {
+        ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = BAD;
+        text(ctx, holdText, X + 10, 466, { size: 10, color: BAD, shadow: false });
+        ctx.restore();
+      } else {
+        text(ctx, holdText, X + 10, 466, { size: 10, color: DIM });
+      }
     }
 
     // the human's hand, mini cards
