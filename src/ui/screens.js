@@ -1901,7 +1901,9 @@ export function makeGameScreen(app, g) {
   }
 
   function drawSteerHint(ctx, st) {
-    box(ctx, 724, 420, 232, 84, { title: 'STEER' });
+    const _sh = st.current?.kind === 'hunter' ? st.hunters?.[st.current.index] : null;
+    const _sc = _sh ? (SLOT_COLORS[(_sh.slot ?? 0) % 4] ?? '#3c4364') : '#3c4364';
+    box(ctx, 724, 420, 232, 84, { title: 'STEER', stroke: _sc });
     const rem = st.move?.remaining ?? 0;
     const used = st.move?.path?.length ?? 0;
     const total = Math.max(rem + used, 1);
