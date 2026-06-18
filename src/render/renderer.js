@@ -584,10 +584,21 @@ export function createRenderer(canvas, opts = {}) {
         if (ev.crit) {
           addSparkles(battle?.d ?? k, '#ffe98a');
           shake = { t: 0, dur: 450, mag: 3.0 };
-        } else if ((ev.damage ?? 0) >= 5) {
-          shake = { t: 0, dur: 350, mag: 2.5 };
-        } else if ((ev.damage ?? 0) >= 3) {
-          shake = { t: 0, dur: 250, mag: 1.5 };
+        } else if ((ev.damage ?? 0) > 0) {
+          // Impact burst: red/orange sparks proportional to damage
+          const idk = battle?.d ?? k;
+          const idp = displayPos(idk);
+          if (idp) {
+            const cnt = (ev.damage ?? 0) >= 5 ? 10 : 7;
+            for (let i = 0; i < cnt; i++) {
+              const a = (i / cnt) * Math.PI * 2;
+              sparkles.push({ wx: idp.x + 0.5, wy: idp.y + 0.4, vx: Math.cos(a) * 1.1,
+                vy: Math.sin(a) * 1.1 - 0.8, t: 0, ttl: 360,
+                color: i % 3 === 0 ? '#fff' : i % 3 === 1 ? '#ff9060' : '#ff6a5a' });
+            }
+          }
+          if ((ev.damage ?? 0) >= 5) shake = { t: 0, dur: 350, mag: 2.5 };
+          else if ((ev.damage ?? 0) >= 3) shake = { t: 0, dur: 250, mag: 1.5 };
         }
         break;
       case 'statusInflicted': {
