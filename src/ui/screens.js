@@ -458,7 +458,23 @@ function drawHunterCard(app, rec, x, y, w) {
     ctx.save(); ctx.shadowBlur = 4; ctx.shadowColor = '#906000';
     text(ctx, `${rec.credits} cr`, x + 76 + lvW, y + 30, { size: 14, color: GOLD, shadow: false });
     ctx.restore(); }
-  text(ctx, fmtStats({ ...d, maxHp: rec.maxHp }) + (rec.maxHp < baseMaxHp(rec) ? `/${baseMaxHp(rec)}` : ''), x + 76, y + 50, { size: 13, color: DIM });
+  { const hp = rec.maxHp, base = baseMaxHp(rec);
+    const segs = [
+      { t: `MV+${d.mv}`, c: '#3a6ee0' },
+      { t: `  AT ${d.at}`, c: '#cc4a3a' },
+      { t: `  DF ${d.df}`, c: '#e0c63a' },
+      { t: `  HP ${hp}${hp < base ? '/' + base : ''}`, c: '#3aa84a' },
+    ];
+    ctx.font = font(13, true);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    let sx = x + 76;
+    for (const seg of segs) {
+      ctx.fillStyle = '#000'; ctx.fillText(seg.t, sx + 2, y + 52);
+      ctx.save(); ctx.shadowBlur = 3; ctx.shadowColor = seg.c;
+      ctx.fillStyle = seg.c; ctx.fillText(seg.t, sx, y + 50);
+      ctx.restore();
+      sx += Math.round(ctx.measureText(seg.t).width);
+    } }
 }
 
 // ---------------------------------------------------------------------------
@@ -2138,7 +2154,20 @@ export function makeGameScreen(app, g) {
         ig.addColorStop(0, infoAccent + '22'); ig.addColorStop(1, 'transparent');
         ctx.fillStyle = ig; ctx.fillRect(X + 4, 346, W - 8, 68); }
       const d = displayStats(h.internal ?? { mv: 1, at: 1, df: 1, hp: 1 }, h.level ?? 1);
-      text(ctx, `Lv${h.level}  MV+${d.mv} AT${d.at} DF${d.df}`, X + 10, 370, { size: 12 });
+      { const iSegs = [
+          { t: `Lv${h.level}  `, c: GOLD },
+          { t: `MV+${d.mv} `, c: '#3a6ee0' },
+          { t: `AT${d.at} `, c: '#cc4a3a' },
+          { t: `DF${d.df}`, c: '#e0c63a' },
+        ];
+        ctx.font = font(12, true);
+        ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        let isx = X + 10;
+        for (const seg of iSegs) {
+          ctx.fillStyle = '#000'; ctx.fillText(seg.t, isx + 1, 371);
+          ctx.fillStyle = seg.c; ctx.fillText(seg.t, isx, 370);
+          isx += Math.round(ctx.measureText(seg.t).width);
+        } }
       const names = (h.items || []).map((s) => itemName(s));
       // Clip to 30 chars: 3 longest names joined = 46 chars; at sz=11 that's 304px but box is 212px wide.
       const clipLine = (s) => (s.length > 30 ? s.slice(0, 27) + '...' : s);
