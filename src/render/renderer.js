@@ -899,14 +899,7 @@ export function createRenderer(canvas, opts = {}) {
       tg.addColorStop(0.35, `rgba(255,160,60,${(flicker * 0.3).toFixed(3)})`);
       tg.addColorStop(1, 'transparent');
       ctx.fillStyle = tg;
-      ctx.fillRect(0, 0, canvas.width, canvas.height - HUD_H);
-      // Cool dungeon shadow: tiles beyond torch range fade to near-black
-      const dk = ctx.createRadialGradient(lightPos.x, lightPos.y, lr * 0.40, lightPos.x, lightPos.y, lr * 1.05);
-      dk.addColorStop(0, 'transparent');
-      dk.addColorStop(1, 'rgba(0,0,14,0.38)');
-      ctx.save(); ctx.fillStyle = dk;
-      ctx.fillRect(0, 0, canvas.width, canvas.height - HUD_H);
-      ctx.restore(); }
+      ctx.fillRect(0, 0, canvas.width, canvas.height - HUD_H); }
     if (state.debug) {
       for (const t of b.traps ?? []) drawTrap(t);
     } else {
