@@ -935,6 +935,19 @@ export function createRenderer(canvas, opts = {}) {
       ctx.fillStyle = gr;
       ctx.fillRect(p.x - s, p.y - s, TILE * s + 2 * s, TILE * s + 2 * s);
       ctx.restore();
+      if (isWyrm) {
+        const ringPhase = (clock / 3200) % 1;
+        const ringR = (9 + ringPhase * 18) * s;
+        const ringAlpha = (1 - ringPhase) * 0.30;
+        ctx.save();
+        ctx.globalAlpha = ringAlpha;
+        ctx.strokeStyle = 'rgba(140,60,220,0.9)';
+        ctx.lineWidth = s * 0.5;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, ringR, ringR * 0.28, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
     }
   }
 
