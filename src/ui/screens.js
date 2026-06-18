@@ -264,10 +264,11 @@ function drawWallpaper(ctx, W, H, index) {
       }
     }
   }
-  // Radial vignette darkens edges and corners on every wallpaper
+  // Radial vignette — very slight breathing pulse gives the menus a living feel
+  const vigBreathe = 0.016 * Math.sin(t / 5.8);
   const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.15, W / 2, H / 2, H * 0.95);
   vig.addColorStop(0, 'transparent');
-  vig.addColorStop(1, 'rgba(0,0,0,0.52)');
+  vig.addColorStop(1, `rgba(0,0,0,${(0.52 + vigBreathe).toFixed(3)})`);
   ctx.fillStyle = vig;
   ctx.fillRect(0, 0, W, H);
 }

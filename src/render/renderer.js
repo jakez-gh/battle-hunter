@@ -1833,15 +1833,20 @@ export function createRenderer(canvas, opts = {}) {
       const barY = labelY + 10;
       const ratio = m.maxHp ? clamp(m.hp / m.maxHp, 0, 1) : 0;
       const labelCol = MONSTER_LABEL_COLOR[m.kind] ?? '#ff8866';
-      // Kind label above HP bar
+      // Kind label above HP bar — colored glow matches monster brand color
+      ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = labelCol;
       text(m.kind, cx, labelY, labelCol, 9, 'center');
+      ctx.restore();
       // Dark backdrop behind HP bar
       ctx.save(); ctx.globalAlpha = 0.72; ctx.fillStyle = '#080a12';
       ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2); ctx.restore();
-      // Colored HP fill
+      // Colored HP fill — WYRM gets purple, others red-orange (matches sidebar)
       const fill = Math.round(barW * ratio);
       if (fill > 0) {
-        const [mc0, mc1] = ratio > 0.5 ? ['#e05a3a', '#a82820'] : ratio > 0.25 ? ['#f07020', '#a04810'] : ['#ff4040', '#c01818'];
+        const isWyrm = m.kind === 'WYRM';
+        const [mc0, mc1] = isWyrm
+          ? (ratio > 0.5 ? ['#9850d8', '#6030a8'] : ratio > 0.25 ? ['#c060f0', '#8030c0'] : ['#e050ff', '#a020d0'])
+          : (ratio > 0.5 ? ['#e05a3a', '#a82820'] : ratio > 0.25 ? ['#f07020', '#a04810'] : ['#ff4040', '#c01818']);
         const mg = ctx.createLinearGradient(barX, barY, barX, barY + barH);
         mg.addColorStop(0, mc0); mg.addColorStop(1, mc1);
         ctx.fillStyle = mg;
