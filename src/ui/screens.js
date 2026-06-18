@@ -303,8 +303,9 @@ const PALETTE_ACCENT = {
 const itemName = (slot) => {
   const it = ITEMS[slot.itemId];
   if (!it) return slot.itemId;
-  if (slot.identified || !it.cursed) return slot.identified ? it.name : `??? (${it.cursed ? 'cursed' : 'sealed'})`;
-  return '??? (cursed)';
+  if (!slot.identified) return it.cursed ? '??? (cursed)' : `??? (sealed)`;
+  const m = slot.identified && it.effect ? /^(?:at|df|escape)\+(\d)$/.exec(it.effect) : null;
+  return m ? `${it.name} +${m[1]}` : it.name;
 };
 
 function drawGoldBloom(ctx, cx) {
@@ -1600,7 +1601,7 @@ export function makeGameScreen(app, g) {
       box(ctx, X, 344, W, 72, { title: `INFO: ${h.name} (Tab)` });
       const d = displayStats(h.internal ?? { mv: 1, at: 1, df: 1, hp: 1 }, h.level ?? 1);
       text(ctx, `Lv${h.level}  MV+${d.mv} AT${d.at} DF${d.df}`, X + 10, 370, { size: 12 });
-      const names = (h.items || []).map((s) => (s.identified ? ITEMS[s.itemId]?.name ?? s.itemId : '???'));
+      const names = (h.items || []).map((s) => itemName(s));
       // Clip to 30 chars: 3 longest names joined = 46 chars; at sz=11 that's 304px but box is 212px wide.
       const clipLine = (s) => (s.length > 30 ? s.slice(0, 27) + '...' : s);
       text(ctx, clipLine(names.slice(0, 3).join(', ') || 'no items'), X + 10, 386, { size: 11, color: DIM });
@@ -1710,7 +1711,7 @@ export function makeResultsScreen(app, g) {
   return {
     enter() { app.music(win ? 'results' : 'gameover'); },
     update(dt) {
-      t += dt / 1000;
+      t += dt;
       if (win) {
         for (const c of confetti) {
           c.x += c.vx;
