@@ -1150,24 +1150,28 @@ export function createRenderer(canvas, opts = {}) {
         }
       }
       if (m.kind === 'VAC') {
-        // Radar sweep: thin rotating sector from center
+        // Radar sweep: rotating sector with trailing ghost lines (cyan, consistent with aura)
         const angle = (clock / 2200) * Math.PI * 2;
         const sweepR = 9 * s;
         ctx.save();
-        ctx.globalAlpha = 0.22;
-        ctx.fillStyle = '#ffd23e';
+        // Three trailing ghost lines fading behind the sweep
+        for (let gi = 3; gi >= 0; gi--) {
+          ctx.globalAlpha = (4 - gi) / 4 * 0.38;
+          ctx.strokeStyle = '#50b0e8';
+          ctx.lineWidth = s * 0.5;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx + Math.cos(angle - gi * 0.18) * sweepR, cy + Math.sin(angle - gi * 0.18) * sweepR);
+          ctx.stroke();
+        }
+        // Filled sector at current sweep angle
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = '#50b0e8';
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, sweepR, angle - 0.3, angle);
         ctx.closePath();
         ctx.fill();
-        ctx.globalAlpha = 0.45;
-        ctx.strokeStyle = '#ffd23e';
-        ctx.lineWidth = s * 0.5;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(cx + Math.cos(angle) * sweepR, cy + Math.sin(angle) * sweepR);
-        ctx.stroke();
         ctx.restore();
       }
       if (m.kind === 'FNG') {
