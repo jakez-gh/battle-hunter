@@ -401,17 +401,26 @@ const itemTier = (slot) => {
   const m = slot.identified && it?.effect ? /^(?:at|df|escape)\+(\d)$/.exec(it.effect) : null;
   return m ? +m[1] : 0;
 };
+const ITEM_CAT_COLOR = {
+  weapon: '#cc4a3a', armor: '#e0c63a', escape: '#3a6ee0',
+  special: '#a060d8', counter: '#3aa84a', sensor: '#3aacc8',
+  treasure: '#b8c0d0',
+};
+
 function drawItemList(ctx, items, x, y0, hudT) {
   items.slice(0, 6).forEach((slot, i) => {
     const tier = itemTier(slot);
     const label = '- ' + itemName(slot);
     const ly = y0 + i * 18;
-    if (slot.identified && tier >= 3) {
+    if (!slot.identified) {
+      text(ctx, label, x, ly, { size: 12, color: DIM });
+    } else if (tier >= 3) {
       ctx.save(); ctx.shadowBlur = 4 + 2 * Math.sin(hudT * 1.8 + i * 1.1); ctx.shadowColor = '#906000';
       text(ctx, label, x, ly, { size: 12, color: GOLD, shadow: false });
       ctx.restore();
     } else {
-      const col = !slot.identified ? DIM : tier >= 2 ? '#d8cc88' : '#b8c0d0';
+      const it = ITEMS[slot.itemId];
+      const col = ITEM_CAT_COLOR[it?.category] ?? '#b8c0d0';
       text(ctx, label, x, ly, { size: 12, color: col });
     }
   });
