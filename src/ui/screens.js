@@ -2834,30 +2834,30 @@ export function makeManualScreen(app) {
     {
       title: 'THE BASICS',
       sections: [
-        { head: 'Goal', body: 'Be the first hunter to carry the Target Item out through the EXIT tile. The Target is hidden inside one of the boxes on the board.' },
-        { head: 'Your Turn', body: 'Each turn: Move (roll 1d6, use cards to extend), Rest (draw 2 cards; 3 from empty hand), or play cards for their effects. You must take at least one action.' },
-        { head: 'Target Found', body: 'Once a hunter opens the Target box, everyone on the board knows who holds it. From that point, rivals will pursue the holder.' },
-        { head: 'Winning', body: 'Step onto EXIT while holding the Target to win. In Story mode, a rival exiting with the Target, or the WYRM defeating the holder, ends the game as a loss.' },
+        { head: 'Goal', headColor: GOLD, body: 'Be the first hunter to carry the Target Item out through the EXIT tile. The Target is hidden inside one of the boxes on the board.' },
+        { head: 'Your Turn', headColor: '#3a6ee0', body: 'Each turn: Move (roll 1d6, use cards to extend), Rest (draw 2 cards; 3 from empty hand), or play cards for their effects. You must take at least one action.' },
+        { head: 'Target Found', headColor: '#e0c63a', body: 'Once a hunter opens the Target box, everyone on the board knows who holds it. From that point, rivals will pursue the holder.' },
+        { head: 'Winning', headColor: OK, body: 'Step onto EXIT while holding the Target to win. In Story mode, a rival exiting with the Target, or the WYRM defeating the holder, ends the game as a loss.' },
       ],
     },
     {
       title: 'MOVEMENT',
       sections: [
-        { head: 'Rolling', body: 'Choose Move to roll 1d6. Play Blue cards before or during movement to add +1, +2, or +3 to your budget. You must move at least 1 step.' },
-        { head: 'Steering', body: 'Move one tile at a time with arrow keys. You can backtrack freely. Press Enter to stop early. Movement ends when your budget hits zero.' },
-        { head: 'Boxes & Flags', body: 'Boxes open at the end of movement on their tile. Flag tiles trigger a 1d6 roll for points each turn you land or stay on them.' },
-        { head: 'Traps', body: 'Traps trigger when you step onto their tile. Press a direction key at the right moment to dodge (human players only). Monsters ignore traps.' },
-        { head: 'Green Cards', body: 'Playing a Green card places a trap on your current tile before you move. You can dodge your own trap.' },
+        { head: 'Rolling', headColor: '#4a7dff', body: 'Choose Move to roll 1d6. Play Blue cards before or during movement to add +1, +2, or +3 to your budget. You must move at least 1 step.' },
+        { head: 'Steering', headColor: '#3a6ee0', body: 'Move one tile at a time with arrow keys. You can backtrack freely. Press Enter to stop early. Movement ends when your budget hits zero.' },
+        { head: 'Boxes & Flags', headColor: GOLD, body: 'Boxes open at the end of movement on their tile. Flag tiles trigger a 1d6 roll for points each turn you land or stay on them.' },
+        { head: 'Traps', headColor: BAD, body: 'Traps trigger when you step onto their tile. Press a direction key at the right moment to dodge (human players only). Monsters ignore traps.' },
+        { head: 'Green Cards', headColor: '#3aa84a', body: 'Playing a Green card places a trap on your current tile before you move. You can dodge your own trap.' },
       ],
     },
     {
       title: 'BATTLE',
       sections: [
-        { head: 'Starting a Battle', body: 'Move onto a tile occupied by another hunter or monster. You are the attacker; they defend.' },
-        { head: 'Attacker Options', body: 'Attack: deal AT damage (play Red cards for +AT). Guard: double your DF (play Yellow). Escape: flee roll vs pursuer MV (play Blue to boost).' },
-        { head: 'Defender Options', body: 'Counter: fight back with Red or Yellow cards. Guard: Yellow cards for DF boost, no return damage. Surrender: hand over one item and end combat.' },
-        { head: 'Damage & Crits', body: 'Damage = (AT + card) - (DF + card), minimum 0. Rolling doubles = Critical Hit. Attacker gains a bonus effect; defender may get Panic. Human defenders can negate crits by pressing a key at the right moment.' },
-        { head: 'Defeat', body: 'At 0 HP: warp to a random tile, lose 1 permanent max HP, attacker picks one item. HP restores fully on the next turn. The Target changes hands on defeat.' },
+        { head: 'Starting a Battle', headColor: '#cc4a3a', body: 'Move onto a tile occupied by another hunter or monster. You are the attacker; they defend.' },
+        { head: 'Attacker Options', headColor: '#cc4a3a', body: 'Attack: deal AT damage (play Red cards for +AT). Guard: double your DF (play Yellow). Escape: flee roll vs pursuer MV (play Blue to boost).' },
+        { head: 'Defender Options', headColor: '#e0c63a', body: 'Counter: fight back with Red or Yellow cards. Guard: Yellow cards for DF boost, no return damage. Surrender: hand over one item and end combat.' },
+        { head: 'Damage & Crits', headColor: BAD, body: 'Damage = (AT + card) - (DF + card), minimum 0. Rolling doubles = Critical Hit. Attacker gains a bonus effect; defender may get Panic. Human defenders can negate crits by pressing a key at the right moment.' },
+        { head: 'Defeat', headColor: BAD, body: 'At 0 HP: warp to a random tile, lose 1 permanent max HP, attacker picks one item. HP restores fully on the next turn. The Target changes hands on defeat.' },
       ],
     },
     {
@@ -2902,19 +2902,19 @@ export function makeManualScreen(app) {
     {
       title: 'SCORING & CREDITS',
       sections: [
-        { head: 'Score Sources', body: 'Movement: 15pts/tile.  Damage: 25pts/HP dealt.  Flags: face value per roll.  Monster kills: 500-750 bonus.  Handicap: (relic level - your level) x 250.  Items held: 250pts each.  Target Item: +1250pts.  Cap: 50,000pts.' },
-        { head: 'Credits Earned', body: 'Credits = floor(score / 15 x relic level). The hunter who returned the Target also receives its sale price.' },
-        { head: 'Story Bonus', body: 'Story mode clear pays an extra 1/4 of the next level-up cost.' },
-        { head: 'Hospital', body: 'Level up costs 1,000cr (Lv1->2) scaling to 46,500cr (Lv14->15). Max HP repair: 50cr x your level per 1 HP restored.' },
+        { head: 'Score Sources', headColor: GOLD, body: 'Movement: 15pts/tile.  Damage: 25pts/HP dealt.  Flags: face value per roll.  Monster kills: 500-750 bonus.  Handicap: (relic level - your level) x 250.  Items held: 250pts each.  Target Item: +1250pts.  Cap: 50,000pts.' },
+        { head: 'Credits Earned', headColor: GOLD, body: 'Credits = floor(score / 15 x relic level). The hunter who returned the Target also receives its sale price.' },
+        { head: 'Story Bonus', headColor: '#3aacc8', body: 'Story mode clear pays an extra 1/4 of the next level-up cost.' },
+        { head: 'Hospital', headColor: OK, body: 'Level up costs 1,000cr (Lv1->2) scaling to 46,500cr (Lv14->15). Max HP repair: 50cr x your level per 1 HP restored.' },
       ],
     },
     {
       title: 'MISSION TYPES',
       sections: [
-        { head: 'Fetch', body: 'Standard mission. The Target Item is sealed inside one of the boxes. Find it, pick it up, and reach EXIT.' },
-        { head: 'Rescue', body: 'A survivor waits at a fixed position on the board. Reach them first. If a RAVEN agent gets there before you, the mission is lost. RAVEN teams hold back for the first couple of rounds.' },
-        { head: 'Re-steal', body: 'A RAVEN agent starts the mission already holding the Target. Defeat or outmanoeuvre them to take it, then escape via EXIT.' },
-        { head: 'Story Rivals', body: 'Keld (attack specialist) and Mira (speed specialist) are recurring rivals with stats that scale with mission level. Both use Clever AI: collect items until the Target is found, then pursue relentlessly.' },
+        { head: 'Fetch', headColor: GOLD, body: 'Standard mission. The Target Item is sealed inside one of the boxes. Find it, pick it up, and reach EXIT.' },
+        { head: 'Rescue', headColor: OK, body: 'A survivor waits at a fixed position on the board. Reach them first. If a RAVEN agent gets there before you, the mission is lost. RAVEN teams hold back for the first couple of rounds.' },
+        { head: 'Re-steal', headColor: BAD, body: 'A RAVEN agent starts the mission already holding the Target. Defeat or outmanoeuvre them to take it, then escape via EXIT.' },
+        { head: 'Story Rivals', headColor: '#cc4a3a', body: 'Keld (attack specialist) and Mira (speed specialist) are recurring rivals with stats that scale with mission level. Both use Clever AI: collect items until the Target is found, then pursue relentlessly.' },
       ],
     },
   ];
