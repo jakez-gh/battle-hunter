@@ -1207,7 +1207,7 @@ export function makeClientScreen(app) {
       if (party.length < 4 && available.length > 0) {
         items.push({ label: `+ Add P${party.length + 1}`, value: { kind: 'add' }, color: OK });
       }
-      items.push({ label: `Start  (relic Lv${m.level})`, value: { kind: 'start', mission: m }, color: OK });
+      items.push({ label: 'Start', right: `relic Lv${m.level}`, rightColor: '#a898c8', value: { kind: 'start', mission: m }, color: OK });
       items.push({ label: 'Cancel', value: { kind: 'cancel' } });
       return makeMenu(items, {
         title: 'PARTY SETUP',
@@ -1234,7 +1234,7 @@ export function makeClientScreen(app) {
     function addHunterMenu() {
       const party = currentParty();
       const available = app.roster.hunters.filter((h) => !party.find((p) => p.id === h.id));
-      const items = available.map((h) => ({ label: h.name, right: `Lv${h.level}`, value: h.id }));
+      const items = available.map((h) => ({ label: h.name, right: `Lv${h.level}`, rightColor: GOLD, value: h.id }));
       items.push({ label: 'Cancel', value: null });
       return makeMenu(items, {
         title: `ADD P${party.length + 1}`,
@@ -2793,7 +2793,13 @@ export function makeMissionBriefingScreen(app, mission) {
         BX + 20, BY + 36, { size: 22, color: GOLD, shadow: false });
       ctx.restore();
 
-      text(ctx, 'Level ' + mission.level, BX + 20, BY + 70, { size: 14, color: DIM });
+      { const lvStr = 'Level ';
+        ctx.font = font(14, false); ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+        const lvW = Math.round(ctx.measureText(lvStr).width);
+        text(ctx, lvStr, BX + 20, BY + 70, { size: 14, color: DIM });
+        ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = '#7860a8';
+        text(ctx, String(mission.level), BX + 20 + lvW, BY + 70, { size: 14, color: '#a898c8', shadow: false });
+        ctx.restore(); }
       { const tc = TYPE_COLOR[mission.type] || FG;
         ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = tc;
         text(ctx, mission.type.toUpperCase(), BX + 130, BY + 70, { size: 14, color: tc, shadow: false });
