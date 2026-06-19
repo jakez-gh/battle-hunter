@@ -1767,11 +1767,11 @@ export function makeGameScreen(app, g) {
       const attacks = acts.filter((a) => a.type === 'attack');
       const rest = acts.find((a) => a.type === 'rest');
       const items = [];
-      if (moves.length) items.push({ label: 'Move', value: () => host.push(subMenu('MOVE - play a card?', moves)) });
-      if (attacks.length) items.push({ label: 'Attack', value: () => (attacks.length === 1 ? act(attacks[0]) : host.push(subMenu('ATTACK - target', attacks))) });
-      if (rest) items.push({ label: actionLabel(st, rest), value: () => act(rest) });
+      if (moves.length) items.push({ label: 'Move', color: '#3a6ee0', value: () => host.push(subMenu('MOVE - play a card?', moves)) });
+      if (attacks.length) items.push({ label: 'Attack', color: '#cc4a3a', value: () => (attacks.length === 1 ? act(attacks[0]) : host.push(subMenu('ATTACK - target', attacks))) });
+      if (rest) items.push({ label: actionLabel(st, rest), color: '#3aa84a', value: () => act(rest) });
       for (const a of acts) {
-        if (!['move', 'attack', 'rest'].includes(a.type)) items.push({ label: actionLabel(st, a), value: () => act(a) });
+        if (!['move', 'attack', 'rest'].includes(a.type)) items.push({ label: actionLabel(st, a), color: '#9aa0b4', value: () => act(a) });
       }
       host.push(makeMenu(items, { title: 'YOUR TURN', onPick: (fn) => fn() }));
       return;
@@ -1811,7 +1811,11 @@ export function makeGameScreen(app, g) {
   }
 
   function subMenu(title, acts) {
-    return makeMenu(acts.map((a) => ({ label: actionLabel(g.state, a), value: a })), {
+    return makeMenu(acts.map((a) => ({
+      label: actionLabel(g.state, a),
+      color: a.card ? (CARD_HEX[cardColor(a.card)] ?? null) : null,
+      value: a,
+    })), {
       title,
       onPick: (a) => act(a),
       onCancel: host.menus.length ? () => { host.pop(); } : null,
