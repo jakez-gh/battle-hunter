@@ -1889,8 +1889,8 @@ export function makeGameScreen(app, g) {
       if (k === 'cancel' && !host.top()) {
         host.push(makeMenu(
           [
-            { label: 'Resume', value: 'resume' },
-            { label: 'Return to Hub', value: 'hub' },
+            { label: 'Resume', value: 'resume', color: OK },
+            { label: 'Return to Hub', value: 'hub', color: BAD },
           ],
           {
             title: 'Paused',
