@@ -492,10 +492,10 @@ function drawHunterCard(app, rec, x, y, w) {
 export function makeTitleScreen(app) {
   let t = 0;
   const menu = makeMenu([
-    { label: 'STORY', value: 'story' },
-    { label: 'NORMAL', value: 'normal' },
-    { label: 'HOW TO PLAY', value: 'manual' },
-    { label: 'OPTIONS', value: 'options' },
+    { label: 'STORY', value: 'story', color: GOLD },
+    { label: 'NORMAL', value: 'normal', color: '#4a7dff' },
+    { label: 'HOW TO PLAY', value: 'manual', color: '#3aacc8' },
+    { label: 'OPTIONS', value: 'options', color: DIM },
   ], {
     onPick(v) {
       if (v === 'options') { app.stack.push(makeOptionsScreen(app)); return; }

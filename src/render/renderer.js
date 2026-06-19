@@ -1159,6 +1159,18 @@ export function createRenderer(canvas, opts = {}) {
             }
             ctx.restore();
           }
+          // Bone fragment: ~2% of floor tiles bear a faint cross-shaped battle relic
+          { const bfh = ((x * 3107 + y * 2477) ^ 1847) & 0xFFFF;
+            if ((bfh & 0xFF) < 5) {
+              const bcs = cam.scale;
+              const bfx = (fp.x + (4 + (bfh >> 4 & 7)) * bcs) | 0;
+              const bfy = (fp.y + (4 + (bfh >> 9 & 5)) * bcs) | 0;
+              ctx.save(); ctx.globalAlpha = 0.15 + 0.05 * ((bfh >> 12) & 3);
+              ctx.fillStyle = '#8a7060';
+              ctx.fillRect(bfx, bfy - bcs, bcs, bcs * 3);
+              ctx.fillRect(bfx - bcs, bfy, bcs * 3, bcs);
+              ctx.restore();
+            } }
           ctx.fillStyle = 'rgba(0,0,0,0.22)';
           ctx.fillRect(fp.x, fp.y + ts - 1, ts, 1);
           ctx.fillRect(fp.x + ts - 1, fp.y, 1, ts - 1);
