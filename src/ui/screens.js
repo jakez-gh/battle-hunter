@@ -622,7 +622,7 @@ export function makeRosterScreen(app, opts = {}) {
 
   function rootMenu() {
     const hs = app.roster.hunters;
-    const items = hs.map((h) => ({ label: h.name, right: `Lv${h.level} ${h.credits}cr`, value: { kind: 'hunter', id: h.id } }));
+    const items = hs.map((h) => ({ label: h.name, right: `Lv${h.level} ${h.credits}cr`, rightColor: GOLD, value: { kind: 'hunter', id: h.id } }));
     items.push({ label: '+ Register new hunter', value: { kind: 'new' }, color: OK });
     items.push({ label: 'Back', value: { kind: 'back' } });
     return makeMenu(items, {
@@ -1137,6 +1137,7 @@ export function makeClientScreen(app) {
     const rec = currentHunter(app);
     if (app.session.mode === 'story') {
       const unlockedTo = Math.min(15, rec.storyProgress + 1);
+      const TYPE_COL = { fetch: GOLD, rescue: OK, resteal: BAD };
       const items = STORY_MISSIONS.map((m) => {
         const cleared = m.id <= (rec.storyProgress ?? 0);
         const locked = m.id > unlockedTo;
@@ -1144,6 +1145,7 @@ export function makeClientScreen(app) {
           label: `M${String(m.id).padStart(2)} ${m.title}`,
           right: locked ? 'locked' : cleared ? `✓ Lv${m.level} ${m.type}` : `Lv${m.level} ${m.type}`,
           color: cleared ? OK : undefined,
+          rightColor: locked ? undefined : (TYPE_COL[m.type] ?? DIM),
           value: m,
           disabled: locked,
         };
@@ -1365,18 +1367,21 @@ export function makeHospitalScreen(app) {
       {
         label: lost > 0 ? `Repair 1 max HP` : 'Repair max HP (nothing lost)',
         right: lost > 0 ? `${perPt}cr` : '',
+        rightColor: GOLD,
         value: 'repair1',
         disabled: lost <= 0 || rec.credits < perPt,
       },
       {
         label: lost > 0 ? `Repair all (${lost} pts)` : ' ',
         right: lost > 0 ? `${perPt * lost}cr` : '',
+        rightColor: GOLD,
         value: 'repairAll',
         disabled: lost <= 0 || rec.credits < perPt * lost,
       },
       {
         label: fee ? `Level up to ${rec.level + 1}` : 'Level up (at cap 15)',
         right: fee ? `${fee}cr` : '',
+        rightColor: GOLD,
         value: 'levelup',
         disabled: !fee || rec.credits < fee,
       },

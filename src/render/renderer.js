@@ -2477,10 +2477,28 @@ export function createRenderer(canvas, opts = {}) {
     if (battle.escape) {
       const e = battle.escape;
       const ec = e.escaped ? '#8fd17e' : '#ff6a5a';
-      ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = ec;
-      text(`ESCAPE ${e.dTotal ?? '?'} vs ${e.aTotal ?? '?'} ${e.escaped ? 'FLED!' : 'CAUGHT'}`,
-        bx + bw / 2, by + 84, ec, 12, 'center');
-      ctx.restore();
+      const dV = String(e.dTotal ?? '?');
+      const aV = String(e.aTotal ?? '?');
+      const result = e.escaped ? ' FLED!' : ' CAUGHT';
+      const segs = [
+        { t: 'ESCAPE ', c: '#9aa0b4', shadow: null },
+        { t: dV, c: '#4a7dff', shadow: '#2a4da0' },
+        { t: ' vs ', c: '#9aa0b4', shadow: null },
+        { t: aV, c: '#cc4a3a', shadow: '#8a2a2a' },
+        { t: result, c: ec, shadow: ec },
+      ];
+      setFont(12); ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+      const fullW = segs.reduce((w, s) => w + ctx.measureText(s.t).width, 0);
+      let ex = (bx + bw / 2 - fullW / 2) | 0;
+      const ey = (by + 84) | 0;
+      ctx.save();
+      for (const s of segs) {
+        ctx.shadowBlur = s.shadow ? 8 : 0; ctx.shadowColor = s.shadow ?? 'transparent';
+        ctx.fillStyle = s.c;
+        ctx.fillText(s.t, ex, ey);
+        ex += ctx.measureText(s.t).width;
+      }
+      ctx.restore(); ctx.textAlign = 'left';
     }
     if (battle.strike) {
       const st = battle.strike;
