@@ -66,6 +66,7 @@ function mockCanvas() {
     get: (t, p) => {
       if (p in t) return t[p];
       if (p === 'createRadialGradient' || p === 'createLinearGradient') return () => gradStub;
+      if (p === 'measureText') return () => ({ width: 8 });
       return noop;
     },
     set: (t, p, v) => { t[p] = v; return true; },

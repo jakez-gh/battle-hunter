@@ -2225,8 +2225,17 @@ export function createRenderer(canvas, opts = {}) {
       text(`${h.hp}/${h.maxHp}`, x + 168, y + 3, active ? '#c0c8d8' : '#8a90a0');
     }
     const iv = h.internal ?? { mv: 0, at: 0, df: 0 };
-    text(`MV+${Math.floor((iv.mv ?? 0) / 3)} AT${iv.at ?? 0} DF${Math.floor((iv.df ?? 0) / 2)}`,
-      x + 222, y + 3, active ? '#6e7890' : '#484c5e');
+    { const sSegs = [
+        { t: `MV+${Math.floor((iv.mv ?? 0) / 3)}`, c: active ? '#3a6ee0' : '#2a4e8c' },
+        { t: ` AT${iv.at ?? 0}`, c: active ? '#cc4a3a' : '#7a2e24' },
+        { t: ` DF${Math.floor((iv.df ?? 0) / 2)}`, c: active ? '#e0c63a' : '#8a7828' },
+      ];
+      setFont(12); ctx.textAlign = 'left';
+      let ssx = x + 222;
+      for (const seg of sSegs) {
+        ctx.fillStyle = seg.c; ctx.fillText(seg.t, ssx | 0, (y + 3) | 0);
+        ssx += Math.round(ctx.measureText(seg.t).width);
+      } }
     // hand as mini card backs colored by card color
     let cx = x + 340;
     if (active && (h.hand?.length ?? 0) > 0) {
