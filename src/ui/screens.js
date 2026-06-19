@@ -2209,7 +2209,17 @@ export function makeGameScreen(app, g) {
       } else {
         text(ctx, `${h.hp}/${h.maxHp}`, X + 186, y + 22, { size: 11, color: hpCol });
       }
-      text(ctx, `hand ${h.hand?.length ?? 0}  bag ${h.items?.length ?? 0}`, X + 60, y + 40, { size: 11, color: DIM });
+      { const hc = h.hand?.length ?? 0, bc = h.items?.length ?? 0;
+        ctx.font = '11px Consolas, "Courier New", monospace'; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+        let hbx = X + 60;
+        const hsegs = [
+          { t: 'hand ', c: DIM }, { t: String(hc), c: hc > 0 ? '#4a7dff' : DIM },
+          { t: '  bag ', c: DIM }, { t: String(bc), c: bc > 0 ? GOLD : DIM },
+        ];
+        for (const seg of hsegs) {
+          ctx.fillStyle = seg.c; ctx.fillText(seg.t, hbx, y + 40);
+          hbx += ctx.measureText(seg.t).width;
+        } }
       // status glyphs — pulsing colored background behind each icon
       let sx = X + 160;
       for (const sk of ['stun', 'leg', 'panic', 'empty']) {
