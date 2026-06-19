@@ -2456,8 +2456,10 @@ export function createRenderer(canvas, opts = {}) {
     text('VS', bx + bw / 2, by + 42, '#ffe98a', 16, 'center');
     ctx.restore();
     if (battle.response) {
-      ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = '#9adfe8';
-      text(String(battle.response).toUpperCase(), bx + bw / 2, by + 64, '#9adfe8', 12, 'center');
+      const RESP_COLOR = { counter: '#cc4a3a', guard: '#e0c63a', escape: '#4a7dff', surrender: '#9aa0b4' };
+      const rc = RESP_COLOR[battle.response] ?? '#9adfe8';
+      ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = rc;
+      text(String(battle.response).toUpperCase(), bx + bw / 2, by + 64, rc, 12, 'center');
       ctx.restore();
     }
     if (battle.escape) {
