@@ -1117,9 +1117,9 @@ export function makeClientScreen(app) {
   function rootMenu() {
     const rec = currentHunter(app);
     return makeMenu([
-      { label: 'Accept a mission', value: 'mission', disabled: !rec },
-      { label: 'Sell items', value: 'sell', disabled: !rec || !rec.items.some((s) => s.identified) },
-      { label: 'Appraise items', value: 'appraise', disabled: !rec || !rec.items.some((s) => !s.identified) },
+      { label: 'Accept a mission', value: 'mission', color: '#4a7dff', disabled: !rec },
+      { label: 'Sell items', value: 'sell', color: GOLD, disabled: !rec || !rec.items.some((s) => s.identified) },
+      { label: 'Appraise items', value: 'appraise', color: '#3aacc8', disabled: !rec || !rec.items.some((s) => !s.identified) },
       { label: 'Back', value: 'back' },
     ], {
       title: 'CLIENT',
@@ -1245,6 +1245,7 @@ export function makeClientScreen(app) {
       .map(({ slot, i }) => ({
         label: ITEMS[slot.itemId]?.name ?? slot.itemId,
         right: `${sellPrice(slot.itemId, rec.level)}cr`,
+        rightColor: GOLD,
         value: i,
       }));
     items.push({ label: 'Done', value: null });
@@ -1273,9 +1274,9 @@ export function makeClientScreen(app) {
       if (rec.items.some((s) => s.identified)) host.push(sellMenu());
     };
     return makeMenu([
-      { label: `Sell for ${base}cr`, value: 'sell' },
-      { label: 'Haggle (30%: +10% / fail: half)', value: 'haggle' },
-      { label: 'Keep it', value: 'keep' },
+      { label: `Sell for ${base}cr`, value: 'sell', color: GOLD },
+      { label: 'Haggle (30%: +10% / fail: half)', value: 'haggle', color: '#e0c63a' },
+      { label: 'Keep it', value: 'keep', color: DIM },
     ], {
       title: ITEMS[slot.itemId]?.name ?? slot.itemId,
       onPick(v) {
@@ -1294,7 +1295,7 @@ export function makeClientScreen(app) {
     const items = rec.items
       .map((slot, i) => ({ slot, i }))
       .filter(({ slot }) => !slot.identified)
-      .map(({ slot, i }) => ({ label: itemName(slot), right: `${fee}cr`, value: i, disabled: rec.credits < fee }));
+      .map(({ slot, i }) => ({ label: itemName(slot), right: `${fee}cr`, rightColor: GOLD, value: i, disabled: rec.credits < fee }));
     items.push({ label: 'Done', value: null });
     return makeMenu(items, {
       title: `APPRAISE - fee ${fee}cr each`,
