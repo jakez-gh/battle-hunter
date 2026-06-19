@@ -1058,9 +1058,34 @@ export function makeHubScreen(app) {
       const rec = currentHunter(app);
       if (rec) {
         drawHunterCard(app, rec, 120, 410, 480);
-        ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = OK;
-        text(ctx, `${app.session.mode === 'story' ? `STORY - next mission ${Math.min(15, rec.storyProgress + 1)}` : 'NORMAL free-play'}`, 120, 500, { size: 15, color: OK, shadow: false });
-        ctx.restore();
+        if (app.session.mode === 'story') {
+          const prog = rec.storyProgress ?? 0;
+          const barW = 480, barH = 10, barX = 120, barY = 502;
+          // Background track
+          ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = OK;
+          ctx.fillRect(barX, barY, barW, barH); ctx.restore();
+          // Filled portion
+          const fillW = Math.round(barW * prog / 15);
+          if (fillW > 0) {
+            const bg = ctx.createLinearGradient(barX, 0, barX + fillW, 0);
+            bg.addColorStop(0, '#1e7a40'); bg.addColorStop(1, OK);
+            ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = OK;
+            ctx.fillStyle = bg; ctx.fillRect(barX, barY, fillW, barH); ctx.restore();
+          }
+          // Segment ticks (every mission)
+          ctx.save(); ctx.globalAlpha = 0.4; ctx.fillStyle = '#06060c';
+          for (let mi = 1; mi < 15; mi++) ctx.fillRect(barX + Math.round(barW * mi / 15), barY, 1, barH);
+          ctx.restore();
+          // Label
+          ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = OK;
+          const nextLabel = prog >= 15 ? 'STORY COMPLETE!' : `Mission ${prog + 1} of 15`;
+          text(ctx, `STORY  ${nextLabel}`, barX, barY + 14, { size: 13, color: OK, shadow: false });
+          ctx.restore();
+        } else {
+          ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = OK;
+          text(ctx, 'NORMAL free-play', 120, 500, { size: 15, color: OK, shadow: false });
+          ctx.restore();
+        }
         drawItemList(ctx, rec.items, 640, 412, t);
       } else {
         ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = BAD;
@@ -1103,12 +1128,17 @@ export function makeClientScreen(app) {
     const rec = currentHunter(app);
     if (app.session.mode === 'story') {
       const unlockedTo = Math.min(15, rec.storyProgress + 1);
-      const items = STORY_MISSIONS.map((m) => ({
-        label: `M${String(m.id).padStart(2)} ${m.title}`,
-        right: m.id <= unlockedTo ? `Lv${m.level} ${m.type}` : 'locked',
-        value: m,
-        disabled: m.id > unlockedTo,
-      }));
+      const items = STORY_MISSIONS.map((m) => {
+        const cleared = m.id <= (rec.storyProgress ?? 0);
+        const locked = m.id > unlockedTo;
+        return {
+          label: `M${String(m.id).padStart(2)} ${m.title}`,
+          right: locked ? 'locked' : cleared ? `✓ Lv${m.level} ${m.type}` : `Lv${m.level} ${m.type}`,
+          color: cleared ? OK : undefined,
+          value: m,
+          disabled: locked,
+        };
+      });
       items.push({ label: 'Cancel', value: null });
       return makeMenu(items, {
         title: 'STORY MISSIONS',
@@ -1273,6 +1303,7 @@ export function makeClientScreen(app) {
 
   return {
     enter() { host.push(rootMenu()); },
+    resume() { note = ''; host.clear(); host.push(rootMenu()); },
     update(dt) { t += dt; },
     onKey(k) { host.key(k); },
     onClick(pos) { host.click(pos); },
@@ -2382,11 +2413,19 @@ export function makeResultsScreen(app, g) {
         }
       }
     },
-    onKey(k) {
+    onKey(k, e) {
       if (k === 'confirm' || k === 'cancel') {
+        if (t < 1.8) { t = 1.8; return; } // skip count-up on first press
         sfx.menuConfirm();
         applyToRoster();
         app.stack.pop(); // back to the hub
+        return;
+      }
+      if (e?.code === 'KeyR' && g.mission) {
+        if (t < 1.8) t = 1.8;
+        sfx.menuConfirm();
+        applyToRoster();
+        app.startMission(g.mission); // replay — replaces RESULTS with GAME
       }
     },
     onClick() { this.onKey('confirm'); },
@@ -2435,7 +2474,11 @@ export function makeResultsScreen(app, g) {
       ctx.shadowColor = win ? '#c8960a' : '#aa2020';
       text(ctx, rtext, rcx, 26, { size: 34, align: 'center', color: win ? GOLD : BAD, shadow: false });
       ctx.restore();
-      if (!win && g.outcome.reason) text(ctx, String(g.outcome.reason), app.W / 2, 66, { size: 14, align: 'center', color: DIM });
+      if (g.mission?.id != null)
+        text(ctx, `M${String(g.mission.id).padStart(2, '0')} · ${g.mission.title ?? ''}`, rcx, 66,
+          { size: 14, align: 'center', color: win ? GOLD : DIM });
+      else if (!win && g.outcome.reason)
+        text(ctx, String(g.outcome.reason), app.W / 2, 66, { size: 14, align: 'center', color: DIM });
       // Separator + score table
       ctx.save(); ctx.fillStyle = win ? GOLD : BAD; ctx.globalAlpha = 0.45;
       ctx.fillRect(40, 92, app.W - 80, 1); ctx.restore();
@@ -2575,7 +2618,24 @@ export function makeResultsScreen(app, g) {
         text(ctx, String(cnt(r.credits)), x + 84, 490, { size: 15, align: 'center', color: OK, shadow: false });
         ctx.restore();
       });
-      text(ctx, 'Enter: collect and return to the hub', app.W / 2, 600, { size: 15, align: 'center', color: DIM });
+      // Story mode new-mission unlock banner
+      if (win && app.session.mode === 'story' && typeof g.mission?.id === 'number' && g.mission.id < 15) {
+        const unlockPulse = 0.7 + 0.3 * Math.sin(t * 2.6);
+        ctx.save(); ctx.globalAlpha = Math.min(1, (t - 1.8) / 0.4) * unlockPulse;
+        ctx.shadowBlur = 14; ctx.shadowColor = OK;
+        text(ctx, `NEW MISSION UNLOCKED: M${String(g.mission.id + 1).padStart(2, '0')} · ${STORY_MISSIONS[g.mission.id]?.title ?? ''}`,
+          app.W / 2, 560, { size: 15, align: 'center', color: OK, shadow: false });
+        ctx.restore();
+      } else if (win && app.session.mode === 'story' && g.mission?.id === 15) {
+        const cpulse = 0.75 + 0.25 * Math.sin(t * 2.0);
+        ctx.save(); ctx.globalAlpha = Math.min(1, (t - 1.8) / 0.4) * cpulse;
+        ctx.shadowBlur = 18; ctx.shadowColor = GOLD;
+        text(ctx, 'STORY COMPLETE! All 15 missions cleared.', app.W / 2, 560, { size: 15, align: 'center', color: GOLD, shadow: false });
+        ctx.restore();
+      }
+      const replayHint = g.mission ? '   R: replay' : '';
+      const exitHint = t < 1.8 ? 'Enter: skip' : 'Enter: return to hub';
+      text(ctx, exitHint + replayHint, app.W / 2, 600, { size: 15, align: 'center', color: DIM });
     },
   };
 
