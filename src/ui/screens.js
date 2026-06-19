@@ -341,16 +341,17 @@ function drawMenu(ctx, m, x, y, w, opt = {}) {
   m.items.forEach((it, i) => {
     const sel = i === m.idx;
     if (sel) {
+      const hc = (!it.disabled && it.color) ? it.color : '#5064dc';
       const sg = ctx.createLinearGradient(x + 4, 0, x + w - 8, 0);
-      sg.addColorStop(0, 'rgba(80,100,220,0.42)'); sg.addColorStop(1, 'rgba(80,100,220,0.10)');
+      sg.addColorStop(0, hc + '6a'); sg.addColorStop(1, hc + '1a');
       ctx.fillStyle = sg; ctx.fillRect(x + 4, oy - 2, w - 8, lh);
-      ctx.fillStyle = 'rgba(120,150,255,0.72)'; ctx.fillRect(x + 4, oy - 2, 2, lh);
+      ctx.fillStyle = hc + 'b8'; ctx.fillRect(x + 4, oy - 2, 2, lh);
       // Subtle shimmer scan across selected row
       const mt = typeof performance !== 'undefined' ? performance.now() / 1000 : 0;
       const shX = x + 4 + ((mt % 2.4) / 2.4) * (w + 40) - 20;
       const sh = ctx.createLinearGradient(shX - 16, 0, shX + 16, 0);
       sh.addColorStop(0, 'transparent');
-      sh.addColorStop(0.5, 'rgba(180,200,255,0.22)');
+      sh.addColorStop(0.5, 'rgba(240,240,255,0.18)');
       sh.addColorStop(1, 'transparent');
       ctx.save(); ctx.beginPath(); ctx.rect(x + 4, oy - 2, w - 8, lh); ctx.clip();
       ctx.fillStyle = sh; ctx.fillRect(shX - 16, oy - 2, 32, lh); ctx.restore();
