@@ -2776,13 +2776,28 @@ export function makeMissionBriefingScreen(app, mission) {
       ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = '#b07a08';
       text(ctx, 'OPPOSITION', BX + 20, oppY + 10, { size: 12, color: GOLD, shadow: false });
       ctx.restore();
-      const oppNames = mission.opponents.map(function(o) {
-        if (o === 'RAVEN') return 'RAVEN agent';
-        if (o === 'keld') return 'Keld';
-        if (o === 'mira') return 'Mira';
-        return o;
-      });
-      text(ctx, oppNames.join(',  '), BX + 20, oppY + 28, { size: 14, color: DIM });
+      // Per-opponent multi-segment colored rendering
+      { const OPP_COLOR = { RAVEN: BAD, keld: '#cc4a3a', mira: '#3a6ee0' };
+        const OPP_LABEL = { RAVEN: 'RAVEN agent', keld: 'Keld', mira: 'Mira' };
+        ctx.font = font(14, false);
+        ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+        let ox = BX + 20;
+        mission.opponents.forEach((o, oi) => {
+          if (oi > 0) {
+            ctx.fillStyle = DIM; ctx.fillText(',  ', ox, oppY + 28);
+            ox += Math.round(ctx.measureText(',  ').width);
+          }
+          const label = OPP_LABEL[o] ?? o;
+          const col = OPP_COLOR[o] ?? DIM;
+          if (OPP_COLOR[o]) {
+            ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = col + '80';
+            ctx.fillStyle = col; ctx.fillText(label, ox, oppY + 28);
+            ctx.restore();
+          } else {
+            ctx.fillStyle = col; ctx.fillText(label, ox, oppY + 28);
+          }
+          ox += Math.round(ctx.measureText(label).width);
+        }); }
 
       const depY = BY + BH - 54;
       // Deploy button pulse
