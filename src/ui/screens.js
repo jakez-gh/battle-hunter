@@ -1407,10 +1407,10 @@ export function makeHospitalScreen(app) {
   function allocateMenu(rec) {
     const d = displayStats(rec.internal, rec.level + 1);
     return makeMenu([
-      { label: 'MV', right: `iMV ${rec.internal.mv} -> move +${Math.floor((rec.internal.mv + 1) / 3)}`, value: 'mv' },
-      { label: 'AT', right: `iAT ${rec.internal.at} -> attack ${rec.internal.at + 1}`, value: 'at' },
-      { label: 'DF', right: `iDF ${rec.internal.df} -> defense ${Math.floor((rec.internal.df + 1) / 2)}`, value: 'df' },
-      { label: 'HP', right: `iHP ${rec.internal.hp} -> max ${d.maxHp + 3}`, value: 'hp' },
+      { label: 'MV', right: `iMV ${rec.internal.mv} -> move +${Math.floor((rec.internal.mv + 1) / 3)}`, value: 'mv', color: '#3a6ee0' },
+      { label: 'AT', right: `iAT ${rec.internal.at} -> attack ${rec.internal.at + 1}`, value: 'at', color: '#cc4a3a' },
+      { label: 'DF', right: `iDF ${rec.internal.df} -> defense ${Math.floor((rec.internal.df + 1) / 2)}`, value: 'df', color: '#e0c63a' },
+      { label: 'HP', right: `iHP ${rec.internal.hp} -> max ${d.maxHp + 3}`, value: 'hp', color: '#3aa84a' },
     ], {
       title: `LEVEL ${rec.level + 1}: allocate +1 point`,
       onPick(stat) {
