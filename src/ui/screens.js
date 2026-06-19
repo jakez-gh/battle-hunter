@@ -1070,27 +1070,43 @@ export function makeHubScreen(app) {
         drawHunterCard(app, rec, 120, 410, 480);
         if (app.session.mode === 'story') {
           const prog = rec.storyProgress ?? 0;
+          const complete = prog >= 15;
+          const barCol = complete ? GOLD : OK;
           const barW = 480, barH = 10, barX = 120, barY = 502;
           // Background track
-          ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = OK;
+          ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = barCol;
           ctx.fillRect(barX, barY, barW, barH); ctx.restore();
           // Filled portion
-          const fillW = Math.round(barW * prog / 15);
+          const fillW = Math.round(barW * Math.min(prog, 15) / 15);
           if (fillW > 0) {
             const bg = ctx.createLinearGradient(barX, 0, barX + fillW, 0);
-            bg.addColorStop(0, '#1e7a40'); bg.addColorStop(1, OK);
-            ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = OK;
+            if (complete) {
+              bg.addColorStop(0, '#a06800'); bg.addColorStop(1, GOLD);
+            } else {
+              bg.addColorStop(0, '#1e7a40'); bg.addColorStop(1, OK);
+            }
+            ctx.save(); ctx.shadowBlur = complete ? 10 : 6; ctx.shadowColor = barCol;
             ctx.fillStyle = bg; ctx.fillRect(barX, barY, fillW, barH); ctx.restore();
+            // Shine on bar
+            ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#fff';
+            ctx.fillRect(barX, barY, fillW, Math.ceil(barH / 2)); ctx.restore();
           }
           // Segment ticks (every mission)
           ctx.save(); ctx.globalAlpha = 0.4; ctx.fillStyle = '#06060c';
           for (let mi = 1; mi < 15; mi++) ctx.fillRect(barX + Math.round(barW * mi / 15), barY, 1, barH);
           ctx.restore();
           // Label
-          ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = OK;
-          const nextLabel = prog >= 15 ? 'STORY COMPLETE!' : `Mission ${prog + 1} of 15`;
-          text(ctx, `STORY  ${nextLabel}`, barX, barY + 14, { size: 13, color: OK, shadow: false });
-          ctx.restore();
+          const nextLabel = complete ? 'STORY COMPLETE!' : `Mission ${prog + 1} of 15`;
+          if (complete) {
+            const cpulse = 0.75 + 0.25 * Math.sin(t * 2.0);
+            ctx.save(); ctx.globalAlpha = cpulse; ctx.shadowBlur = 14; ctx.shadowColor = GOLD;
+            text(ctx, `STORY  ${nextLabel}`, barX, barY + 14, { size: 13, color: GOLD, shadow: false });
+            ctx.restore();
+          } else {
+            ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = OK;
+            text(ctx, `STORY  ${nextLabel}`, barX, barY + 14, { size: 13, color: OK, shadow: false });
+            ctx.restore();
+          }
         } else {
           ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = OK;
           text(ctx, 'NORMAL free-play', 120, 500, { size: 15, color: OK, shadow: false });

@@ -1430,6 +1430,14 @@ export function createRenderer(canvas, opts = {}) {
       ctx.fillRect(((cx + Math.cos(oa) * orbR) - s * 0.5) | 0, ((cy + Math.sin(oa) * orbR) - s * 0.5) | 0, s, s);
       ctx.restore();
     }
+    // Status icon in diamond center — shows what the trap does (revealed traps only)
+    const trapIcon = atlas[`status.${t.kind}`];
+    if (trapIcon && s >= 2) {
+      ctx.save();
+      ctx.globalAlpha = pulse * 0.88;
+      ctx.drawImage(trapIcon, (cx - 6) | 0, (cy - 6) | 0, 12, 12);
+      ctx.restore();
+    }
   }
 
   function drawOverlays() {
