@@ -2841,10 +2841,10 @@ export function makeManualScreen(app) {
     {
       title: 'CARDS',
       sections: [
-        { head: 'Red (20) — Battle AT bonus', body: '+3x3  +4x3  +5x3  +6x3  +7x2  +8x2  +9x2  C (match opp AT)  S (double your AT). Only usable in battle.' },
-        { head: 'Yellow (30) — DF / dodge', body: '+3x7  +4x6  +5x5  +6x4  +7x3  +8x2  +9x1  D (double DF / 100% trap dodge)  A (negate all damage / 100% dodge). Raises trap evasion by value x10% while moving.' },
-        { head: 'Blue (30) — Movement', body: '+1x16  +2x8  +3x4  E (warp to EXIT; cures Leg Damage; always wins flee roll). E cards are placed in the bottom 49 of the deck.' },
-        { head: 'Green (20) — Set Traps', body: 'D (Damage: relicLv+1d6 HP)  S (Stun)  L (Leg Damage)  E (Empty: discard hand). Place on your starting tile before you move.' },
+        { head: 'Red (20) — Battle AT bonus', headColor: '#e05a4a', body: '+3x3  +4x3  +5x3  +6x3  +7x2  +8x2  +9x2  C (match opp AT)  S (double your AT). Only usable in battle.' },
+        { head: 'Yellow (30) — DF / dodge', headColor: '#e0c63a', body: '+3x7  +4x6  +5x5  +6x4  +7x3  +8x2  +9x1  D (double DF / 100% trap dodge)  A (negate all damage / 100% dodge). Raises trap evasion by value x10% while moving.' },
+        { head: 'Blue (30) — Movement', headColor: '#4a7dff', body: '+1x16  +2x8  +3x4  E (warp to EXIT; cures Leg Damage; always wins flee roll). E cards are placed in the bottom 49 of the deck.' },
+        { head: 'Green (20) — Set Traps', headColor: '#3aa84a', body: 'D (Damage: relicLv+1d6 HP)  S (Stun)  L (Leg Damage)  E (Empty: discard hand). Place on your starting tile before you move.' },
         { head: 'Rest', body: 'An action, not a card. Draw 2 cards (3 from empty hand). If hand is already full (5), still uses your turn.' },
       ],
     },
@@ -2852,29 +2852,29 @@ export function makeManualScreen(app) {
       title: 'FLAGS',
       sections: [
         { head: 'How Flags Work', body: 'Land on a flag to roll 1-6. You roll again each turn you remain on the same flag. The color determines what the numbers mean.' },
-        { head: 'Red Flags', body: '1: 250pts + HP damage trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 250pts + HP restore.  6: 250pts + full HP + partial maxHP restore.' },
-        { head: 'Blue Flags', body: '1: 250pts + Leg Damage trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 250pts + Leg cured.  6: 250pts + Leg cured + act again this turn.' },
-        { head: 'Green Flags', body: '1: 250pts + Empty trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 250pts + draw 2 cards.  6: 250pts + fill hand to 5.' },
-        { head: 'Yellow Flags', body: '1: 250pts + Stun trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 1500pts.  6: 2000pts.' },
+        { head: 'Red Flags', headColor: '#e05a4a', body: '1: 250pts + HP damage trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 250pts + HP restore.  6: 250pts + full HP + partial maxHP restore.' },
+        { head: 'Blue Flags', headColor: '#4a7dff', body: '1: 250pts + Leg Damage trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 250pts + Leg cured.  6: 250pts + Leg cured + act again this turn.' },
+        { head: 'Green Flags', headColor: '#3aa84a', body: '1: 250pts + Empty trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 250pts + draw 2 cards.  6: 250pts + fill hand to 5.' },
+        { head: 'Yellow Flags', headColor: '#e0c63a', body: '1: 250pts + Stun trap.  2: 250pts.  3: 500pts.  4: 1000pts.  5: 1500pts.  6: 2000pts.' },
       ],
     },
     {
       title: 'STATUS EFFECTS',
       sections: [
-        { head: 'Stun', body: 'Your next turn is skipped. You cannot counter-attack while stunned. Caused by Stun traps or WYRM critical hits.' },
-        { head: 'Leg Damage', body: 'Movement bonus drops to +0 (+1 with a Crutch item). Cured by: landing on EXIT, playing a Blue E card, or a Blue Flag roll of 5 or 6.' },
-        { head: 'Panic', body: 'Caused by Critical Hits (if you miss the negate window). AI controls your turn, cycling behaviour patterns each round. A Calmant item clears Panic at the start of your turn.' },
-        { head: 'Empty', body: 'Your entire hand is discarded. You cannot draw new cards while Empty. Clears at end of the current round. Caused by Empty traps or FNG critical hits.' },
+        { head: 'Stun', headColor: '#d8b83a', body: 'Your next turn is skipped. You cannot counter-attack while stunned. Caused by Stun traps or WYRM critical hits.' },
+        { head: 'Leg Damage', headColor: '#4a7dff', body: 'Movement bonus drops to +0 (+1 with a Crutch item). Cured by: landing on EXIT, playing a Blue E card, or a Blue Flag roll of 5 or 6.' },
+        { head: 'Panic', headColor: '#e05a4a', body: 'Caused by Critical Hits (if you miss the negate window). AI controls your turn, cycling behaviour patterns each round. A Calmant item clears Panic at the start of your turn.' },
+        { head: 'Empty', headColor: '#9aa0b4', body: 'Your entire hand is discarded. You cannot draw new cards while Empty. Clears at end of the current round. Caused by Empty traps or FNG critical hits.' },
       ],
     },
     {
       title: 'MONSTERS',
       sections: [
         { head: 'Spawning', body: 'Up to 2 regular monsters can be present at once. One may appear next to you when you finish a move turn. An identified Wardstone item prevents spawns near you.' },
-        { head: 'FNG  (Hunter-Killer)', body: 'Balanced stats. Critical hit inflicts Empty status. Counter item: Patch.' },
-        { head: 'OOZ  (Slime)', body: 'High HP, low attack. No special critical rider. Counter item: Repellent.' },
-        { head: 'VAC  (Cleaner Bot)', body: 'Fast movement. No special critical rider. Counter item: Override.' },
-        { head: 'WYRM  (Dragon)', body: 'Appears when the deck runs out. Very high HP. Critical hit inflicts Stun. If WYRM defeats the Target holder the mission ends as a loss. Counter item: Tamer.' },
+        { head: 'FNG  (Hunter-Killer)', headColor: '#e09040', body: 'Balanced stats. Critical hit inflicts Empty status. Counter item: Patch.' },
+        { head: 'OOZ  (Slime)', headColor: '#50c84a', body: 'High HP, low attack. No special critical rider. Counter item: Repellent.' },
+        { head: 'VAC  (Cleaner Bot)', headColor: '#50b0e8', body: 'Fast movement. No special critical rider. Counter item: Override.' },
+        { head: 'WYRM  (Dragon)', headColor: '#9870d8', body: 'Appears when the deck runs out. Very high HP. Critical hit inflicts Stun. If WYRM defeats the Target holder the mission ends as a loss. Counter item: Tamer.' },
       ],
     },
     {
@@ -2933,8 +2933,10 @@ export function makeManualScreen(app) {
       for (let si = 0; si < pg.sections.length; si++) {
         const sec = pg.sections[si];
         if (curY >= bodyBottom) break;
-        ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = '#906000';
-        text(ctx, sec.head, BX + 20, curY, { size: 13, color: GOLD, shadow: false });
+        const hc = sec.headColor ?? GOLD;
+        const hShadow = sec.headColor ? sec.headColor + '80' : '#906000';
+        ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = hShadow;
+        text(ctx, sec.head, BX + 20, curY, { size: 13, color: hc, shadow: false });
         ctx.restore();
         curY = wrapText(ctx, sec.body, BX + 28, curY + 18, BW - 60, 17, { size: 13, color: DIM });
         curY += 6;
