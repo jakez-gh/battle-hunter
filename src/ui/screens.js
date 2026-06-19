@@ -1955,7 +1955,15 @@ export function makeGameScreen(app, g) {
         ctx.fillStyle = sg; ctx.fillRect(706, 0, 18, app.H); }
       drawHud(ctx, st);
       const m = host.top();
-      if (m) drawMenu(ctx, m, 724, 420, 232, { lineH: 22, size: 13 });
+      // Dim the game area while pause menu is open
+      if (m) {
+        ctx.save(); ctx.globalAlpha = 0.45; ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 720, app.H); ctx.restore();
+        ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = '#b07a08';
+        text(ctx, 'PAUSED', 360, 340, { size: 28, align: 'center', color: GOLD, shadow: false });
+        ctx.restore();
+        drawMenu(ctx, m, 724, 420, 232, { lineH: 22, size: 13 });
+      }
       if (steering) drawSteerHint(ctx, st);
       if (timing) drawTiming(ctx, timing);
       if (banner) {
