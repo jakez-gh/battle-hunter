@@ -2481,10 +2481,21 @@ export function createRenderer(canvas, opts = {}) {
       });
       if (!rolling) {
         if (st.totals) {
-          const tv = Object.values(st.totals).filter((v) => typeof v === 'number');
-          ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = '#6080b8';
-          text(tv.join(' vs '), bx + bw / 2, by + 124, '#f0f4ff', 12, 'center');
-          ctx.restore();
+          const atkV = String(st.totals.atk ?? '?');
+          const defV = String(st.totals.def ?? '?');
+          const vsStr = ' vs ';
+          setFont(12); ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+          const fullW = ctx.measureText(atkV + vsStr + defV).width;
+          let sx = (bx + bw / 2 - fullW / 2) | 0;
+          const ty2 = (by + 124) | 0;
+          ctx.save();
+          ctx.shadowBlur = 6; ctx.shadowColor = '#cc4a3a'; ctx.fillStyle = '#cc4a3a';
+          ctx.fillText(atkV, sx, ty2); sx += ctx.measureText(atkV).width;
+          ctx.shadowBlur = 0; ctx.fillStyle = '#9aa0b4';
+          ctx.fillText(vsStr, sx, ty2); sx += ctx.measureText(vsStr).width;
+          ctx.shadowBlur = 6; ctx.shadowColor = '#c0a030'; ctx.fillStyle = '#e0c63a';
+          ctx.fillText(defV, sx, ty2);
+          ctx.restore(); ctx.textAlign = 'left';
         }
         { const dmgCx = (bx + bw / 2) | 0, dmgCy = (by + 150) | 0;
           // Bounce-in pop: scale from 1→1.4→1 over the first 35% of non-rolling phase

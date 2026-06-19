@@ -357,7 +357,7 @@ function drawMenu(ctx, m, x, y, w, opt = {}) {
     }
     const color = it.disabled ? '#565d75' : it.color ?? (sel ? '#ffffff' : FG);
     text(ctx, (sel ? '>' : ' ') + it.label, x + 10, oy, { size: opt.size ?? 15, color });
-    if (it.right) text(ctx, it.right, x + w - 10, oy, { align: 'right', size: opt.size ?? 14, color: it.disabled ? '#565d75' : DIM });
+    if (it.right) text(ctx, it.right, x + w - 10, oy, { align: 'right', size: opt.size ?? 14, color: it.disabled ? '#565d75' : (it.rightColor ?? DIM) });
     m.rects.push({ x: x + 4, y: oy - 2, w: w - 8, h: lh });
     oy += lh;
   });
@@ -1778,9 +1778,12 @@ export function makeGameScreen(app, g) {
     }
 
     if (phase === 'battle.response') {
+      const RESP_COL = { counter: '#cc4a3a', guard: '#e0c63a', escape: '#4a7dff', surrender: '#9aa0b4' };
       const items = acts.map((a) => ({
         label: actionLabel(st, a),
         right: RESPONSE_HINTS[a.response] ?? '',
+        color: RESP_COL[a.response],
+        rightColor: RESP_COL[a.response],
         value: () => act(a),
       }));
       host.push(makeMenu(items, { title: 'BATTLE - respond!', onPick: (fn) => fn() }));
