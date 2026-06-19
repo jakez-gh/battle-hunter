@@ -1640,7 +1640,7 @@ export function makeGameScreen(app, g) {
   let broken = false;
   let finished = false;
 
-  const say = (s, dur = 2.2) => { banner = { text: s, t: dur }; };
+  const say = (s, dur = 2.2, color = GOLD) => { banner = { text: s, t: dur, color }; };
 
   function act(action) {
     try {
@@ -1669,14 +1669,17 @@ export function makeGameScreen(app, g) {
         case 'turnStarted':
           if (inBattleMusic) { inBattleMusic = false; app.music(g.songBase); }
           break;
-        case 'targetFound': say('TARGET ITEM FOUND!'); break;
+        case 'targetFound': say('TARGET ITEM FOUND!', 2.2, GOLD); break;
         case 'boxOpened':
-          if (ev.contents && ev.contents !== 'TARGET') say(`Found: ${ITEMS[ev.contents]?.name ?? ev.contents}`);
+          if (ev.contents && ev.contents !== 'TARGET') say(`Found: ${ITEMS[ev.contents]?.name ?? ev.contents}`, 2.2, '#3aacc8');
           break;
-        case 'flagClaimed': say(`${cap(ev.color)} flag - rolled ${ev.roll}!`); break;
-        case 'monsterSpawned': say(`A ${ev.kind} appears!`); break;
-        case 'wyrmSpawned': say('THE WYRM RISES!', 3); break;
-        case 'wyrmRespawned': say('The WYRM returns...', 3); break;
+        case 'flagClaimed': {
+          const FC = { red: '#ff6a5a', blue: '#4a7dff', green: '#3aa84a', yellow: '#e0c63a' };
+          say(`${cap(ev.color)} flag - rolled ${ev.roll}!`, 2.2, FC[ev.color] ?? GOLD);
+          break; }
+        case 'monsterSpawned': say(`A ${ev.kind} appears!`, 2.2, '#cc4a3a'); break;
+        case 'wyrmSpawned': say('THE WYRM RISES!', 3, BAD); break;
+        case 'wyrmRespawned': say('The WYRM returns...', 3, '#e06090'); break;
         case 'missionWon':
           g.outcome.winnerRef = ev.winner ?? ev.unit ?? null;
           g.outcome.won = true;
@@ -1984,19 +1987,20 @@ export function makeGameScreen(app, g) {
         const bAlpha = Math.min(1, banner.t * 2.5);
         const bx0 = (680 - w) / 2 + 40;
         ctx.save(); ctx.globalAlpha = bAlpha;
-        box(ctx, bx0, 30, w, 44, { stroke: GOLD });
-        // Banner gold bloom behind text
-        const bc = ctx.createRadialGradient(380, 52, 4, 380, 52, 80);
-        bc.addColorStop(0, 'rgba(200,160,30,0.22)'); bc.addColorStop(1, 'transparent');
-        ctx.fillStyle = bc; ctx.fillRect(bx0, 30, w, 44);
+        const bc = banner.color ?? GOLD;
+        box(ctx, bx0, 30, w, 44, { stroke: bc });
+        // Themed bloom behind text
+        const bloom = ctx.createRadialGradient(380, 52, 4, 380, 52, 80);
+        bloom.addColorStop(0, bc + '38'); bloom.addColorStop(1, 'transparent');
+        ctx.fillStyle = bloom; ctx.fillRect(bx0, 30, w, 44);
         // Shimmer scan across banner
         const shX = bx0 + ((hudT % 1.8) / 1.8) * (w + 40) - 20;
         const sh = ctx.createLinearGradient(shX - 16, 0, shX + 16, 0);
         sh.addColorStop(0, 'transparent'); sh.addColorStop(0.5, 'rgba(255,240,160,0.20)'); sh.addColorStop(1, 'transparent');
         ctx.save(); ctx.beginPath(); ctx.rect(bx0, 30, w, 44); ctx.clip();
         ctx.fillStyle = sh; ctx.fillRect(shX - 16, 30, 32, 44); ctx.restore();
-        ctx.save(); ctx.shadowBlur = 12; ctx.shadowColor = '#906000';
-        text(ctx, banner.text, 380, 42, { size: 17, align: 'center', color: GOLD, shadow: false });
+        ctx.save(); ctx.shadowBlur = 12; ctx.shadowColor = bc;
+        text(ctx, banner.text, 380, 42, { size: 17, align: 'center', color: bc, shadow: false });
         ctx.restore();
         ctx.restore();
       }
