@@ -957,7 +957,7 @@ export function makeHubScreen(app) {
   const ICONS = [
     { id: 'office', label: 'OFFICE', icon: 'icon.flag', info: 'Register, inspect or erase hunters. Pick the active hunter.' },
     { id: 'client', label: 'CLIENT', icon: 'icon.bag', info: 'Accept missions, sell finds (haggle if you dare), appraise unknowns.' },
-    { id: 'hospital', label: 'HOSPITAL', icon: 'icon.rest', info: 'Repair lost max HP and buy level-ups.' },
+    { id: 'hospital', label: 'HOSPITAL', icon: 'icon.plus', info: 'Repair lost max HP and buy level-ups.' },
     { id: 'options', label: 'OPTIONS', icon: 'icon.move', info: 'Volumes and wallpapers.' },
   ];
   let idx = 0;

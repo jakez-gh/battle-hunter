@@ -757,6 +757,11 @@ const ICONS = { // 12x12 action icons
     '...ORRRO....', '...OROO.....', '...OO.......', '...OO.......', '...OO.......',
     '............', '............',
   ],
+  plus: [
+    '............', '....OOOO....', '....ORRO....', '....ORRO....', '.OOOORROOO..',
+    '.ORRRRRRRO..', '.ORRRRRRRO..', '.OOOORROOO..', '....ORRO....', '....ORRO....',
+    '....OOOO....', '............',
+  ],
 };
 
 // 8x8 numeric chips 1-6 (die faces as pips).

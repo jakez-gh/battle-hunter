@@ -56,7 +56,7 @@ test('UI set: 4 card frames, 5 icons, chips 1-6, 4 statuses, marks', () => {
   for (const f of Object.values(UI.cardFrames)) {
     assert.deepEqual(gridSize(f.grid), { w: 14, h: 20 });
   }
-  assert.deepEqual(Object.keys(UI.icons).sort(), ['attack', 'bag', 'flag', 'move', 'rest']);
+  assert.deepEqual(Object.keys(UI.icons).sort(), ['attack', 'bag', 'flag', 'move', 'plus', 'rest']);
   for (const i of Object.values(UI.icons)) assert.deepEqual(gridSize(i.grid), { w: 12, h: 12 });
   assert.deepEqual(Object.keys(UI.chips).map(Number).sort(), [1, 2, 3, 4, 5, 6]);
   assert.deepEqual(Object.keys(UI.status).sort(), ['empty', 'leg', 'panic', 'stun']);
