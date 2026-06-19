@@ -2005,22 +2005,26 @@ export function makeGameScreen(app, g) {
   }
 
   function drawTiming(ctx, tm) {
+    const isDodge = tm.kind === 'react.dodge';
+    const boxStroke = isDodge ? '#3a6ee0' : '#cc4a3a';
+    const zoneCol = isDodge ? '#3a78d4' : '#d8a830';
+    const markerGlow = isDodge ? '#a0c8ff' : '#ffe98a';
     const x = 160, y = 320, w = 400, h = 84;
-    box(ctx, x, y, w, h, { stroke: GOLD, title: tm.kind === 'react.dodge' ? 'DODGE! press at center' : 'BRACE! press at center' });
+    box(ctx, x, y, w, h, { stroke: boxStroke, title: isDodge ? 'DODGE! press at center' : 'BRACE! press at center' });
     const bx = x + 20, bw = w - 40, by = y + 46;
     // Track
     ctx.fillStyle = '#151828';
     ctx.fillRect(bx, by, bw, 18);
-    // Green zone with feathered glow
+    // Zone with feathered glow
     const zw = bw * TIMING.window * 2;
     const zx = bx + bw / 2 - zw / 2;
     const zg = ctx.createLinearGradient(zx - 8, 0, zx + zw + 8, 0);
     zg.addColorStop(0, 'transparent');
-    zg.addColorStop(0.2, '#3aa84a');
-    zg.addColorStop(0.8, '#3aa84a');
+    zg.addColorStop(0.2, zoneCol);
+    zg.addColorStop(0.8, zoneCol);
     zg.addColorStop(1, 'transparent');
     ctx.save();
-    ctx.fillStyle = '#3aa84a';
+    ctx.fillStyle = zoneCol;
     ctx.fillRect(zx, by, zw, 18);
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = zg;
@@ -2035,12 +2039,12 @@ export function makeGameScreen(app, g) {
     // marker glow when in zone
     if (inZone) {
       const mg = ctx.createRadialGradient(mx, by + 9, 0, mx, by + 9, 14);
-      mg.addColorStop(0, 'rgba(255,255,200,0.55)'); mg.addColorStop(1, 'transparent');
+      mg.addColorStop(0, isDodge ? 'rgba(160,200,255,0.55)' : 'rgba(255,255,200,0.55)'); mg.addColorStop(1, 'transparent');
       ctx.save(); ctx.fillStyle = mg; ctx.fillRect(mx - 14, by - 6, 28, 30); ctx.restore();
     }
     if (inZone) {
-      ctx.save(); ctx.shadowBlur = 14; ctx.shadowColor = '#ffe98a';
-      ctx.fillStyle = '#ffe98a'; ctx.fillRect(mx - 3, by - 6, 6, 30); ctx.restore();
+      ctx.save(); ctx.shadowBlur = 14; ctx.shadowColor = markerGlow;
+      ctx.fillStyle = markerGlow; ctx.fillRect(mx - 3, by - 6, 6, 30); ctx.restore();
     } else {
       ctx.fillStyle = '#f0f4ff'; ctx.fillRect(mx - 3, by - 6, 6, 30);
     }
@@ -2511,6 +2515,8 @@ export function makeResultsScreen(app, g) {
       }
       const labels = ['', 'Movement', 'Damage', 'Flags', 'Kills', 'Handicap', 'Items', 'TOTAL', 'Place', 'Credits'];
       const LABEL_COLORS = ['', '#3a6ee0', '#cc4a3a', '#e0c63a', '#cc4a3a', '#a060d8', '#3aa84a'];
+      // Per-category color matching label rows (indices 0-5 = moved/damage/flags/kills/handicap/items)
+      const SCORE_CAT_COLORS = ['#3a6ee0', '#cc4a3a', '#e0c63a', '#cc4a3a', '#a060d8', '#3aa84a'];
       // Subtle alternating row tints
       labels.forEach((s, i) => {
         if (i % 2 === 0 && i > 0 && i < 7) {
@@ -2575,13 +2581,13 @@ export function makeResultsScreen(app, g) {
         // Score count-up animation: values tick from 0 to final over 1.8s
         const cnt = (v) => Math.round(v * Math.min(1, t / 1.8));
         const vals = [r.moved, r.damage, r.flagPts, r.killPts, r.handicap, r.itemPts];
-        // Slot-colored fill bars behind each score value, proportional to per-category leader
+        // Category-colored fill bars behind each score value, proportional to per-category leader
         { const bw2 = cw - 32, bx2 = x + 16;
           vals.forEach((v, j) => {
             const fill = maxVals[j] > 0 ? cnt(v) / maxVals[j] : 0;
             if (fill > 0) {
               const bFill = (bw2 * fill) | 0;
-              ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = SLOT_COLORS[h.slot ?? i];
+              ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = SCORE_CAT_COLORS[j];
               ctx.fillRect(bx2, 188 + j * 40, bFill, 5); ctx.restore();
               ctx.save(); ctx.globalAlpha = 0.18; ctx.fillStyle = '#fff';
               ctx.fillRect(bx2, 188 + j * 40, bFill, 2); ctx.restore();
@@ -2589,12 +2595,15 @@ export function makeResultsScreen(app, g) {
           }); }
         vals.forEach((v, j) => {
           const counted = cnt(v);
+          const catCol = SCORE_CAT_COLORS[j];
           if (t < 1.8 && v > 0) {
-            ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = SLOT_COLORS[h.slot ?? i];
-            text(ctx, String(counted), x + 84, 170 + j * 40, { size: 15, align: 'center', shadow: false });
+            ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = catCol;
+            text(ctx, String(counted), x + 84, 170 + j * 40, { size: 15, align: 'center', color: catCol, shadow: false });
             ctx.restore();
+          } else if (v > 0) {
+            text(ctx, String(counted), x + 84, 170 + j * 40, { size: 15, align: 'center', color: catCol });
           } else {
-            text(ctx, String(counted), x + 84, 170 + j * 40, { size: 15, align: 'center' });
+            text(ctx, '0', x + 84, 170 + j * 40, { size: 15, align: 'center', color: DIM });
           }
         });
         // Winner total score: glowing gold text
