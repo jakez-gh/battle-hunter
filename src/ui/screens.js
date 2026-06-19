@@ -2510,13 +2510,15 @@ export function makeResultsScreen(app, g) {
           ctx.fillRect(lx + fi * cw, 95, cw, 435); ctx.restore(); }
       }
       const labels = ['', 'Movement', 'Damage', 'Flags', 'Kills', 'Handicap', 'Items', 'TOTAL', 'Place', 'Credits'];
+      const LABEL_COLORS = ['', '#3a6ee0', '#cc4a3a', '#e0c63a', '#cc4a3a', '#a060d8', '#3aa84a'];
       // Subtle alternating row tints
       labels.forEach((s, i) => {
         if (i % 2 === 0 && i > 0 && i < 7) {
           ctx.save(); ctx.fillStyle = 'rgba(255,255,255,0.025)';
           ctx.fillRect(x0, 122 + i * 40, app.W - x0 * 2, 40); ctx.restore();
         }
-        text(ctx, s, x0, 130 + i * 40, { size: 16, color: i >= 7 ? GOLD : DIM });
+        const lc = i >= 7 ? GOLD : (LABEL_COLORS[i] ?? DIM);
+        text(ctx, s, x0, 130 + i * 40, { size: 16, color: lc });
       });
       // Per-category maximum for proportional score bars
       const maxVals = [
