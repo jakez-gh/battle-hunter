@@ -226,6 +226,42 @@ test('legalActions in turn.steer returns step and stop actions', () => {
   }
 });
 
+// Soft-undo invariant: applyAction never mutates its input, so a pre-step
+// snapshot is a faithful restore point. The GAME screen's in-move undo relies
+// on this (it rewinds by restoring a clone of the prior steering state).
+test('applyAction(step) does not mutate input — undo snapshot is faithful', () => {
+  for (let seed = 1; seed <= 40; seed++) {
+    const state = makeGame(seed);
+    const move = legalActions(state).find((a) => a.type === 'move');
+    if (!move) continue;
+    const { state: steer } = applyAction(state, move);
+    if (steer.phase !== 'turn.steer') continue;
+    const step = legalActions(steer).find((a) => a.type === 'step');
+    if (!step) continue;
+
+    const snap = structuredClone(steer);           // how the UI snapshots before a step
+    const beforePos = { ...steer.hunters[steer.current.index].pos };
+    const beforeRemaining = steer.move.remaining;
+    const beforePathLen = steer.move.path.length;
+
+    const { state: after } = applyAction(steer, step);
+
+    // The input object is untouched (purity) → the snapshot is still accurate.
+    assert.deepEqual(steer.hunters[steer.current.index].pos, beforePos, 'input pos mutated');
+    assert.equal(steer.move.remaining, beforeRemaining, 'input move.remaining mutated');
+    assert.equal(steer.move.path.length, beforePathLen, 'input move.path mutated');
+    assert.deepEqual(snap.move, steer.move, 'snapshot diverged from pristine input');
+
+    // And the step produced a genuinely advanced state, so undo is meaningful.
+    if (after.phase === 'turn.steer') {
+      assert.equal(after.move.remaining, beforeRemaining - 1);
+      assert.equal(after.move.path.length, beforePathLen + 1);
+    }
+    return; // one good seed is enough
+  }
+  assert.fail('no seed produced a steppable turn.steer state');
+});
+
 test('legalActions in turn.postMove returns attack + pass', () => {
   // Build a state where the current hunter is already in postMove phase.
   const state = makeGame(1);
