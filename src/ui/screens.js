@@ -889,7 +889,8 @@ export function makeCreationScreen(app) {
           ctx.restore();
         } else {
           const sc = sel ? STAT_HEX[row] : null;
-          text(ctx, val, 220, y, { size: 18, color: row === 'done' ? BAD : sc ?? FG });
+          const palAcc = row === 'palette' ? (PALETTE_ACCENT[PALETTE_NAMES[state.palette]] ?? FG) : null;
+          text(ctx, val, 220, y, { size: 18, color: row === 'done' ? BAD : palAcc ?? sc ?? FG });
         }
       });
       { const ptc = left() ? GOLD : OK;
