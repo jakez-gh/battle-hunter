@@ -1088,7 +1088,7 @@ export function makeHubScreen(app) {
         ig.addColorStop(0, infoAccent + '30'); ig.addColorStop(1, 'transparent');
         ctx.save(); ctx.globalAlpha = ia * 2; ctx.fillStyle = ig;
         ctx.fillRect(122, 322, 716, 56); ctx.restore(); }
-      text(ctx, ICONS[idx].info, 140, 340, { size: 15, color: DIM });
+      text(ctx, ICONS[idx].info, 140, 340, { size: 15, color: FG });
       const rec = currentHunter(app);
       if (rec) {
         drawHunterCard(app, rec, 120, 410, 480);
