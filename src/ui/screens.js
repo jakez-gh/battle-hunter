@@ -737,6 +737,19 @@ export function makeRosterScreen(app, opts = {}) {
               ctx.save(); ctx.shadowBlur = 4; ctx.shadowColor = '#906000';
               text(ctx, s, 680, ly, { size: 15, color: GOLD, shadow: false });
               ctx.restore();
+            } else if (i === 5) {
+              // "Missions N   Wins N" — wins count in green
+              ctx.font = font(15, true); ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+              const mSegs = [
+                { t: `Missions ${rec.record.missions}`, c: FG },
+                { t: `   Wins `, c: DIM },
+                { t: String(rec.record.wins), c: rec.record.wins > 0 ? OK : DIM },
+              ];
+              let mx = 680;
+              for (const seg of mSegs) {
+                ctx.fillStyle = seg.c; ctx.fillText(seg.t, mx, ly);
+                mx += Math.round(ctx.measureText(seg.t).width);
+              }
             } else if (i === 6) {
               const ic = rec.items.length === 6 ? '#d8cc88' : rec.items.length === 0 ? DIM : FG;
               text(ctx, s, 680, ly, { size: 15, color: ic });
