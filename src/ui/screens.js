@@ -2025,6 +2025,9 @@ export function makeGameScreen(app, g) {
       ctx.fillStyle = '#06060c';
       ctx.fillRect(0, 0, app.W, app.H);
       const st = g.state;
+      // Steering: show how far this move can still reach + the path walked so
+      // far (the renderer's range/path overlays). Cleared in every other phase.
+      if (steering) A.steerOverlay(g.renderer, st); else A.clearOverlays(g.renderer);
       A.rendererDraw(g.renderer, st, frameDt);
       // Soft vertical shadow at dungeon/HUD boundary (x=720)
       { const sg = ctx.createLinearGradient(706, 0, 724, 0);

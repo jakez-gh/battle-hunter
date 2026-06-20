@@ -8,6 +8,7 @@
 // items, missions, board, combat, sprites, audio, save) are imported direct.
 
 import { interpolateInternal, RIVALS, rivalStats } from './engine/missions.js';
+import { reachableTiles, occupiedSet } from './engine/board.js';
 import { buildAtlas } from './render/sprites.js';
 import { playMusic, stopMusic } from './audio/music.js';
 import { setVolumes } from './audio/synth.js';
@@ -217,6 +218,21 @@ const adapt = {
     const x = Math.floor((pos.x - BOARD.ox) / BOARD.tile);
     const y = Math.floor((pos.y - BOARD.oy) / BOARD.tile);
     return x >= 0 && y >= 0 && x < 20 && y < 20 ? { x, y } : null;
+  },
+  // Steering display: feed the reachable-range + walked-path overlays the
+  // renderer already knows how to draw (turn.steer only). Pure presentation —
+  // composes already-tested reachableTiles/occupiedSet over the live move state.
+  steerOverlay(r, state) {
+    try {
+      if (!r?.showRange || !state?.move) { r?.clearOverlays?.(); return; }
+      const me = resolveUnit(state, game?.currentChooser?.(state) ?? state.current);
+      if (!me?.pos) { r.clearOverlays?.(); return; }
+      r.showRange(reachableTiles(state.board, occupiedSet(state), me.pos, state.move.remaining ?? 0));
+      r.showPath(state.move.path?.length ? state.move.path : null);
+    } catch { /* presentation only */ }
+  },
+  clearOverlays(r) {
+    try { r?.clearOverlays?.(); } catch { /* optional */ }
   },
 };
 
