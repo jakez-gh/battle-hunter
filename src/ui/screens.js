@@ -1837,10 +1837,17 @@ export function makeGameScreen(app, g) {
     if (acts.length) host.push(subMenu(phase || 'CHOOSE', acts));
   }
 
+  function pickItemColor(a) {
+    const opt = a.option;
+    if (!opt) return null;
+    const id = typeof opt === 'string' ? opt : opt.itemId;
+    return id ? (ITEM_CAT_COLOR[ITEMS[id]?.category] ?? null) : null;
+  }
+
   function subMenu(title, acts) {
     return makeMenu(acts.map((a) => ({
       label: actionLabel(g.state, a),
-      color: a.card ? (CARD_HEX[cardColor(a.card)] ?? null) : null,
+      color: a.card ? (CARD_HEX[cardColor(a.card)] ?? null) : (a.type === 'pick' ? pickItemColor(a) : null),
       value: a,
     })), {
       title,
@@ -2305,11 +2312,32 @@ export function makeGameScreen(app, g) {
           ctx.fillStyle = seg.c; ctx.fillText(seg.t, isx, 370);
           isx += Math.round(ctx.measureText(seg.t).width);
         } }
-      const names = (h.items || []).map((s) => itemName(s));
-      // Clip to 30 chars: 3 longest names joined = 46 chars; at sz=11 that's 304px but box is 212px wide.
-      const clipLine = (s) => (s.length > 30 ? s.slice(0, 27) + '...' : s);
-      text(ctx, clipLine(names.slice(0, 3).join(', ') || 'no items'), X + 10, 386, { size: 11, color: DIM });
-      text(ctx, clipLine(names.slice(3).join(', ')), X + 10, 400, { size: 11, color: DIM });
+      // Info panel item names: per-category color, wrapping to two rows
+      { const slots = h.items || [];
+        if (!slots.length) {
+          text(ctx, 'no items', X + 10, 386, { size: 11, color: DIM });
+        } else {
+          ctx.font = font(11, true); ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+          const maxW = W - 22;
+          let ix = 0, iy = 386, rowW = 0;
+          for (let si = 0; si < slots.length; si++) {
+            const slot = slots[si];
+            const nm = itemName(slot);
+            const cat = slot.identified ? ITEMS[slot.itemId]?.category : null;
+            const nc = cat ? (ITEM_CAT_COLOR[cat] ?? DIM) : DIM;
+            const sep = si > 0 ? ', ' : '';
+            const sw = Math.round(ctx.measureText(sep + nm).width);
+            if (rowW + sw > maxW && rowW > 0) {
+              if (iy >= 400) break; // only 2 rows
+              ix = X + 10; iy = 400; rowW = 0;
+            }
+            if (sep) { ctx.fillStyle = DIM; ctx.fillText(sep, ix, iy); ix += Math.round(ctx.measureText(sep).width); }
+            ctx.fillStyle = '#000'; ctx.fillText(nm, ix + 1, iy + 1);
+            ctx.fillStyle = nc; ctx.fillText(nm, ix, iy);
+            const nw = Math.round(ctx.measureText(nm).width);
+            ix += nw; rowW += sw;
+          }
+        } }
     }
 
     // mission goal
