@@ -945,7 +945,15 @@ export function makeCreationScreen(app) {
           ctx.fillStyle = seg.c; ctx.fillText(seg.t, csx, 385);
           csx += sw;
         } }
-      text(ctx, `displayed: MV ${d.mv}  DF ${d.df}  HP ${d.maxHp}`, 750, 420, { size: 12, align: 'center', color: DIM });
+      { const dSegs = [
+          { t: 'displayed: ' }, { t: `MV ${d.mv}`, c: '#3a6ee0' }, { t: '  ' },
+          { t: `DF ${d.df}`, c: '#e0c63a' }, { t: '  ' }, { t: `HP ${d.maxHp}`, c: '#3aa84a' },
+        ];
+        ctx.font = font(12); ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+        let dtw = 0; for (const s of dSegs) dtw += ctx.measureText(s.t).width;
+        let dcx = 750 - dtw / 2;
+        for (const s of dSegs) { ctx.fillStyle = s.c ?? DIM; ctx.fillText(s.t, dcx, 420); dcx += ctx.measureText(s.t).width; }
+      }
       text(ctx, 'type to name - arrows to adjust - Enter on BEGIN', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
     },
   };
