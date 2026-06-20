@@ -2847,7 +2847,7 @@ export function makeMissionBriefingScreen(app, mission) {
       ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = '#b07a08';
       text(ctx, 'OBJECTIVE', BX + 20, nextY + 10, { size: 12, color: GOLD, shadow: false });
       ctx.restore();
-      wrapText(ctx, TYPE_HINT[mission.type] || '', BX + 20, nextY + 28, BW - 60, 20, { size: 14, color: DIM });
+      wrapText(ctx, TYPE_HINT[mission.type] || '', BX + 20, nextY + 28, BW - 60, 20, { size: 14, color: TYPE_COLOR[mission.type] || FG });
 
       const oppY = nextY + 78;
       ctx.fillStyle = '#3c4364';
