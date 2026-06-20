@@ -716,7 +716,7 @@ export function makeRosterScreen(app, opts = {}) {
             `Missions ${rec.record.missions}   Wins ${rec.record.wins}`,
             `Items: ${rec.items.length}/6`,
           ];
-          const lineColors = [FG, OK, FG, rec.maxHp < baseMaxHp(rec) ? '#d8cc88' : FG, null, FG, FG];
+          const lineColors = [FG, OK, FG, rec.maxHp < baseMaxHp(rec) ? BAD : '#3aa84a', null, FG, FG];
           lines.forEach((s, i) => {
             const ly = 226 + i * 26;
             if (i === 2) {
