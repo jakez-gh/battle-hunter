@@ -2398,7 +2398,8 @@ export function makeGameScreen(app, g) {
       text(ctx, goalLine, X + 10, 450, { size: 11, color: GOLD, shadow: false });
       ctx.restore();
     } else {
-      text(ctx, goalLine, X + 10, 450, { size: 11, color: DIM });
+      const goalIdleColor = { rescue: OK, resteal: BAD }[st.missionType] ?? DIM;
+      text(ctx, goalLine, X + 10, 450, { size: 11, color: goalIdleColor });
     }
     if (rivalHold) {
       const rivalsFree = st.round > (st.rescueHoldRounds ?? 0);
