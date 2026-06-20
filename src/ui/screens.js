@@ -761,8 +761,8 @@ export function makeRosterScreen(app, opts = {}) {
         }
       }
       if (!app.roster.hunters.length) {
-        text(ctx, 'No hunters registered yet - create one!', 500, 120, { size: 16, color: DIM });
-        text(ctx, 'Always open via run.bat / run.sh so saves persist.', 500, 146, { size: 12, color: DIM });
+        text(ctx, 'No hunters registered yet - create one!', 500, 120, { size: 16, color: FG });
+        text(ctx, 'Always open via run.bat / run.sh so saves persist.', 500, 146, { size: 12, color: GOLD });
       }
     },
   };
@@ -2184,7 +2184,7 @@ export function makeGameScreen(app, g) {
       text(ctx, `${rem} step${rem !== 1 ? 's' : ''} left`, 736, 456, { size: 12, color: BAD, shadow: false });
       ctx.restore();
     } else {
-      text(ctx, `${rem} step${rem !== 1 ? 's' : ''} left`, 736, 456, { size: 12, color: DIM });
+      text(ctx, `${rem} step${rem !== 1 ? 's' : ''} left`, 736, 456, { size: 12, color: FG });
     }
     text(ctx, 'arrows: step \xb7 Enter: stop', 736, 472, { size: 11, color: DIM });
     text(ctx, used > 0 ? 'Z / Backspace: undo step' : 'Z: undo (after a step)', 736, 486,
@@ -2800,7 +2800,7 @@ export function makeResultsScreen(app, g) {
       }
       const replayHint = g.mission ? '   R: replay' : '';
       const exitHint = t < 1.8 ? 'Enter: skip' : 'Enter: return to hub';
-      text(ctx, exitHint + replayHint, app.W / 2, 600, { size: 15, align: 'center', color: DIM });
+      text(ctx, exitHint + replayHint, app.W / 2, 600, { size: 15, align: 'center', color: FG });
     },
   };
 
@@ -3096,7 +3096,7 @@ export function makeManualScreen(app) {
         ctx.save(); ctx.shadowBlur = 6; ctx.shadowColor = hShadow;
         text(ctx, sec.head, BX + 20, curY, { size: 13, color: hc, shadow: false });
         ctx.restore();
-        curY = wrapText(ctx, sec.body, BX + 28, curY + 18, BW - 60, 17, { size: 13, color: DIM });
+        curY = wrapText(ctx, sec.body, BX + 28, curY + 18, BW - 60, 17, { size: 13, color: FG });
         curY += 6;
       }
 
