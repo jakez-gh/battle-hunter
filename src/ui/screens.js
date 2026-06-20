@@ -282,9 +282,9 @@ function drawWallpaper(ctx, W, H, index) {
 // ---------------------------------------------------------------------------
 // Menus — vertical option lists with keyboard + click-to-select-click-to-pick.
 
-function makeMenu(items, { title = '', onPick, onCancel, footer = '' } = {}) {
+function makeMenu(items, { title = '', onPick, onCancel, footer = '', footerColor = null } = {}) {
   const m = {
-    title, items, footer, idx: 0, rects: [],
+    title, items, footer, footerColor, idx: 0, rects: [],
     current: () => m.items[m.idx],
     move(d) {
       const n = m.items.length;
@@ -362,7 +362,7 @@ function drawMenu(ctx, m, x, y, w, opt = {}) {
     m.rects.push({ x: x + 4, y: oy - 2, w: w - 8, h: lh });
     oy += lh;
   });
-  if (m.footer) text(ctx, m.footer, x + 10, oy + 2, { size: 12, color: DIM });
+  if (m.footer) text(ctx, m.footer, x + 10, oy + 2, { size: 12, color: m.footerColor ?? DIM });
   return h;
 }
 
@@ -1432,6 +1432,7 @@ export function makeHospitalScreen(app) {
     ], {
       title: `HOSPITAL - ${rec.credits}cr`,
       footer: lost > 0 ? `Max HP ${rec.maxHp} / base ${baseMaxHp(rec)}` : `Max HP ${rec.maxHp} (full)`,
+      footerColor: lost > 0 ? BAD : '#3aa84a',
       onPick(v) {
         if (v === 'back') { app.stack.pop(); return; }
         if (v === 'repair1' || v === 'repairAll') {
