@@ -129,6 +129,63 @@ none — claim one from the backlog
 
 ---
 
+## Sprint: Fun & sellability (from multi-agent design analysis, 2026-06-20)
+
+Goal: make the game genuinely more fun and worth paying for. Direction from the
+analysis: polish the existing turns to feel sharp/fair/watchable, then build a
+seeded roguelike "Relic Dive" run + "Daily Hunt" (the deterministic engine makes
+it cheap). Quick wins first — every one lifts the floor of *every* mode.
+
+### Done (2026-06-20)
+
+- [x] **Steering range + path overlay** — wire the renderer's already-built
+  `showRange`/`showPath` (drawn but never fed) into `turn.steer` via
+  `adapt.steerOverlay`. Turns blind steering into a readable tactical decision.
+  Commit: `5c5083a`
+
+- [x] **One-step soft-undo while steering** — Z / Backspace rewinds the last
+  step (no die re-roll); snapshot-based, relies on engine purity (new game.test
+  invariant). Antidote to "died to a hidden trap I couldn't see." Commit: `1ac3d2b`
+
+### Quick wins pending (days-to-weeks, low-regret — see analysis)
+
+- [ ] **Crush AI dead-air** — `aiSpeed` exists (default 8) but the per-substep
+  gate is uniform. Make non-decisive substeps (plain walk/draw/rest) near-instant
+  (~50–80ms); keep full ceremony only for battles / target-found / flag-6 /
+  WYRM-spawn. Surface the speed control (keys `[`/`]` are undiscoverable).
+- [ ] **Dice fairness without removing dice** — pre-attack advantage readout
+  (stat delta), one **Fortune reroll token** per hunter per mission, post-battle
+  math summary. Story/display-only fudging is OK; never touch Normal/seeded RNG.
+- [ ] **AI uses the dodge/crit-negate reflex** — replace hardcoded `{hit:false}`
+  in `ai.js` with a difficulty-scaled seeded roll; add Easy/Normal/Hard at setup.
+- [ ] **Combat juice micro-pass** — rolling damage counter, crit freeze-frame,
+  magnitude-scaled audio pitch; dedicated WYRM-spawn cinematic (clip-worthy).
+- [ ] **Rival voice** — 10–20 short lines for Keld/Mira/RAVEN on found-target /
+  defeated / steal / WYRM. Cheap characterization; shows up in reviews.
+- [ ] **Hotseat hidden-hand fix** — render the active player's hand + a
+  pass-the-device handoff card (4-player Normal is currently unplayable).
+
+### Big bet (weeks-to-months): "Relic Dive" seeded run + Daily Hunt
+
+Phase hard; prove each phase is fun before funding the next. Promote to
+`ROADMAP.md` when greenlit.
+
+- [ ] **Phase 0 — Determinism cleanup (prerequisite).** Route every
+  gameplay-affecting entropy source through the seeded rng. Known leaks:
+  `main.js` `Math.random()` for opponent archetypes/AI names/sprite IDs/the seed
+  itself; `screens.js` dungeon-music pick. Acceptance: seed-replay equality test
+  passes. Nothing seeded/shareable is honest until this lands.
+- [ ] **Phase 1 — Depth-stack + Daily Hunt** (chained seeded dungeons of rising
+  relicLevel; "Descend or Bank Out"; date-seeded daily + local best/streak +
+  share string). Keep a "Classic Campaign" wrapper.
+- [ ] **Phase 2 — Horizontal perks** (choose-1-of-3 between depths, same
+  effect-string format `items.js` already parses; breadth not vertical power).
+- [ ] **Phase 3 — Run modifiers + per-depth room objectives.**
+- [ ] **Deferred** — cloud leaderboard + ghost races (needs a backend = new
+  external resource; only after the offline daily proves return visits).
+
+---
+
 ## Backlog (future sprints)
 
 - Network play (WebRTC or WebSocket) for remote multiplayer
