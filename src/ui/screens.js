@@ -1482,8 +1482,20 @@ export function makeHospitalScreen(app) {
       host.menus.forEach((m, i) => drawMenu(ctx, m, 60 + i * 30, 100 + i * 40, 440, { lineH: 26 }));
       if (note) { ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = OK;
         text(ctx, note, app.W / 2, 640, { size: 16, align: 'center', color: OK, shadow: false }); ctx.restore(); }
-      const fees = LEVEL_UP_FEES.map((f, i) => `L${i + 1}>${i + 2}: ${f}`).slice(Math.max(0, (rec?.level ?? 1) - 2), (rec?.level ?? 1) + 2);
-      text(ctx, fees.join('   '), app.W / 2, 668, { size: 12, align: 'center', color: DIM });
+      { const level = rec?.level ?? 1;
+        const feeEntries = LEVEL_UP_FEES.map((f, i) => ({ label: `L${i + 1}>${i + 2}: ${f}`, fee: f, current: i === level - 1 }))
+          .slice(Math.max(0, level - 2), level + 2);
+        ctx.save(); ctx.font = font(12); ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+        const SEP = '   ';
+        const totalW = feeEntries.reduce((s, e, j) => s + (j > 0 ? Math.round(ctx.measureText(SEP).width) : 0) + Math.round(ctx.measureText(e.label).width), 0);
+        let cx = ((app.W - totalW) / 2) | 0;
+        for (let j = 0; j < feeEntries.length; j++) {
+          if (j > 0) { const sw = Math.round(ctx.measureText(SEP).width); ctx.fillStyle = DIM; ctx.fillText(SEP, cx, 668); cx += sw; }
+          const e = feeEntries[j];
+          ctx.fillStyle = e.current ? ((rec?.credits ?? 0) >= e.fee ? GOLD : BAD) : DIM;
+          ctx.fillText(e.label, cx, 668); cx += Math.round(ctx.measureText(e.label).width);
+        }
+        ctx.restore(); }
     },
   };
 }
