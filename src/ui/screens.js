@@ -875,7 +875,9 @@ export function makeCreationScreen(app) {
         const y = 120 + i * 56;
         const sel = state.row === i;
         if (sel) {
-          const rgb = STAT_RGB[row] ?? [80, 100, 220];
+          const palHex = row === 'palette' ? (PALETTE_ACCENT[PALETTE_NAMES[state.palette]] ?? '#4a64d1') : null;
+          const palRgb = palHex ? [parseInt(palHex.slice(1,3),16), parseInt(palHex.slice(3,5),16), parseInt(palHex.slice(5,7),16)] : null;
+          const rgb = palRgb ?? STAT_RGB[row] ?? [80, 100, 220];
           const [ri, gi, bi] = rgb;
           const sg = ctx.createLinearGradient(56, 0, 56 + 488, 0);
           sg.addColorStop(0, `rgba(${ri},${gi},${bi},0.42)`); sg.addColorStop(1, `rgba(${ri},${gi},${bi},0.10)`);
