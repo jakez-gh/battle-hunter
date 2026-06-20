@@ -2539,22 +2539,27 @@ export function createRenderer(canvas, opts = {}) {
           ctx.restore(); ctx.textAlign = 'left';
         }
         { const dmgCx = (bx + bw / 2) | 0, dmgCy = (by + 150) | 0;
-          // Bounce-in pop: scale from 1→1.4→1 over the first 35% of non-rolling phase
+          // popP: 0 at dice-stop (anim 50%), 1 at anim 85%
           const popP = (anim?.ev.type === 'strikeRolled') ? Math.min(1, (anim.t / anim.dur - 0.5) / 0.35) : 1;
           const popScale = 1 + Math.sin(Math.max(0, popP) * Math.PI) * 0.40;
-          // Escalating color: low→coral, high (6+)→orange, max (9+)→gold
-          const dmgCol = st.damage >= 9 ? '#ffe050' : st.damage >= 6 ? '#ff9a40' : '#ff6a5a';
-          const dmgShadow = st.damage >= 9 ? '#e0a010' : st.damage >= 6 ? '#d06010' : '#ff5050';
+          // Rolling counter: tick from 0 → damage during first half of pop phase,
+          // so the number locks at full value exactly when the bounce-in peaks (popP=0.5).
+          const showDmg = (anim?.ev.type === 'strikeRolled' && popP < 0.5)
+            ? Math.max(1, Math.round(st.damage * (popP / 0.5)))
+            : st.damage;
+          const dmgCol = showDmg >= 9 ? '#ffe050' : showDmg >= 6 ? '#ff9a40' : '#ff6a5a';
+          const dmgShadow = showDmg >= 9 ? '#e0a010' : showDmg >= 6 ? '#d06010' : '#ff5050';
           ctx.save();
           ctx.translate(dmgCx, dmgCy); ctx.scale(popScale, popScale); ctx.translate(-dmgCx, -dmgCy);
-          ctx.shadowBlur = st.damage >= 6 ? 20 : 14; ctx.shadowColor = dmgShadow;
-          text(`-${st.damage}`, dmgCx, dmgCy, dmgCol, 24, 'center');
+          ctx.shadowBlur = showDmg >= 6 ? 20 : 14; ctx.shadowColor = dmgShadow;
+          text(`-${showDmg}`, dmgCx, dmgCy, dmgCol, 24, 'center');
           ctx.restore(); }
         if (st.crit && anim?.ev.type === 'strikeRolled') {
           const p = anim.t / anim.dur;
-          if (p > 0.5 && p < 0.72) {
-            const fp = (p - 0.5) / 0.22;
-            const fadeAlpha = fp < 0.5 ? fp * 2 : 2 - fp * 2;
+          if (p > 0.5) {
+            // Crit flash: instant full-brightness burst at dice-stop, then slow fade to end
+            const fp = (p - 0.5) / 0.5;
+            const fadeAlpha = fp < 0.12 ? fp / 0.12 : 1 - (fp - 0.12) / 0.88;
             // Gold radial burst from center
             const ccx = bx + bw / 2, ccy = by + bh / 2;
             const cg = ctx.createRadialGradient(ccx, ccy, 0, ccx, ccy, bh * 0.8);
@@ -2562,9 +2567,11 @@ export function createRenderer(canvas, opts = {}) {
             cg.addColorStop(0.4, `rgba(220,160,20,${(fadeAlpha * 0.5).toFixed(2)})`);
             cg.addColorStop(1, 'transparent');
             ctx.save(); ctx.fillStyle = cg; ctx.fillRect(bx, by, bw, bh); ctx.restore();
-            // White rim flash on edges
-            ctx.save(); ctx.globalAlpha = fadeAlpha * 0.35; ctx.fillStyle = '#fff';
-            ctx.fillRect(bx, by, bw, bh); ctx.restore();
+            // White rim flash — only during initial burst
+            if (fadeAlpha > 0.2) {
+              ctx.save(); ctx.globalAlpha = fadeAlpha * 0.35; ctx.fillStyle = '#fff';
+              ctx.fillRect(bx, by, bw, bh); ctx.restore();
+            }
             ctx.save(); ctx.shadowBlur = 22; ctx.shadowColor = '#ffe060';
             text('CRIT!', bx + bw / 2, by + bh / 2 - 10, '#ffe98a', 28, 'center');
             ctx.restore();
