@@ -1683,6 +1683,7 @@ export function makeGameScreen(app, g) {
   const host = makeMenuHost();
   let uiKey = null;        // phase signature the menus were built for
   let steering = false;
+  let undoStack = [];      // pre-step snapshots for in-move soft-undo
   let timing = null;       // { t } while a react.* minigame runs
   let aiSpeed = app.options().aiSpeed ?? 8;
   let aiDelay = 0.2 / aiSpeed;
@@ -1696,6 +1697,7 @@ export function makeGameScreen(app, g) {
   let finished = false;
 
   const say = (s, dur = 2.2, color = GOLD) => { banner = { text: s, t: dur, color }; };
+  const snapshot = (s) => { try { return structuredClone(s); } catch { return JSON.parse(JSON.stringify(s)); } };
 
   function act(action) {
     try {
@@ -1712,6 +1714,24 @@ export function makeGameScreen(app, g) {
     steering = false;
     timing = null;
     uiKey = null;
+    // The undo stack is valid only within one steering sequence: reset when a
+    // fresh move begins (0 steps taken) or steering ends. Steps keep it (they
+    // push their pre-step snapshot before calling act).
+    if (g.state.phase !== 'turn.steer' || !(g.state.move?.path?.length)) undoStack = [];
+  }
+
+  // In-move soft-undo: rewind the last step within the current move. Restores a
+  // pre-step snapshot (the engine stays pure; we never un-roll the die — the
+  // stack is empty at 0 steps). Feeds the renderer the restored state directly.
+  function undoStep() {
+    if (!undoStack.length) { sfx.error(); return; }
+    g.state = undoStack.pop();
+    A.rendererFeed(g.renderer, g.state, []);
+    host.clear();
+    steering = true;
+    timing = null;
+    uiKey = null;
+    sfx.step();
   }
 
   function handleEvents(events) {
@@ -1977,11 +1997,12 @@ export function makeGameScreen(app, g) {
       }
       if (steering) {
         const st = g.state;
+        if (k === 'undo') { undoStep(); return; }
         let acts = [];
         try { acts = A.legalActions(st) || []; } catch { /* ignore */ }
         if (DIR_BY_KEY[k]) {
           const step = acts.find((a) => a.type === 'step' && a.dir === DIR_BY_KEY[k]);
-          if (step) act(step); else sfx.error();
+          if (step) { undoStack.push(snapshot(st)); act(step); } else sfx.error();
         } else if (k === 'confirm' || k === 'cancel') {
           const stop = acts.find((a) => a.type === 'stop');
           if (stop) act(stop); else sfx.error();
@@ -2017,7 +2038,7 @@ export function makeGameScreen(app, g) {
           const dx = tile.x - me.pos.x, dy = tile.y - me.pos.y;
           const dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'E' : 'W') : (dy > 0 ? 'S' : 'N');
           const step = acts.find((a) => a.type === 'step' && a.dir === dir);
-          if (step) act(step);
+          if (step) { undoStack.push(snapshot(st)); act(step); }
         }
       }
     },
@@ -2166,6 +2187,8 @@ export function makeGameScreen(app, g) {
       text(ctx, `${rem} step${rem !== 1 ? 's' : ''} left`, 736, 456, { size: 12, color: DIM });
     }
     text(ctx, 'arrows: step \xb7 Enter: stop', 736, 472, { size: 11, color: DIM });
+    text(ctx, used > 0 ? 'Z / Backspace: undo step' : 'Z: undo (after a step)', 736, 486,
+      { size: 11, color: undoStack.length ? OK : DIM });
   }
 
   function drawHud(ctx, st) {
@@ -2613,7 +2636,7 @@ export function makeResultsScreen(app, g) {
         text(ctx, `M${String(g.mission.id).padStart(2, '0')} · ${g.mission.title ?? ''}`, rcx, 66,
           { size: 14, align: 'center', color: win ? GOLD : DIM });
       else if (!win && g.outcome.reason)
-        text(ctx, String(g.outcome.reason), app.W / 2, 66, { size: 14, align: 'center', color: DIM });
+        text(ctx, String(g.outcome.reason), app.W / 2, 66, { size: 14, align: 'center', color: BAD });
       // Separator + score table
       ctx.save(); ctx.fillStyle = win ? GOLD : BAD; ctx.globalAlpha = 0.45;
       ctx.fillRect(40, 92, app.W - 80, 1); ctx.restore();

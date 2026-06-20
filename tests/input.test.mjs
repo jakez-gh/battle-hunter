@@ -14,6 +14,7 @@ test('KEY_MAP covers all expected semantic actions', () => {
     confirm: ['Enter', 'NumpadEnter', 'Space'],
     cancel: ['Escape'],
     info: ['Tab'],
+    undo: ['Backspace', 'KeyZ'],
   };
   for (const [action, codes] of Object.entries(required)) {
     for (const code of codes) {
@@ -32,10 +33,12 @@ test('semanticKey returns the correct semantic for known keycodes', () => {
   assert.equal(semanticKey({ code: 'Space' }), 'confirm');
   assert.equal(semanticKey({ code: 'Escape' }), 'cancel');
   assert.equal(semanticKey({ code: 'Tab' }), 'info');
+  assert.equal(semanticKey({ code: 'KeyZ' }), 'undo');
+  assert.equal(semanticKey({ code: 'Backspace' }), 'undo');
 });
 
 test('semanticKey returns null for unknown keycodes', () => {
-  assert.equal(semanticKey({ code: 'KeyZ' }), null);
+  assert.equal(semanticKey({ code: 'KeyQ' }), null);
   assert.equal(semanticKey({ code: 'F1' }), null);
   assert.equal(semanticKey({ code: '' }), null);
   assert.equal(semanticKey({}), null);
