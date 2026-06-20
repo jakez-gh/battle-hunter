@@ -623,7 +623,7 @@ export function makeRosterScreen(app, opts = {}) {
 
   function rootMenu() {
     const hs = app.roster.hunters;
-    const items = hs.map((h) => ({ label: h.name, right: `Lv${h.level} ${h.credits}cr`, rightColor: GOLD, value: { kind: 'hunter', id: h.id } }));
+    const items = hs.map((h) => ({ label: h.name, right: `Lv${h.level} ${h.credits}cr`, rightColor: GOLD, color: PALETTE_ACCENT[h.palette], value: { kind: 'hunter', id: h.id } }));
     items.push({ label: '+ Register new hunter', value: { kind: 'new' }, color: OK });
     items.push({ label: 'Back', value: { kind: 'back' } });
     return makeMenu(items, {
