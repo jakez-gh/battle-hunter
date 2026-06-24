@@ -2322,11 +2322,18 @@ export function makeGameScreen(app, g) {
         text(ctx, `${h.hp}/${h.maxHp}`, X + 186, y + 22, { size: 11, color: hpCol });
       }
       { const hc = h.hand?.length ?? 0, bc = h.items?.length ?? 0;
+        const bagFull = bc >= 6;
+        if (bagFull) {
+          // Pulsing danger glow behind bag count when full
+          const bp2 = 0.18 + 0.14 * Math.sin(hudT * 5);
+          ctx.save(); ctx.globalAlpha = bp2; ctx.fillStyle = BAD;
+          ctx.fillRect(X + 118, y + 38, 60, 14); ctx.restore();
+        }
         ctx.font = '11px Consolas, "Courier New", monospace'; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
         let hbx = X + 60;
         const hsegs = [
           { t: 'hand ', c: DIM }, { t: String(hc), c: hc > 0 ? '#4a7dff' : DIM },
-          { t: '  bag ', c: DIM }, { t: String(bc), c: bc > 0 ? GOLD : DIM },
+          { t: '  bag ', c: DIM }, { t: bagFull ? `${bc} FULL` : String(bc), c: bagFull ? BAD : bc > 0 ? GOLD : DIM },
         ];
         for (const seg of hsegs) {
           ctx.fillStyle = seg.c; ctx.fillText(seg.t, hbx, y + 40);
@@ -2339,7 +2346,17 @@ export function makeGameScreen(app, g) {
         const sp2 = 0.40 + 0.40 * Math.sin(hudT * 4.5 + (sk === 'stun' ? 0 : sk === 'leg' ? 2.1 : sk === 'panic' ? 4.2 : 1.05));
         ctx.save(); ctx.globalAlpha = sp2 * 0.72; ctx.fillStyle = STATUS_GLOW_COLORS[sk] ?? '#9aa0b4';
         ctx.fillRect(sx - 1, y + 39, 18, 16); ctx.restore();
-        sprite(app, `status.${sk}`, sx, y + 40, 2); sx += 18;
+        sprite(app, `status.${sk}`, sx, y + 40, 2);
+        // Turn-count badge on countable statuses (stun/panic/empty > 1)
+        const skVal = h.status[sk];
+        if (sk !== 'leg' && typeof skVal === 'number' && skVal > 1) {
+          ctx.save();
+          ctx.font = 'bold 8px Consolas, "Courier New", monospace'; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'right';
+          ctx.fillStyle = '#000'; ctx.fillText(String(skVal), sx + 16, y + 54);
+          ctx.fillStyle = STATUS_GLOW_COLORS[sk] ?? '#fff'; ctx.fillText(String(skVal), sx + 15, y + 53);
+          ctx.restore();
+        }
+        sx += 18;
       }
     });
 
