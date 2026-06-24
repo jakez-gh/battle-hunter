@@ -180,10 +180,11 @@ Phase hard; prove each phase is fun before funding the next. Promote to
   call-site gap. New regression test: "engine replay: same seed+config produces
   identical event sequence." Renderer/audio `Math.random()` calls are
   cosmetic-only and intentionally left unseeded.
-- [~] **Phase 1 — Depth-stack + Daily Hunt** (chained seeded dungeons of rising
+- [x] **Phase 1 — Depth-stack + Daily Hunt** (chained seeded dungeons of rising
   relicLevel; "Descend or Bank Out"; date-seeded daily + local best/streak +
-  share string). Keep a "Classic Campaign" wrapper.
-  Design doc: `ROADMAP.md` Phase 1. Slices added to sprint below.
+  share string). Keep a "Classic Campaign" wrapper. **Shipped `38d7212`** —
+  345/345 tests green. DIVE + DAILY HUNT on Hub; depth-transition + run-summary
+  screens; share-string copy on run end. Design doc: `ROADMAP.md` Phase 1.
 - [ ] **Phase 2 — Horizontal perks** (choose-1-of-3 between depths, same
   effect-string format `items.js` already parses; breadth not vertical power).
 - [ ] **Phase 3 — Run modifiers + per-depth room objectives.**
@@ -242,6 +243,33 @@ Prerequisite: Phase 0 done at `319521e`.
   `buildShareString(runResult)` to clipboard (try `navigator.clipboard`,
   fallback to hidden textarea + `execCommand('copy')`). Save best via
   `saveRelicDiveBest`. Depends on 1A + 1B + 1C.
+
+---
+
+## Sprint: Phase 2 — Horizontal perks
+
+From `ROADMAP.md` Phase 2. Two independent lanes: **engine** (`items.js`,
+new `perks.js`) and **UI** (`screens.js`). Coordinate on `screens.js` with
+whoever holds the visual-polish claim first. Prerequisite: Phase 1 done at
+`38d7212`.
+
+### Engine lane
+
+- [~] **2A — Perk catalog + roll logic (`perks.js`)** — pure perk definitions
+  in the same effect-string format `items.js` already parses (`at+1`, `noSelfTrap`,
+  `restDraw+1`, `firstBoxIdentified`, etc.). `rollPerkChoices(rng, n=3)` samples
+  without replacement from the catalog. `applyPerk(perk, hunter)` reuses
+  `items.js` effect application path; no engine-core changes.
+  Tests: choices are non-duplicate; `applyPerk` round-trips same as item effects.
+  **Claimed by `opus-coord-3ba000`** (`src/engine/perks.js`, `tests/perks.test.mjs`).
+
+### UI lane
+
+- [ ] **2B — Perk-pick screen (`screens.js`)** — after each won depth, before
+  `makeDepthClearedScreen`, show `makePerkPickScreen`: three perk cards
+  (name + effect description), hunter clicks one, `applyPerk` runs on the runner.
+  Requires 2A done. **Coordinate with `render-agent-b7ca8a` on `screens.js` claim
+  before starting.**
 
 ---
 

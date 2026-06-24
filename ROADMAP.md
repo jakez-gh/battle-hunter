@@ -40,7 +40,7 @@ dungeon-music pick). **Acceptance (met):** pre-game setup is seeded; same seed �
 same game. *Follow-up owned separately: a full seed→action-log→replay equality
 test in `tests/` (the belt-and-suspenders acceptance check).*
 
-### Phase 1 — Depth-stack + Daily Hunt (the core loop)
+### Phase 1 — Depth-stack + Daily Hunt (the core loop) ✅ DONE (`38d7212`, 345/345 tests)
 The minimum that makes "a run" exist and be shareable.
 - Chain N seeded dungeons of rising `relicLevel` from one root seed
   (`hashRun(rootSeed, depth) → config.seed`); `relicLevel` already drives
