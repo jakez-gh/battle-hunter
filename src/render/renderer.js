@@ -1160,7 +1160,7 @@ export function createRenderer(canvas, opts = {}) {
           }
           continue;
         }
-        blitTile(`tile.${floors[(x * 7 + y * 13) % 19]}`, x, y);
+        blitTile(`tile.${floors[(x * 7 + y * 13) % floors.length]}`, x, y);
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
           // Section color temperature: each quadrant gets a faint ambient tint for character
           { const secTint = x < 10
