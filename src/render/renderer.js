@@ -1284,6 +1284,17 @@ export function createRenderer(canvas, opts = {}) {
             lsg.addColorStop(0, 'rgba(0,0,0,0.45)'); lsg.addColorStop(1, 'transparent');
             ctx.fillStyle = lsg; ctx.fillRect(fp.x, fp.y, vd, ts);
           }
+          // Concave-corner AO: radial darkening where two perpendicular walls meet at a floor corner
+          { if (!b.floor[y - 1]?.[x] && !b.floor[y]?.[x - 1]) {
+              const cgr = ctx.createRadialGradient(fp.x, fp.y, 0, fp.x, fp.y, ts * 0.48);
+              cgr.addColorStop(0, 'rgba(0,0,0,0.26)'); cgr.addColorStop(1, 'transparent');
+              ctx.fillStyle = cgr; ctx.fillRect(fp.x, fp.y, ts * 0.48, ts * 0.48);
+            }
+            if (!b.floor[y - 1]?.[x] && !b.floor[y]?.[x + 1]) {
+              const cgr = ctx.createRadialGradient(fp.x + ts, fp.y, 0, fp.x + ts, fp.y, ts * 0.48);
+              cgr.addColorStop(0, 'rgba(0,0,0,0.26)'); cgr.addColorStop(1, 'transparent');
+              ctx.fillStyle = cgr; ctx.fillRect(fp.x + ts * 0.52, fp.y, ts * 0.48, ts * 0.48);
+            } }
           // Pit-edge rim: 1-px bright highlight distinguishes floor-void border from floor-wall border
           { const rw = Math.max(1, cam.scale); const ra = 0.22;
             if (!b.floor[y]?.[x + 1] && !b.floor[y + 1]?.[x + 1]) {
