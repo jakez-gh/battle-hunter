@@ -1464,6 +1464,49 @@ export function createRenderer(canvas, opts = {}) {
         ctx.fillRect(fesx, fesy, cam.scale, cam.scale); ctx.restore();
       }
     }
+    // Rescue NPC — glowing survivor marker (rescue missions only)
+    if (b.rescue && !b.rescue.claimed) {
+      const rp = worldToScreen(b.rescue.x, b.rescue.y, cam);
+      const rs = TILE * cam.scale;
+      const rcx = rp.x + rs / 2, rcy = rp.y + rs / 2;
+      const rpulse = 0.5 + 0.5 * Math.sin(clock / 500);
+      const rpulse2 = 0.5 + 0.5 * Math.sin(clock / 500 + Math.PI);
+      // Distress beacon: pulsing green radial glow
+      const rg = ctx.createRadialGradient(rcx, rcy, 0, rcx, rcy, rs * 1.4);
+      rg.addColorStop(0, 'rgba(50,220,90,0.6)'); rg.addColorStop(1, 'transparent');
+      ctx.save(); ctx.globalAlpha = rpulse * 0.75; ctx.fillStyle = rg;
+      ctx.fillRect(rp.x - rs * 0.4, rp.y - rs * 0.4, rs * 1.8, rs * 1.8); ctx.restore();
+      // Outer ring pulse (alternating)
+      const rg2 = ctx.createRadialGradient(rcx, rcy, rs * 0.5, rcx, rcy, rs * 1.8);
+      rg2.addColorStop(0, 'rgba(80,255,120,0.18)'); rg2.addColorStop(1, 'transparent');
+      ctx.save(); ctx.globalAlpha = rpulse2 * 0.6; ctx.fillStyle = rg2;
+      ctx.fillRect(rp.x - rs * 0.8, rp.y - rs * 0.8, rs * 2.6, rs * 2.6); ctx.restore();
+      const s = cam.scale;
+      // Dark shadow block behind figure for readability on any floor tile
+      ctx.save(); ctx.globalAlpha = 0.45; ctx.fillStyle = '#001806';
+      ctx.fillRect((rp.x + 1 * s) | 0, (rp.y + 0 * s) | 0, 5 * s, 12 * s); ctx.restore();
+      // Person silhouette: head (3×3 at 2,1), body (3×4 at 2,4), outstretched arms, legs
+      ctx.save();
+      ctx.fillStyle = '#e8f8ec';
+      ctx.fillRect((rp.x + 2 * s) | 0, (rp.y + 1 * s) | 0, 3 * s, 3 * s); // head
+      ctx.fillRect((rp.x + 2 * s) | 0, (rp.y + 4 * s) | 0, 3 * s, 4 * s); // body
+      ctx.fillRect((rp.x + 0 * s) | 0, (rp.y + 5 * s) | 0, 2 * s, s);     // left arm
+      ctx.fillRect((rp.x + 5 * s) | 0, (rp.y + 5 * s) | 0, 2 * s, s);     // right arm
+      ctx.fillRect((rp.x + 2 * s) | 0, (rp.y + 8 * s) | 0, s, 3 * s);     // left leg
+      ctx.fillRect((rp.x + 4 * s) | 0, (rp.y + 8 * s) | 0, s, 3 * s);     // right leg
+      ctx.restore();
+      // "!" urgency label above the figure — flashes with the pulse
+      ctx.save();
+      ctx.font = `bold ${(3 * s) | 0}px Consolas, monospace`;
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = 0.25 + 0.75 * rpulse;
+      ctx.fillStyle = '#000';
+      ctx.fillText('!', (rcx + s * 0.5) | 0, (rp.y - 2.5 * s) | 0);
+      ctx.globalAlpha = 0.9 + 0.1 * rpulse;
+      ctx.fillStyle = '#3dffa0';
+      ctx.fillText('!', rcx | 0, (rp.y - 3 * s) | 0);
+      ctx.restore();
+    }
   }
 
   function drawTrap(t) {
