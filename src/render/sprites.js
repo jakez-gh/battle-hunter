@@ -540,6 +540,25 @@ const WALL_G = [ // cracked stone — a jagged fissure cuts diagonally through t
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_I = [ // monolith — one tall slab, no horizontal mortar joint, subtle texture flecks
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGgGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGgX',
+  'XGGdGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGdGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_H = [ // pillar-panel — slim stone columns flank a deep recessed centre
   'XXXXXXXXXXXXXXXX',
   'XcGXdddddddddXgX',
@@ -776,6 +795,7 @@ export const TILES = {
   wallF: { grid: WALL_F, palette: TILE_PALETTE },
   wallG: { grid: WALL_G, palette: TILE_PALETTE },
   wallH: { grid: WALL_H, palette: TILE_PALETTE },
+  wallI: { grid: WALL_I, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
