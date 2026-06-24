@@ -578,6 +578,44 @@ const WALL_T = [ // engaged column — central pilaster shaft with capital and b
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_U = [ // diamond lattice — shallow cut-diamond facets across two courses
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGdGGGGGdGGGGX',
+  'XGGdGGGGGdGGGGGX',
+  'XGdGGGGGdGGGGGGX',
+  'XGGdGGGGGdGGGGGX',
+  'XGGGdGGGGGdGGGGX',
+  'XGgGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGdGGGGdGGgX',
+  'XGGGdGGGGGdGGGGX',
+  'XGGdGGGGGdGGGGGX',
+  'XGdGGGGGdGGGGGGX',
+  'XGGdGGGGGdGGGGGX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const WALL_V = [ // drip face — stalactite moisture streaks on block surface
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGdGGGGGGGGGGX',
+  'XGGGdGGGGGGdGGGX',
+  'XGGGdGGGGGGdGGGX',
+  'XGGGXGGGGGGdGGGX',
+  'XGGGGGGGGGGGGGgX',
+  'XgGGGGGGGGGGGGGX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGdGGgX',
+  'XGGGGGGGGGGdGGGX',
+  'XGGdGGGGGGGXGGGX',
+  'XGGdGGGGGGGGGGGX',
+  'XGGdGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_S = [ // vermiculated — scattered worm-track pits across two-course block faces
   'XXXXXXXXXXXXXXXX',
   'XcGGGGGGGGGGGGgX',
@@ -1156,6 +1194,8 @@ export const TILES = {
   wallR: { grid: WALL_R, palette: TILE_PALETTE },
   wallS: { grid: WALL_S, palette: TILE_PALETTE },
   wallT: { grid: WALL_T, palette: TILE_PALETTE },
+  wallU: { grid: WALL_U, palette: TILE_PALETTE },
+  wallV: { grid: WALL_V, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
