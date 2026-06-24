@@ -2487,6 +2487,58 @@ export function makeGameScreen(app, g) {
     // AI speed hint — always visible so players discover the [ / ] keys
     text(ctx, `[ / ] AI speed: ${aiSpeed}\xd7`, X + 10, 498, { size: 10, color: DIM });
 
+    // Minimap — board overview in the sidebar gap between GOAL and HAND panels
+    if (st.board) {
+      const b2 = st.board;
+      const MSCALE = 3, MW = b2.w * MSCALE, MH = b2.h * MSCALE;
+      const mx = X + Math.floor((W - MW) / 2), mmy = 514;
+      ctx.save();
+      ctx.fillStyle = '#0c0d12';
+      ctx.fillRect(mx, mmy, MW, MH);
+      ctx.fillStyle = '#22253a';
+      for (let ty = 0; ty < b2.h; ty++)
+        for (let tx = 0; tx < b2.w; tx++)
+          if (b2.floor[ty][tx]) ctx.fillRect(mx + tx * MSCALE, mmy + ty * MSCALE, MSCALE, MSCALE);
+      // Exit
+      ctx.fillStyle = '#3eca74';
+      ctx.fillRect(mx + b2.exit.x * MSCALE, mmy + b2.exit.y * MSCALE, MSCALE, MSCALE);
+      // Boxes: gold pulse for TARGET, brown for others, skip opened
+      (b2.boxes || []).forEach((bx) => {
+        if (bx.opened) return;
+        if (bx.contents === 'TARGET') {
+          ctx.globalAlpha = 0.55 + 0.45 * Math.sin(hudT * 3);
+          ctx.fillStyle = '#e8d87e';
+        } else { ctx.fillStyle = '#7a5a28'; }
+        ctx.fillRect(mx + bx.x * MSCALE, mmy + bx.y * MSCALE, MSCALE, MSCALE);
+        ctx.globalAlpha = 1;
+      });
+      // Rescue NPC — cyan pulse
+      if (b2.rescue && !b2.rescue.claimed) {
+        ctx.globalAlpha = 0.6 + 0.4 * Math.sin(hudT * 2.5);
+        ctx.fillStyle = '#4af0c4';
+        ctx.fillRect(mx + b2.rescue.x * MSCALE, mmy + b2.rescue.y * MSCALE, MSCALE, MSCALE);
+        ctx.globalAlpha = 1;
+      }
+      // Monsters — red
+      ctx.fillStyle = '#cc3333';
+      (st.monsters || []).forEach((m) => {
+        if (m.pos) ctx.fillRect(mx + m.pos.x * MSCALE, mmy + m.pos.y * MSCALE, MSCALE, MSCALE);
+      });
+      // Hunters — slot-colored dot with black outline
+      (st.hunters || []).forEach((h, i) => {
+        if (!h.pos) return;
+        const sc = SLOT_COLORS[(h.slot ?? i) % 4] ?? '#fff';
+        ctx.fillStyle = '#000';
+        ctx.fillRect(mx + h.pos.x * MSCALE - 1, mmy + h.pos.y * MSCALE - 1, MSCALE + 2, MSCALE + 2);
+        ctx.fillStyle = sc;
+        ctx.fillRect(mx + h.pos.x * MSCALE, mmy + h.pos.y * MSCALE, MSCALE, MSCALE);
+      });
+      ctx.strokeStyle = '#383c58';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(mx - 0.5, mmy - 0.5, MW + 1, MH + 1);
+      ctx.restore();
+    }
+
     // the human's hand, mini cards — show active human's hand; handoff card in multi-human games
     const me = A.isHumanTurn(st) ? A.resolveUnit(st, A.currentChooser(st)) : null;
     if (me && handoff) {
