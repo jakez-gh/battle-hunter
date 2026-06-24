@@ -1728,14 +1728,6 @@ export function createRenderer(canvas, opts = {}) {
       ctx.strokeRect(p.x + s * 0.4, p.y + s * 0.4, ts - s * 0.8, ts - s * 0.8);
       ctx.restore();
     }
-    // Ground shadow: squashed ellipse anchored to floor, giving units visual weight
-    { const shcx = dx + w / 2, shcy = p.y + TILE * s - s * 0.5;
-      ctx.save(); ctx.globalAlpha = alpha * 0.38;
-      ctx.translate(shcx, shcy); ctx.scale(1, 0.30);
-      const shg = ctx.createRadialGradient(0, 0, 0, 0, 0, 5 * s);
-      shg.addColorStop(0, 'rgba(0,0,0,0.75)'); shg.addColorStop(1, 'transparent');
-      ctx.fillStyle = shg; ctx.fillRect(-6 * s, -6 * s, 12 * s, 12 * s);
-      ctx.restore(); }
     ctx.save();
     ctx.globalAlpha = alpha;
     if (facing.get(k) === -1) {
