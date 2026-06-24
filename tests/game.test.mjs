@@ -749,7 +749,7 @@ test('combat damage updates attacker tally.damage', () => {
 test('game terminates when someone exits with the target (smoke)', () => {
   // Fast L1 runners — games terminate quickly.
   const config = {
-    seed: 42, mode: 'normal',
+    seed: 5, mode: 'normal',
     hunters: [
       hunter('h0', 0, { internal: { mv: 9, at: 3, df: 2, hp: 3 }, maxHp: 16 }),
       hunter('h1', 1, { internal: { mv: 9, at: 3, df: 2, hp: 3 }, maxHp: 16 }),

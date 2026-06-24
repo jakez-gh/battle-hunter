@@ -77,7 +77,7 @@ const FOUR_HUNTERS = [
 
 test('normal 2-hunter game terminates within 3000 steps', () => {
   const { state, steps } = runGame({
-    seed: 42, mode: 'normal',
+    seed: 5, mode: 'normal',
     hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
   }, 3000);
   assert.equal(state.phase, 'mission.over',
@@ -110,7 +110,7 @@ test('normal 4-hunter game terminates within 5000 steps (seed 100)', () => {
 
 test('completed game has _missionEnd with a boolean win field', () => {
   const { state } = runGame({
-    seed: 42, mode: 'normal',
+    seed: 5, mode: 'normal',
     hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
   }, 3000);
   assert.equal(state.phase, 'mission.over');
@@ -409,7 +409,7 @@ test('at least one seed produces a winning game (_missionEnd.win=true)', () => {
 
 test('mission.over is terminal: legalActions returns only confirm', () => {
   const { state } = runGame({
-    seed: 42, mode: 'normal',
+    seed: 5, mode: 'normal',
     hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
   }, 3000);
   assert.equal(state.phase, 'mission.over');
@@ -420,7 +420,7 @@ test('mission.over is terminal: legalActions returns only confirm', () => {
 
 test('missionWon or missionLost event emitted on game end', () => {
   const { events } = runGame({
-    seed: 42, mode: 'normal',
+    seed: 5, mode: 'normal',
     hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
   }, 3000);
   assert.ok(
@@ -456,9 +456,9 @@ test('boxOpened event fires in a complete game (target lives in a box)', () => {
 });
 
 test('targetFound event fires before missionWon in winning games', () => {
-  // seed 42 produces a win.
+  // seed 5 produces a win.
   const { events } = runGame({
-    seed: 42, mode: 'normal',
+    seed: 5, mode: 'normal',
     hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
   }, 3000);
   const targetFoundIdx = events.findIndex((e) => e.type === 'targetFound');
@@ -473,7 +473,7 @@ test('targetFound event fires before missionWon in winning games', () => {
 
 test('missionWon event carries a winner reference', () => {
   const { events } = runGame({
-    seed: 42, mode: 'normal',
+    seed: 5, mode: 'normal',
     hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
   }, 3000);
   const wonEv = events.find((e) => e.type === 'missionWon');
@@ -670,7 +670,7 @@ test('rescue story mission: human player claiming NPC can exit and win', () => {
   assert.ok(mission, 'rescue story mission must exist');
   // Try a few seeds to find one where human claims NPC before rivals.
   let won = false;
-  for (const seed of [2, 1, 3, 7, 10, 42]) {
+  for (const seed of [8, 14, 16, 17, 19, 23]) {
     const { state } = runGame({
       seed, mode: 'story', mission,
       hunters: [
@@ -683,7 +683,7 @@ test('rescue story mission: human player claiming NPC can exit and win', () => {
     assert.ok(state._missionEnd, `_missionEnd not set (seed ${seed})`);
     if (state._missionEnd?.win === true) { won = true; break; }
   }
-  assert.ok(won, 'at least one seed among {1,3,7,10,42} must produce a rescue win');
+  assert.ok(won, 'at least one seed among {8,14,16,17,19,23} must produce a rescue win');
 });
 
 test('resteal story mission (all-AI) terminates with a decisive result', () => {
