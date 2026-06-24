@@ -2553,6 +2553,26 @@ export function createRenderer(canvas, opts = {}) {
       ctx.closePath(); ctx.stroke();
       ctx.fillStyle = '#c8d4f0'; ctx.fillRect(mx - 1, my - 1, 2, 2);
       ctx.restore(); }
+    // Section-center rune markers: faint cross symbol at the midpoint of each quadrant
+    const SECTION_CENTERS = [
+      { wx: 5.5, wy: 5.5,  col: 'rgba(255,190,50,' },
+      { wx: 15.5, wy: 5.5,  col: 'rgba(60,130,255,' },
+      { wx: 5.5, wy: 15.5, col: 'rgba(60,200,80,' },
+      { wx: 15.5, wy: 15.5, col: 'rgba(140,60,200,' },
+    ];
+    for (const sc of SECTION_CENTERS) {
+      const sp = worldToScreen(sc.wx, sc.wy, cam);
+      const rp = (0.06 + 0.03 * Math.sin(clock / 3800 + sc.wx)).toFixed(3);
+      const rs = 5;
+      ctx.save(); ctx.globalAlpha = rp;
+      ctx.strokeStyle = sc.col + '1)'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(sp.x - rs, sp.y); ctx.lineTo(sp.x + rs, sp.y);
+      ctx.moveTo(sp.x, sp.y - rs); ctx.lineTo(sp.x, sp.y + rs);
+      ctx.stroke();
+      ctx.fillStyle = sc.col + '1)'; ctx.fillRect(sp.x - 1, sp.y - 1, 2, 2);
+      ctx.restore();
+    }
   }
 
   function drawVignette() {
