@@ -2419,6 +2419,21 @@ export function createRenderer(canvas, opts = {}) {
     grad.addColorStop(1, `rgba(0,0,0,${(0.48 + breathe).toFixed(3)})`);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
+    // Section corner tint: faint color bloom from corner nearest the active unit's quadrant
+    const ak = activeKey();
+    if (ak && state?.board) {
+      const ap = displayPos(ak);
+      if (ap) {
+        const [cx, cy, rgb] = ap.x < 10 && ap.y < 10 ? [0, 0, '255,190,50']
+          : ap.x >= 10 && ap.y < 10 ? [w, 0, '60,130,255']
+          : ap.x < 10 ? [0, h, '60,200,80']
+          : [w, h, '140,60,200'];
+        const ta = (0.07 + 0.03 * Math.sin(clock / 3800)).toFixed(3);
+        const tg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.85);
+        tg.addColorStop(0, `rgba(${rgb},${ta})`); tg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = tg; ctx.fillRect(0, 0, w, h);
+      }
+    }
   }
 
   function drawHunterWindow(h, i, y) {
