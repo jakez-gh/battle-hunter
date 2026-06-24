@@ -540,6 +540,44 @@ const WALL_G = [ // cracked stone — a jagged fissure cuts diagonally through t
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_N = [ // arch niche — shallow semicircular alcove carved into upper wall face
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGdOOOOOdGGGX',
+  'XGGGdOdddddOdGGX',
+  'XGGdOdddddddOdGX',
+  'XGGOdddddddddOGX',
+  'XGGOdddddddddOGX',
+  'XGGGOOOOOOOOOOGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGgX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const WALL_M = [ // coursed ashlar — two large cut-stone blocks with deep interlocking joints
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGdGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGXGGGGGGX',
+  'XGGGGGGGXGGGGGGX',
+  'XgGGGGGGXGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XGGGGdGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGXGGGGGGGGgX',
+  'XGGGGXGGGGGGGGGX',
+  'XgGGGXGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_L = [ // slot drain — a narrow horizontal channel etched into the lower wall face
   'XXXXXXXXXXXXXXXX',
   'XcGGGGGGGGGGGGgX',
@@ -896,6 +934,8 @@ export const TILES = {
   wallJ: { grid: WALL_J, palette: TILE_PALETTE },
   wallK: { grid: WALL_K, palette: TILE_PALETTE },
   wallL: { grid: WALL_L, palette: TILE_PALETTE },
+  wallM: { grid: WALL_M, palette: TILE_PALETTE },
+  wallN: { grid: WALL_N, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
