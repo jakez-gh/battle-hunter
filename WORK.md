@@ -180,14 +180,68 @@ Phase hard; prove each phase is fun before funding the next. Promote to
   call-site gap. New regression test: "engine replay: same seed+config produces
   identical event sequence." Renderer/audio `Math.random()` calls are
   cosmetic-only and intentionally left unseeded.
-- [ ] **Phase 1 — Depth-stack + Daily Hunt** (chained seeded dungeons of rising
+- [~] **Phase 1 — Depth-stack + Daily Hunt** (chained seeded dungeons of rising
   relicLevel; "Descend or Bank Out"; date-seeded daily + local best/streak +
   share string). Keep a "Classic Campaign" wrapper.
+  Design doc: `ROADMAP.md` Phase 1. Slices added to sprint below.
 - [ ] **Phase 2 — Horizontal perks** (choose-1-of-3 between depths, same
   effect-string format `items.js` already parses; breadth not vertical power).
 - [ ] **Phase 3 — Run modifiers + per-depth room objectives.**
 - [ ] **Deferred** — cloud leaderboard + ghost races (needs a backend = new
   external resource; only after the offline daily proves return visits).
+
+---
+
+## Sprint: Phase 1 — Relic Dive depth-stack + Daily Hunt
+
+From `ROADMAP.md` Phase 1. Two independent lanes: **engine** (`save.js`,
+`main.js`) and **UI** (`screens.js`). Claim by lane to avoid conflicts.
+Prerequisite: Phase 0 done at `319521e`.
+
+### Engine lane
+
+- [ ] **1A — Run persistence (`save.js`)**
+  Add `relicDive` to the roster save shape: personal-best (score, depths,
+  shareStr) and daily slot (dateKey, score, depths, shareStr) plus streak
+  counter. New helpers: `loadRelicDiveBest()`, `saveRelicDiveBest(result)`,
+  `dateToSeed(YYYY-MM-DD)` (pure deterministic hash → uint32),
+  `hashRunSeed(rootSeed, depth)` (per-depth seed derivation),
+  `buildShareString(runResult)` (emoji-row + score line).
+  Also a lightweight in-memory `runState` shape (not persisted; lives in
+  screen glue code): `{ rootSeed, depth, startRelicLevel, daily, dateKey,
+  depthResults: [] }`.
+  Tests: add `tests/relic-dive.test.mjs` — `dateToSeed` is stable across
+  calls; `hashRunSeed` differs per depth; `buildShareString` round-trips; no
+  roster-version bump needed (new field backfilled on load).
+
+- [ ] **1B — Run config wiring (`main.js`)**
+  `buildRelicDiveConfig(runState, roster)` → `createGame` config for the
+  current depth: `seed = hashRunSeed(rootSeed, depth)`,
+  `relicLevel = clamp(startRelicLevel + depth − 1, 1, 15)`, hunters carry
+  HP/items from previous depth (pass-through from `applyResults` output).
+  Depends on 1A for `hashRunSeed`. After-depth: caller updates `runState`
+  with depth result and (if win) calls `applyResults` to update roster before
+  continuing. Tests: 3-depth run replay produces identical event sequences
+  (same rootSeed → same per-depth seeds → deterministic replays).
+
+### UI lane
+
+- [ ] **1C — Hub + Relic Dive entry screen (`screens.js`)**
+  Add a "RELIC DIVE" button to the Hub screen (alongside Story / Normal).
+  New `makeRelicDiveScreen`: shows personal-best score + streak; shows
+  whether today's Daily Hunt has been played and, if so, the score; two
+  buttons — **DIVE** (random run seed) and **DAILY HUNT** (date-seeded,
+  disabled after first play today). Hunter selection flows same as Normal.
+  Depends on 1A for `loadRelicDiveBest()` / `dateToSeed`.
+
+- [ ] **1D — Depth-transition + run-summary screens (`screens.js`)**
+  After each won depth, show `makeDepthClearedScreen`: depth score, run
+  total, "DESCEND" (→ next depth config via 1B) / "BANK OUT" (→ run
+  summary). On loss: run ends; show `makeRunSummaryScreen` with all depths
+  reached, total score, "DAILY" stamp if daily. "SHARE" button writes
+  `buildShareString(runResult)` to clipboard (try `navigator.clipboard`,
+  fallback to hidden textarea + `execCommand('copy')`). Save best via
+  `saveRelicDiveBest`. Depends on 1A + 1B + 1C.
 
 ---
 

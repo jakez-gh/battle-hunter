@@ -123,3 +123,84 @@ export function importSave(json) {
   if (!isValid(parsed)) throw new Error('not a battle-hunter save');
   return saveRoster(parsed);
 }
+
+// ---------------------------------------------------------------------------
+// Relic Dive — run-mode persistence (separate key; does not touch the roster)
+// ---------------------------------------------------------------------------
+
+export const RELIC_DIVE_KEY = 'battle-hunter-relic-dive-v1';
+
+// Best-score record shape:
+// { best: { score, depths, shareStr } | null,
+//   daily: { dateKey, score, depths, shareStr } | null,
+//   streak: number }
+export function freshRelicDiveBest() {
+  return { best: null, daily: null, streak: 0 };
+}
+
+export function loadRelicDiveBest() {
+  let raw = null;
+  try { raw = storageArea().getItem(RELIC_DIVE_KEY); } catch { return freshRelicDiveBest(); }
+  if (!raw) return freshRelicDiveBest();
+  try {
+    const p = JSON.parse(raw);
+    if (!p || typeof p !== 'object') return freshRelicDiveBest();
+    return { best: p.best ?? null, daily: p.daily ?? null, streak: p.streak ?? 0 };
+  } catch { return freshRelicDiveBest(); }
+}
+
+export function saveRelicDiveBest(record) {
+  try { storageArea().setItem(RELIC_DIVE_KEY, JSON.stringify(record)); } catch { /* quota/blocked */ }
+}
+
+// ---------------------------------------------------------------------------
+// Run seeding helpers — pure, no I/O
+// ---------------------------------------------------------------------------
+
+// Deterministic uint32 from a UTC date string 'YYYY-MM-DD'.
+// Uses a simple string hash so the result is stable across implementations.
+export function dateToSeed(dateKey) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < dateKey.length; i++) {
+    h = Math.imul(h ^ dateKey.charCodeAt(i), 16777619) >>> 0;
+  }
+  return h || 1;
+}
+
+// Per-depth seed: mix rootSeed with depth so each depth is a different dungeon
+// but the whole run is reproducible from rootSeed alone.
+export function hashRunSeed(rootSeed, depth) {
+  let h = (rootSeed >>> 0) ^ (depth * 0x9e3779b9 >>> 0);
+  h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0;
+  return (h ^ (h >>> 16)) >>> 0 || 1;
+}
+
+// Today's UTC date key 'YYYY-MM-DD'.
+export function todayDateKey() {
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// ---------------------------------------------------------------------------
+// Share string generation
+// ---------------------------------------------------------------------------
+
+// runResult: { daily, dateKey?, startLevel, depthResults: [{won, score}] }
+// Returns a compact multi-line string for clipboard sharing.
+export function buildShareString(runResult) {
+  const { daily, dateKey, startLevel, depthResults } = runResult;
+  const depthsReached = depthResults.length;
+  const totalScore = depthResults.reduce((s, d) => s + (d.score ?? 0), 0);
+  const header = daily
+    ? `Battle Hunter — Daily Hunt ${dateKey}`
+    : 'Battle Hunter — Relic Dive';
+  const depthRow = depthResults
+    .map((d) => (d.won ? '🟩' : '🟥'))
+    .join('');
+  const footer = `Depth ${depthsReached} | Score ${totalScore} | L${startLevel}`;
+  return `${header}\n${depthRow}\n${footer}`;
+}
