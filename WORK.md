@@ -149,7 +149,7 @@ it cheap). Quick wins first — every one lifts the floor of *every* mode.
 
 ### Quick wins pending (days-to-weeks, low-regret — see analysis)
 
-- [ ] **Crush AI dead-air** — `aiSpeed` exists (default 8) but the per-substep
+- [~] **Crush AI dead-air** — `aiSpeed` exists (default 8) but the per-substep
   gate is uniform. Make non-decisive substeps (plain walk/draw/rest) near-instant
   (~50–80ms); keep full ceremony only for battles / target-found / flag-6 /
   WYRM-spawn. Surface the speed control (keys `[`/`]` are undiscoverable).
