@@ -44,11 +44,13 @@ export const sfx = {
     noise({ dur: 0.1, vol: 0.1, freq: 700, slide: 2600, q: 2 });
     after(90, () => note({ midi: 88, dur: 0.06, type: 'square', vol: 0.09 }));
   },
-  // damage scales loudness and weight (cap so huge hits don't clip)
+  // damage scales loudness, weight, and pitch — heavier hits start lower (more bass)
   hit(damage = 1) {
     const d = Math.min(damage, 20);
-    noise({ dur: 0.1 + d * 0.004, vol: 0.16 + d * 0.008, freq: 1100, slide: 250, q: 1 });
+    const startFreq = Math.max(400, 1600 - d * 55); // d=1:1545 d=10:1050 d=20:500
+    noise({ dur: 0.1 + d * 0.004, vol: 0.16 + d * 0.009, freq: startFreq, slide: 160 + d * 5, q: 1 });
     note({ midi: 41 - Math.floor(d / 5), dur: 0.1, type: 'square', vol: 0.1 + d * 0.005, slide: 50 });
+    if (d >= 7) after(30, () => noise({ dur: 0.15, vol: 0.07 + d * 0.005, freq: 90 + d * 4, slide: 40, q: 0.6, type: 'lowpass' }));
   },
   // charged whoosh, then the impact
   crit() {
