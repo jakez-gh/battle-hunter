@@ -2376,6 +2376,17 @@ export function createRenderer(canvas, opts = {}) {
     fg.addColorStop(1, 'rgba(0,0,0,0.65)');
     ctx.fillStyle = fg;
     ctx.fillRect(0, 0, canvas.width, canvas.height - HUD_H);
+    // Section-tinted fog edge: outer fog bleeds the active section's hue at low opacity
+    if (ap) {
+      const secRgb = ap.x < 10
+        ? (ap.y < 10 ? '220,160,40' : '40,180,60')
+        : (ap.y < 10 ? '60,120,220' : '120,40,200');
+      const sfg = ctx.createRadialGradient(lp.x, lp.y, fr * 0.52, lp.x, lp.y, fr);
+      sfg.addColorStop(0, `rgba(${secRgb},0)`);
+      sfg.addColorStop(1, `rgba(${secRgb},0.14)`);
+      ctx.fillStyle = sfg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height - HUD_H);
+    }
   }
 
   function drawAmbientShimmer() {
