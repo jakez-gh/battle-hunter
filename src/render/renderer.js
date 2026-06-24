@@ -1057,6 +1057,18 @@ export function createRenderer(canvas, opts = {}) {
               : (y < 10 ? 'rgba(60,130,255,' : 'rgba(140,60,200,');
             ctx.save(); ctx.globalAlpha = 0.05; ctx.fillStyle = wTint + '1)';
             ctx.fillRect(wp.x | 0, wp.y | 0, wts, wts); ctx.restore();
+            // Moss patch: ~9% of visible wall bases get a green-grey fringe along the bottom edge
+            const mh = ((x * 2111 + y * 4073) ^ 1667) & 0xFFFF;
+            if ((mh & 0xFF) < 23) {
+              const mw = (4 + (mh >> 4 & 0x7)) * cam.scale;
+              const mx0 = wp.x + ((mh >> 8 & 0xF) + 1) * cam.scale;
+              const my = wp.y + wts - cam.scale * 2;
+              ctx.save(); ctx.globalAlpha = 0.20 + (mh >> 12 & 3) * 0.04;
+              ctx.fillStyle = '#4a7a3a'; ctx.fillRect(mx0 | 0, my | 0, mw, cam.scale);
+              ctx.globalAlpha *= 0.55; ctx.fillStyle = '#6aaa52';
+              ctx.fillRect((mx0 + cam.scale) | 0, (my - cam.scale * 0.5) | 0, mw - cam.scale * 2, cam.scale * 0.5 + 1);
+              ctx.restore();
+            }
           }
           // Moisture drip: ~8% of visible wall faces get an animated droplet
           if (b.floor[y + 1]?.[x]) {
