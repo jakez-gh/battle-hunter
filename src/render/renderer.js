@@ -2362,8 +2362,11 @@ export function createRenderer(canvas, opts = {}) {
         const sp2 = worldToScreen(tx, ty, cam);
         const spx = sp2.x + ((h >> 4) & 13) * s;
         const spy = sp2.y + ((h >> 8) & 13) * s;
+        const secCol = tx < 10
+          ? (ty < 10 ? ['#ffd060', '#ffe890'] : ['#60e888', '#a0ffb8'])
+          : (ty < 10 ? ['#70b8ff', '#b0d8ff'] : ['#c080ff', '#e0b0ff']);
         ctx.save(); ctx.globalAlpha = t2 * 0.28;
-        ctx.fillStyle = (h & 1) ? '#e8c87a' : '#9adfe8';
+        ctx.fillStyle = secCol[h & 1];
         // Star/cross shape: 4-arm plus sign for a gem-sparkle look
         ctx.fillRect(spx + s, spy, s, s * 3);     // vertical arm
         ctx.fillRect(spx, spy + s, s * 3, s);     // horizontal arm
