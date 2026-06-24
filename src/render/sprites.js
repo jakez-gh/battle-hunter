@@ -730,6 +730,25 @@ const FLOOR_P = [ // diagonal X — two crossing grooves from opposite corners
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_Q = [ // mason's mark — a faint cross etched into the stone face
+  'GGGGGGGGGGGGGGgG',
+  'GGgGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGdG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGdGGGGGGGG',
+  'GGGGGGGdGGGGGGGG',
+  'GGGdddddddddddGG',
+  'GGGGGGGdGGGGGGGG',
+  'GGGGGGGdGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGdG',
+  'GGGGGGGGGGGGGGGG',
+  'GgGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
 export const TILES = {
   floorA: { grid: FLOOR_A, palette: TILE_PALETTE },
   floorB: { grid: FLOOR_B, palette: TILE_PALETTE },
@@ -747,6 +766,7 @@ export const TILES = {
   floorN: { grid: FLOOR_N, palette: TILE_PALETTE },
   floorO: { grid: FLOOR_O, palette: TILE_PALETTE },
   floorP: { grid: FLOOR_P, palette: TILE_PALETTE },
+  floorQ: { grid: FLOOR_Q, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
