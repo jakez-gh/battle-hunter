@@ -1201,6 +1201,30 @@ export function createRenderer(canvas, opts = {}) {
               cg.addColorStop(0, 'rgba(0,0,0,0.28)'); cg.addColorStop(1, 'rgba(0,0,0,0)');
               ctx.fillStyle = cg; ctx.fillRect((fp.x + ts - cr) | 0, fp.y | 0, cr, cr);
             } }
+          // Wall moisture drip: ~4% of floor tiles beneath walls get an animated droplet
+          if (!b.floor[y - 1]?.[x]) {
+            const dh = ((x * 1979 + y * 3761) ^ 1553) & 0xFFFF;
+            if ((dh & 0xFF) < 10) {
+              const dperiod = 6000 + (dh >> 4 & 0x1FFF);
+              const dphase = ((clock + dh * 41) % dperiod) / dperiod;
+              const dx = fp.x + ((dh >> 8 & 0xF) + 1) * cam.scale;
+              const dy = fp.y + dphase * ts * 1.1;
+              const da = Math.sin(dphase * Math.PI) * 0.55;
+              if (da > 0.04 && dy < fp.y + ts) {
+                ctx.save(); ctx.globalAlpha = da; ctx.fillStyle = '#8ab8d8';
+                ctx.fillRect(dx | 0, dy | 0, cam.scale, cam.scale * (1.5 + dphase * 0.5));
+                ctx.restore();
+              }
+              // Splash ring when drop hits floor edge
+              if (dphase > 0.88) {
+                const sp = (dphase - 0.88) / 0.12;
+                ctx.save(); ctx.globalAlpha = (1 - sp) * 0.38;
+                ctx.strokeStyle = '#6098b8'; ctx.lineWidth = Math.max(0.5, cam.scale * 0.4);
+                ctx.beginPath(); ctx.ellipse(dx | 0, (fp.y + ts * 0.98) | 0, cam.scale * (1 + sp * 2), cam.scale * 0.5, 0, 0, Math.PI * 2);
+                ctx.stroke(); ctx.restore();
+              }
+            }
+          }
           // Torch-light pool: if the wall directly above this floor tile has a torch,
           // spill a section-tinted glow onto the top of this tile
           if (!b.floor[y - 1]?.[x]) {
