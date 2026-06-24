@@ -1284,6 +1284,20 @@ export function createRenderer(canvas, opts = {}) {
             lsg.addColorStop(0, 'rgba(0,0,0,0.45)'); lsg.addColorStop(1, 'transparent');
             ctx.fillStyle = lsg; ctx.fillRect(fp.x, fp.y, vd, ts);
           }
+          // Pit-edge rim: 1-px bright highlight distinguishes floor-void border from floor-wall border
+          { const rw = Math.max(1, cam.scale); const ra = 0.22;
+            if (!b.floor[y]?.[x + 1] && !b.floor[y + 1]?.[x + 1]) {
+              ctx.save(); ctx.globalAlpha = ra; ctx.fillStyle = '#9ab8cc';
+              ctx.fillRect((fp.x + ts - rw) | 0, fp.y | 0, rw, ts); ctx.restore();
+            }
+            if (!b.floor[y]?.[x - 1] && !b.floor[y + 1]?.[x - 1]) {
+              ctx.save(); ctx.globalAlpha = ra; ctx.fillStyle = '#9ab8cc';
+              ctx.fillRect(fp.x | 0, fp.y | 0, rw, ts); ctx.restore();
+            }
+            if (!b.floor[y + 1]?.[x] && !b.floor[y + 2]?.[x]) {
+              ctx.save(); ctx.globalAlpha = ra; ctx.fillStyle = '#9ab8cc';
+              ctx.fillRect(fp.x | 0, (fp.y + ts - rw) | 0, ts, rw); ctx.restore();
+            } }
           // Section seam groove: faint darkening where the four 10Ã—10 quadrants meet
           const sgw = 5 * cam.scale;
           if (x === 9 && b.floor[y]?.[x + 1]) {
