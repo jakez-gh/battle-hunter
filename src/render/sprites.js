@@ -977,6 +977,44 @@ const FLOOR_S = [ // worn center — polished diamond where foot traffic brighte
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_X = [ // cobblestone joints — organic d marks suggest irregular stone edges
+  'GGGGGGGGGGGGGGgG',
+  'GgGGGGGGGGGGGGGG',
+  'GGGGdGGGGGGGdGGG',
+  'GGGdGGGGGGGdGGGG',
+  'GGdGGGGGdGGGGdGG',
+  'GGGdGGGdGGGdGGGG',
+  'GGGGdGdGGGdGGGGG',
+  'GGGGGdGGGdGGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGdGGGGGGGdGGGG',
+  'GGdGGGGGdGGGGdGG',
+  'GGGdGGGdGGGdGGGG',
+  'GGGGdGdGGGdGGGGG',
+  'GGGGGGGGGGGGGGgG',
+  'GGGGGGGGGGGGGgGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const FLOOR_W = [ // running bond — brick rows with half-offset vertical mortar joints
+  'GGGGGGGGGGGGGGgG',
+  'GgGGGGGGGGGGGGGG',
+  'dddddddGdddddddG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGgG',
+  'dddGdddddddGdddG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGgG',
+  'dddddddGdddddddG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGdG',
+  'dddGdddddddGdddG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGgG',
+  'GGGGGGGGGGGGGgGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const FLOOR_V = [ // chevron groove — V-shaped channels across the tile suggest carved stone coursing
   'GGGGGGGGGGGGGGgG',
   'GgGGGGGGGGGGGGGG',
@@ -1057,6 +1095,8 @@ export const TILES = {
   floorT: { grid: FLOOR_T, palette: TILE_PALETTE },
   floorU: { grid: FLOOR_U, palette: TILE_PALETTE },
   floorV: { grid: FLOOR_V, palette: TILE_PALETTE },
+  floorW: { grid: FLOOR_W, palette: TILE_PALETTE },
+  floorX: { grid: FLOOR_X, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
