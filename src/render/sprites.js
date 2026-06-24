@@ -540,6 +540,25 @@ const WALL_G = [ // cracked stone — a jagged fissure cuts diagonally through t
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_K = [ // barred window — deep-set arched opening with iron bars
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGOOOOOOOOGGGX',
+  'XGGGOdXdXdXOGGGX',
+  'XGGGOdXdXdXOGGGX',
+  'XGGGOdXdXdXOGGGX',
+  'XGGGOdXdXdXOGGGX',
+  'XGGGOdXdXdXOGGGX',
+  'XGGGOdXdXdXOGGGX',
+  'XGGGOOOOOOOOGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGgX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_J = [ // carved cross — sunken panel bearing a chisel-cut cross rune
   'XXXXXXXXXXXXXXXX',
   'XcGGGGGGGGGGGGgX',
@@ -836,6 +855,7 @@ export const TILES = {
   wallH: { grid: WALL_H, palette: TILE_PALETTE },
   wallI: { grid: WALL_I, palette: TILE_PALETTE },
   wallJ: { grid: WALL_J, palette: TILE_PALETTE },
+  wallK: { grid: WALL_K, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
