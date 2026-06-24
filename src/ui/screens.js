@@ -169,7 +169,7 @@ export const WALLPAPERS = [
   { name: 'Slate', base: '#11131c', accent: '#1a1d2c', pattern: 'plain' },
   { name: 'Grid Iron', base: '#101822', accent: '#1c2c40', pattern: 'grid' },
   { name: 'Ember Field', base: '#1c1012', accent: '#48211c', pattern: 'dots' },
-  { name: 'Tide Lines', base: '#0e1420', accent: '#1c2c4e', pattern: 'stripes' },
+  { name: 'Tide Lines', base: '#0e1420', accent: '#1c2c4e', pattern: 'waves' },
   { name: 'Moss Weave', base: '#0e180f', accent: '#1d3a20', pattern: 'diag' },
   { name: 'Amber Glow', base: '#1c160c', accent: '#4a3a16', pattern: 'rings' },
   { name: 'Static Drift', base: '#14141a', accent: '#2c2c36', pattern: 'dots' },
@@ -252,6 +252,21 @@ function drawWallpaper(ctx, W, H, index) {
     for (let x = -S + bdrift; x < W + H; x += S) { ctx.moveTo(x, 0); ctx.lineTo(x - H, H); }
     ctx.stroke();
     ctx.restore();
+  } else if (wp.pattern === 'waves') {
+    // Sine-wave bands drifting slowly at different speeds — parallax ocean feel
+    ctx.lineWidth = 1.5;
+    for (let li = 0; li < 7; li++) {
+      const baseY = (li / 7) * H + S * 0.3;
+      const spd = 0.55 + li * 0.15;
+      const amp = 7 + (li % 3) * 5;
+      const freq = 0.017 + (li % 2) * 0.006;
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 2) {
+        const wy = baseY + amp * Math.sin(x * freq + t * spd);
+        x === 0 ? ctx.moveTo(x, wy) : ctx.lineTo(x, wy);
+      }
+      ctx.stroke();
+    }
   } else if (wp.pattern === 'rings') {
     // Rings breathe + each node fires an expanding pulse ring at a staggered phase offset
     const ringR = S / 3 + 4 * Math.sin(t * 0.55);
