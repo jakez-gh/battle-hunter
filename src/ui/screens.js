@@ -1676,16 +1676,6 @@ export function makeOptionsScreen(app) {
 
 const DIR_BY_KEY = { up: 'N', down: 'S', left: 'W', right: 'E' };
 const TIMING = { period: 0.9, window: 0.08, timeout: 2.7 };
-// Events that deserve full ceremony (battle, surprise, milestone). Everything
-// else (walk, draw, die-roll, rest) gets near-instant delay to crush dead-air.
-const DECISIVE_EVENTS = new Set([
-  'battleStarted', 'responseChosen', 'strikeRolled', 'escapeRolled',
-  'critNegated', 'statusInflicted', 'surrendered', 'hunterDefeated', 'monsterKilled',
-  'targetFound', 'flagClaimed',
-  'wyrmSpawned', 'wyrmRespawned',
-  'trapTriggered', 'monsterSpawned', 'exitWarpedAway',
-  'missionWon', 'missionLost',
-]);
 
 export function makeGameScreen(app, g) {
   // g: { state, renderer, mission, outcome:{} } built by app.startMission
@@ -1697,7 +1687,6 @@ export function makeGameScreen(app, g) {
   let timing = null;       // { t } while a react.* minigame runs
   let aiSpeed = app.options().aiSpeed ?? 8;
   let aiDelay = 0.2 / aiSpeed;
-  let lastEvents = [];
   let infoIndex = 0;
   let banner = null;       // { text, t }
   let inBattleMusic = false;
@@ -2463,6 +2452,9 @@ export function makeGameScreen(app, g) {
         text(ctx, holdText, X + 10, 466, { size: 10, color: DIM });
       }
     }
+
+    // AI speed hint — always visible so players discover the [ / ] keys
+    text(ctx, `[ / ] AI speed: ${aiSpeed}\xd7`, X + 10, 498, { size: 10, color: DIM });
 
     // the human's hand, mini cards
     const me = (st.hunters || []).find((x) => x.human);

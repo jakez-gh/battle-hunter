@@ -89,6 +89,29 @@ export function screenToWorld(px, py, cam) {
 const FONT = '"Consolas", "Cascadia Mono", "Monaco", monospace';
 const SLOT_COLORS = ['#3a6ee0', '#cc4a3a', '#e0c63a', '#3aa84a']; // P1..P4
 const CARD_MINI = { R: '#cc4a3a', Y: '#d8b83a', B: '#3a6ee0', G: '#3aa84a' };
+const RIVAL_VOICE = {
+  KELD: {
+    targetFound: ["Mine. Try taking it.", "Got it. Come at me.", "Finally — a real game."],
+    hunterDefeated: ["Next time.", "Lucky shot.", "I'll be back."],
+    wyrmSpawned: ["A WYRM. Good.", "Getting interesting.", "Better this than nothing."],
+    flagClaimed: ["Count that.", "My board."],
+    exitWarpedAway: ["Catch up.", "Easy work.", "Too slow."],
+  },
+  MIRA: {
+    targetFound: ["Already. Sorry.", "See you at exit.", "Too slow."],
+    hunterDefeated: ["Well played.", "Noted.", "I'll adjust."],
+    wyrmSpawned: ["Move.", "Rerouting.", "Adapt."],
+    flagClaimed: ["Swift.", "One more."],
+    exitWarpedAway: ["Done.", "First. As usual.", "Better luck."],
+  },
+  RAVEN: {
+    targetFound: ["Asset secured.", "Target acquired.", "Package confirmed."],
+    hunterDefeated: ["Unit lost.", "Expected resistance.", "Casualty noted."],
+    wyrmSpawned: ["Hazard logged.", "WYRM detected.", "Uncontrolled variable."],
+    flagClaimed: ["Objective taken.", "Secured."],
+    exitWarpedAway: ["Extraction complete.", "Mission done.", "Assets secured."],
+  },
+};
 const TRAP_COLORS = { damage: '#cc4a3a', stun: '#d8b83a', leg: '#3a6ee0', empty: '#8d8d9e' };
 const STATUS_GLOW = { stun: '#d8b83a', leg: '#3a6ee0', panic: '#cc4a3a', empty: '#8d8d9e' };
 const MONSTER_AURA = { VAC: 'rgba(80,170,220,0.55)', OOZ: 'rgba(60,200,80,0.50)', FNG: 'rgba(220,130,40,0.52)', WYRM: 'rgba(140,60,220,0.55)' };
@@ -263,6 +286,22 @@ export function createRenderer(canvas, opts = {}) {
     const p = displayPos(k);
     if (!p) return;
     addSparklesAt(p.x, p.y, color);
+  }
+
+  function addRivalVoice(k, evType) {
+    const u = findUnit(k);
+    if (!u || u.human) return;
+    const name = u.name ?? '';
+    const family = name === 'KELD' ? 'KELD' : name === 'MIRA' ? 'MIRA' : name.startsWith('RAVEN') ? 'RAVEN' : null;
+    if (!family) return;
+    const lines = RIVAL_VOICE[family]?.[evType];
+    if (!lines?.length) return;
+    const line = lines[Math.floor(Math.random() * lines.length)];
+    const col = family === 'KELD' ? '#cc4a3a' : family === 'MIRA' ? '#3a6ee0' : '#e06a5a';
+    const p = displayPos(k);
+    if (!p) return;
+    floats.push({ text: `"${line}"`, color: col, icon: null, big: false, glow: 7,
+      wx: p.x + 0.5, wy: p.y - 0.5, t: 0, ttl: 1400 });
   }
 
   function beginSlide(k, from, to) {
@@ -533,6 +572,7 @@ export function createRenderer(canvas, opts = {}) {
                 color: i % 4 === 0 ? '#fff' : i % 4 === 1 ? '#ffe98a' : '#7ee8a0' });
             }
           } }
+        addRivalVoice(k, 'targetFound');
         break;
       case 'flagClaimed': {
         popOverride(standingFlags, ev.pos ? key(ev.pos.x, ev.pos.y) : null);
@@ -553,6 +593,7 @@ export function createRenderer(canvas, opts = {}) {
         }
         addFloat(k, ev.color ? ev.color.toUpperCase() + ' FLAG!' : 'FLAG!', flagBurstCols[0], { big: true });
         turnFlash = { color: flagBurstCols[0], t: 0, dur: 480 };
+        if (Math.random() < 0.6) addRivalVoice(k, 'flagClaimed');
         break;
       }
       case 'exitWarpedAway': {
@@ -584,6 +625,7 @@ export function createRenderer(canvas, opts = {}) {
               t: 0, ttl: 520, color: i % 5 === 0 ? '#fff' : i % 5 === 1 ? ewSlotCol : '#7ee8a0' });
           }
         }
+        addRivalVoice(k, 'exitWarpedAway');
         break;
       }
       case 'drewBlank': {
@@ -679,6 +721,7 @@ export function createRenderer(canvas, opts = {}) {
               color: i % 4 === 0 ? '#f7f7ff' : i % 4 === 1 ? '#ff6a5a' : dpSlotCol });
           }
         }
+        addRivalVoice(k, 'hunterDefeated');
         break;
       }
       case 'itemTaken': {
@@ -767,6 +810,16 @@ export function createRenderer(canvas, opts = {}) {
           }
         } else if (ev.type !== 'monsterSpawned') {
           shake = { t: 0, dur: 400, mag: 2 };
+        }
+        // A visible rival reacts to the WYRM arrival
+        if (ev.type === 'wyrmSpawned' || ev.type === 'wyrmRespawned') {
+          const wyrmVoicePool = (state?.hunters ?? []).filter(
+            (h) => !h.human && h.hp > 0 && !hiddenUnits.has(`h${h.id}`),
+          );
+          if (wyrmVoicePool.length) {
+            const vr = wyrmVoicePool[Math.floor(Math.random() * wyrmVoicePool.length)];
+            addRivalVoice(`h${vr.id}`, 'wyrmSpawned');
+          }
         }
         break;
       }
