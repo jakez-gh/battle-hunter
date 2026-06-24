@@ -3006,6 +3006,9 @@ export function makeMissionBriefingScreen(app, mission) {
       text(ctx, 'M' + String(mission.id).padStart(2, '0') + '  ' + mission.title,
         BX + 20, BY + 36, { size: 22, color: GOLD, shadow: false });
       ctx.restore();
+      // Active hunter card — top-right corner of briefing panel
+      { const rec = currentHunter(app);
+        if (rec) drawHunterCard(app, rec, BX + BW - 300, BY + 26, 280); }
 
       { const lvStr = 'Level ';
         ctx.font = font(14, false); ctx.textBaseline = 'top'; ctx.textAlign = 'left';
