@@ -173,11 +173,21 @@ it cheap). Quick wins first — every one lifts the floor of *every* mode.
 Phase hard; prove each phase is fun before funding the next. Promote to
 `ROADMAP.md` when greenlit.
 
-- [ ] **Phase 0 — Determinism cleanup (prerequisite).** Route every
+- [~] **Phase 0 — Determinism cleanup (prerequisite).** Route every
   gameplay-affecting entropy source through the seeded rng. Known leaks:
   `main.js` `Math.random()` for opponent archetypes/AI names/sprite IDs/the seed
   itself; `screens.js` dungeon-music pick. Acceptance: seed-replay equality test
   passes. Nothing seeded/shareable is honest until this lands.
+  **HANDOFF (agent may go offline):**
+  Sub-task A — `main.js`: import `makeRng`; create `setupRng = makeRng(seed)` in
+  `buildMissionConfig` after seed generation; thread `setupRng` into
+  `aiHunterConfig` (new 5th param `rng`); replace three `Math.random()` calls
+  (archetype pick in RAVEN branch, name pool pick, spriteId) with `rng.int(n)`;
+  also replace normal-mode opponent-archetype array fill with `setupRng.int(n)`.
+  Sub-task B — `screens.js` line ~1922: replace `Math.random() < 0.5` music pick
+  with `((g.state.seed ^ (g.state.seed >>> 7)) & 1)`.
+  Sub-task C — `tests/gameplay.test.mjs`: add "engine replay: same seed+config
+  produces identical event sequence" regression test.
 - [ ] **Phase 1 — Depth-stack + Daily Hunt** (chained seeded dungeons of rising
   relicLevel; "Descend or Bank Out"; date-seeded daily + local best/streak +
   share string). Keep a "Classic Campaign" wrapper.
