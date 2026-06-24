@@ -13,7 +13,7 @@ import { reachableTiles, occupiedSet } from './engine/board.js';
 import { buildAtlas } from './render/sprites.js';
 import { playMusic, stopMusic } from './audio/music.js';
 import { setVolumes } from './audio/synth.js';
-import { loadRoster, saveRoster } from './save.js';
+import { loadRoster, saveRoster, hashRunSeed } from './save.js';
 import { createScreenStack, makeTitleScreen, makeGameScreen } from './ui/screens.js';
 import { initInput } from './ui/input.js';
 
@@ -90,6 +90,50 @@ function aiHunterConfig(opponent, slot, level, used, rng) {
     // NOTE: AI starting items by level (§2.11) are mission setup — left to
     // createGame; if it doesn't grant them, the AIs simply start bare.
     items: [],
+  };
+}
+
+// Build a createGame config for one depth of a Relic Dive run.
+// runState: { rootSeed, depth, startRelicLevel, daily, dateKey, depthResults }
+// recs: human hunter roster records (P1 first). AI fills remaining slots up to 4.
+// Hunters carry their items from prior depths; HP resets to maxHp each depth.
+export function buildRelicDiveConfig(runState, recs) {
+  const seed = hashRunSeed(runState.rootSeed, runState.depth);
+  const relicLevel = Math.max(1, Math.min(15, runState.startRelicLevel + runState.depth - 1));
+  const setupRng = makeRng(seed);
+  const used = new Set();
+  const aiCount = Math.max(0, 4 - recs.length);
+  const opponents = Array.from({ length: aiCount }, () =>
+    ARCHETYPE_NAMES[setupRng.int(ARCHETYPE_NAMES.length)]
+  );
+  return {
+    seed,
+    mode: 'relic-dive',
+    mission: {
+      id: `relic-dive-d${runState.depth}`,
+      title: `Depth ${runState.depth}`,
+      type: 'fetch',
+      level: relicLevel,
+      opponents: [],
+      targetItemId: null,
+      carrierIndex: null,
+    },
+    hunters: [
+      ...recs.map((rec, i) => ({
+        id: rec.id,
+        slot: i,
+        name: rec.name,
+        spriteId: rec.spriteId,
+        palette: rec.palette,
+        human: true,
+        archetype: null,
+        level: rec.level,
+        internal: { ...rec.internal },
+        maxHp: rec.maxHp,
+        items: rec.items.map((s) => ({ ...s })),
+      })),
+      ...opponents.map((o, i) => aiHunterConfig(o, recs.length + i, relicLevel, used, setupRng)),
+    ],
   };
 }
 
@@ -319,6 +363,32 @@ const app = {
     this.songName = name;
     if (name) playMusic(name); // no-op before the first user gesture unlocks audio
     else stopMusic();
+  },
+  // Start one depth of a Relic Dive run. runState carries depth + seed context.
+  // The run screen (screens.js) owns the runState; this method just wires engine + renderer.
+  startRelicDiveDepth(runState) {
+    if (!game || !ai) {
+      app.bootNote = 'cannot start: engine/ai module failed to load (console has details)';
+      return false;
+    }
+    const rec = this.roster.hunters.find((h) => h.id === this.session.hunterId);
+    if (!rec) return false;
+    try {
+      const coopRecs = (this.session.coopIds || [])
+        .map((id) => this.roster.hunters.find((h) => h.id === id))
+        .filter(Boolean);
+      const config = buildRelicDiveConfig(runState, [rec, ...coopRecs]);
+      const state = adapt.createGame(config);
+      const renderer = adapt.makeRenderer(canvas, atlas);
+      adapt.rendererFeed(renderer, state, state.events ?? []);
+      state.events = [];
+      stack.replace(makeGameScreen(app, { state, renderer, mission: config.mission, outcome: {}, runState }));
+      return true;
+    } catch (e) {
+      console.error('startRelicDiveDepth failed', e);
+      app.bootNote = 'relic dive depth failed to start (see console)';
+      return false;
+    }
   },
   // Build config, spin up engine + renderer, swap the current screen for GAME.
   startMission(mission) {

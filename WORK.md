@@ -200,7 +200,7 @@ Prerequisite: Phase 0 done at `319521e`.
 
 ### Engine lane
 
-- [ ] **1A — Run persistence (`save.js`)**
+- [x] **1A — Run persistence (`save.js`)**
   Add `relicDive` to the roster save shape: personal-best (score, depths,
   shareStr) and daily slot (dateKey, score, depths, shareStr) plus streak
   counter. New helpers: `loadRelicDiveBest()`, `saveRelicDiveBest(result)`,
@@ -214,7 +214,7 @@ Prerequisite: Phase 0 done at `319521e`.
   calls; `hashRunSeed` differs per depth; `buildShareString` round-trips; no
   roster-version bump needed (new field backfilled on load).
 
-- [ ] **1B — Run config wiring (`main.js`)**
+- [x] **1B — Run config wiring (`main.js`)**
   `buildRelicDiveConfig(runState, roster)` → `createGame` config for the
   current depth: `seed = hashRunSeed(rootSeed, depth)`,
   `relicLevel = clamp(startRelicLevel + depth − 1, 1, 15)`, hunters carry
