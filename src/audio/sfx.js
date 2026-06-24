@@ -119,4 +119,31 @@ export const sfx = {
     note({ freq: 110, dur: 0.09, type: 'square', vol: 0.12 });
     after(110, () => note({ freq: 104, dur: 0.12, type: 'square', vol: 0.12 }));
   },
+  // Distinct sounds per status kind (statusInflicted engine event carries ev.kind)
+  statusPanic() {
+    // Eerie sawtooth howl + low rumble — fear closing in
+    note({ midi: 65, dur: 0.25, type: 'sawtooth', vol: 0.13, slide: 98 });
+    after(200, () => noise({ dur: 0.22, vol: 0.09, freq: 280, slide: 70, q: 1.2, type: 'lowpass' }));
+  },
+  statusStun() {
+    // Sharp electric crackle — brief incapacitation
+    noise({ dur: 0.07, vol: 0.24, freq: 3400, slide: 300, q: 7 });
+    note({ midi: 55, dur: 0.07, type: 'square', vol: 0.10 });
+  },
+  statusLeg() {
+    // Dull thud + low note — blunt injury
+    noise({ dur: 0.14, vol: 0.20, freq: 160, slide: 55, q: 0.8, type: 'lowpass' });
+    note({ midi: 38, dur: 0.12, type: 'triangle', vol: 0.11, slide: 65 });
+  },
+  statusEmpty() {
+    // Whooshing scatter — hand swept away
+    noise({ dur: 0.09, vol: 0.16, freq: 1200, slide: 3800, q: 2.5 });
+    after(60, () => noise({ dur: 0.12, vol: 0.10, freq: 800, slide: 2400, q: 2 }));
+  },
+  // Counter item activated — hunter prepared for exactly this monster type
+  counterActivated() {
+    noise({ dur: 0.05, vol: 0.14, freq: 2800, slide: 700, q: 5 });
+    note({ midi: 88, dur: 0.07, type: 'square', vol: 0.16 });
+    after(70, () => note({ midi: 91, dur: 0.10, type: 'triangle', vol: 0.12 }));
+  },
 };
