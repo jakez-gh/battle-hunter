@@ -540,6 +540,44 @@ const WALL_G = [ // cracked stone — a jagged fissure cuts diagonally through t
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_P = [ // toothed cornice — crenelated top course with notched parapet marks
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGdGGGGdGGGGdGX',
+  'XddGGGGddGGGGddX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGXcGGGGgX',
+  'XGGGGGGGXGGGGGgX',
+  'XGGGGGGGXGGGGGgX',
+  'XGGGGGGGXGGGGGgX',
+  'XgGGGGGGXGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const WALL_O = [ // diagonal slash — angled dark marks across two courses suggest raked brickwork
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGdGGGGGdGGGGX',
+  'XGGdGGGGGdGGGGGX',
+  'XGdGGGGGdGGGGGGX',
+  'XdGGGGGdGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGdGGGGGdGGgX',
+  'XGGdGGGGGdGGGGGX',
+  'XGdGGGGGdGGGGGGX',
+  'XdGGGGGdGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_N = [ // arch niche — shallow semicircular alcove carved into upper wall face
   'XXXXXXXXXXXXXXXX',
   'XcGGGGGGGGGGGGgX',
@@ -996,6 +1034,8 @@ export const TILES = {
   wallL: { grid: WALL_L, palette: TILE_PALETTE },
   wallM: { grid: WALL_M, palette: TILE_PALETTE },
   wallN: { grid: WALL_N, palette: TILE_PALETTE },
+  wallO: { grid: WALL_O, palette: TILE_PALETTE },
+  wallP: { grid: WALL_P, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
