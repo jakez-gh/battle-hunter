@@ -2408,6 +2408,17 @@ export function createRenderer(canvas, opts = {}) {
       g.addColorStop(0.72, `rgba(80,210,130,${(pulse * 0.7).toFixed(3)})`);
       g.addColorStop(1, 'rgba(80,210,130,0)');
       ctx.fillStyle = g; ctx.fillRect(0, seamY - 3, vw, 6); }
+    // Center marker: small diamond at the board center where all four sections meet
+    { const mx = seamX, my = seamY;
+      const mp = (0.12 + 0.06 * Math.sin(clock / 3000)).toFixed(3);
+      ctx.save(); ctx.globalAlpha = mp;
+      ctx.strokeStyle = '#c8d4f0'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(mx, my - 6); ctx.lineTo(mx + 6, my);
+      ctx.lineTo(mx, my + 6); ctx.lineTo(mx - 6, my);
+      ctx.closePath(); ctx.stroke();
+      ctx.fillStyle = '#c8d4f0'; ctx.fillRect(mx - 1, my - 1, 2, 2);
+      ctx.restore(); }
   }
 
   function drawVignette() {
