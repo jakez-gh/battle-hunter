@@ -163,6 +163,30 @@ If multiple agent sessions may be running simultaneously:
   work surfaces — engine changes don't touch render, and vice versa
 - Mark your task `IN_PROGRESS` in `WORK.md` immediately (commit the change) so
   other agents know it's claimed
+- **Never `git add -A`.** Stage only the files you authored (`git add <files>`);
+  run `git status` first and leave anything a peer is editing. `git add -A` has
+  already swept another agent's uncommitted work into the wrong commit.
+
+### Live coordination — `.agents/` mailbox + claims
+
+When agents run **concurrently in this shared working tree**, use the
+coordination layer in [.agents/](.agents/) — it gives presence (who's alive),
+work claims with auto-expiring leases, handoff notes, and a peer mailbox, so
+nobody clobbers anyone and a vanished agent's work is seamlessly resumable.
+**Read [.agents/README.md](.agents/README.md) first**, then, every session:
+
+```bash
+node .agents/agent-coord.mjs agents                       # who's here + alive?
+node .agents/agent-coord.mjs register --name <you> --role <engine|render|ui>
+node .agents/agent-coord.mjs claim --as <id> --task <item> --files "a,b" --handoff "plan"
+#   work — heartbeat each step, keep --handoff current, commit often, add only your files
+node .agents/agent-coord.mjs release --as <id> --task <item> --status done
+```
+
+If a peer's heartbeat is `offline` (≥20m) and holds a claim you need, `takeover`
+resumes it from their handoff note + last commit. This is the practical
+mechanism behind the "mark `IN_PROGRESS`" rule above — claims are the live lock,
+`WORK.md` is the durable board.
 
 ---
 

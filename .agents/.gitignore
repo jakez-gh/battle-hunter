@@ -1,0 +1,7 @@
+# Runtime coordination state is live local data, not history — ignore it.
+# The durable, committed parts are README.md, agent-coord.mjs and this file.
+registry/
+mailbox/
+claims/
+log/
+*.tmp-*
