@@ -1071,23 +1071,31 @@ export function createRenderer(canvas, opts = {}) {
               const cs = cam.scale;
               const etx = ewp.x + (((wh >> 4) & 0xF) + 1) * cs;
               const ety = ewp.y + 9 * cs;
-              // Warm glow bloom behind torch
+              // Section-tinted flame: TL=amber, TR=cool-blue, BL=green, BR=violet
+              const tcol = x < 10
+                ? (y < 10
+                  ? { bloom: 'rgba(255,155,45,', wick: '#fff090', f0: '#ffca40', f1: '#ff8820', f2: '#dd3812', cup: '#9a6c28', brk: '#6e4e22' }
+                  : { bloom: 'rgba(80,200,60,',  wick: '#c0ff90', f0: '#80e840', f1: '#2da816', f2: '#186010', cup: '#244e1c', brk: '#1e3c18' })
+                : (y < 10
+                  ? { bloom: 'rgba(80,150,255,', wick: '#d8f0ff', f0: '#a0ccff', f1: '#3880e0', f2: '#1040b0', cup: '#2a4878', brk: '#243858' }
+                  : { bloom: 'rgba(160,60,220,', wick: '#f0a0ff', f0: '#c040ff', f1: '#8020c0', f2: '#440060', cup: '#3c1a58', brk: '#2c1440' });
+              // Glow bloom behind torch
               const tgr = ctx.createRadialGradient(etx + cs * 0.5, ety, 0, etx + cs * 0.5, ety, cs * 5);
               const tgp = 0.10 + 0.05 * Math.sin(clock / 850 + wh * 0.031);
-              tgr.addColorStop(0, 'rgba(255,155,45,' + tgp.toFixed(2) + ')'); tgr.addColorStop(1, 'transparent');
+              tgr.addColorStop(0, tcol.bloom + tgp.toFixed(2) + ')'); tgr.addColorStop(1, 'transparent');
               ctx.fillStyle = tgr;
               ctx.fillRect((etx - cs * 4.5) | 0, (ety - cs * 5) | 0, cs * 10, cs * 9);
-              // Iron torch bracket: vertical stem + horizontal arm
-              ctx.fillStyle = '#6e4e22';
+              // Torch bracket: vertical stem + horizontal arm
+              ctx.fillStyle = tcol.brk;
               ctx.fillRect(etx | 0, ety | 0, cs, cs * 3);
               ctx.fillRect((etx - cs) | 0, (ety + cs) | 0, cs * 2, cs);
-              // Amber torch cup at bracket top
-              ctx.save(); ctx.globalAlpha = 0.80; ctx.fillStyle = '#9a6c28';
+              // Torch cup at bracket top
+              ctx.save(); ctx.globalAlpha = 0.80; ctx.fillStyle = tcol.cup;
               ctx.fillRect((etx - cs) | 0, (ety - cs) | 0, cs * 3, cs); ctx.restore();
               // Animated flame: persistent wick base + three staggered rising streams
               const eper = 1600 + (wh & 3) * 400;
               const fbw = cs * (1.4 + 0.5 * Math.sin(clock / 190 + wh * 0.72));
-              ctx.save(); ctx.globalAlpha = 0.78; ctx.fillStyle = '#fff090';
+              ctx.save(); ctx.globalAlpha = 0.78; ctx.fillStyle = tcol.wick;
               ctx.fillRect((etx + cs * 0.5 - fbw * 0.5) | 0, (ety - cs * 1.6) | 0, fbw, cs * 1.2);
               ctx.restore();
               for (let fi = 0; fi < 3; fi++) {
@@ -1098,7 +1106,7 @@ export function createRenderer(canvas, opts = {}) {
                 const fea = Math.min(frac * 3.5, (1 - frac) * 2.1) * 0.52;
                 const ffw = cs * (1.8 - fi * 0.5);
                 ctx.save(); ctx.globalAlpha = fea;
-                ctx.fillStyle = fi === 0 ? '#ffca40' : (fi === 1 ? '#ff8820' : '#dd3812');
+                ctx.fillStyle = fi === 0 ? tcol.f0 : (fi === 1 ? tcol.f1 : tcol.f2);
                 ctx.fillRect((etx + cs * 0.5 - ffw * 0.5) | 0, fey | 0, ffw, cs);
                 ctx.restore();
               }
@@ -1159,8 +1167,8 @@ export function createRenderer(canvas, opts = {}) {
             ctx.fillStyle = sg;
             ctx.fillRect(fp.x | 0, fp.y | 0, ts, cam.scale * 3.5);
           }
-          // Warm torch-light pool: if the wall directly above this floor tile has a torch,
-          // spill a warm amber glow onto the top of this tile
+          // Torch-light pool: if the wall directly above this floor tile has a torch,
+          // spill a section-tinted glow onto the top of this tile
           if (!b.floor[y - 1]?.[x]) {
             const twh = ((x * 1637 + (y - 1) * 3571) ^ 997) & 0xFFFF;
             if ((twh & 0xFF) >= 20 && ((twh >> 8) & 0xFF) < 16) {
@@ -1168,8 +1176,11 @@ export function createRenderer(canvas, opts = {}) {
               const tcx = fp.x + (((twh >> 4) & 0xF) + 1.5) * cs;
               const tcy = fp.y + ts * 0.15;
               const tgp = 0.14 + 0.07 * Math.sin(clock / 850 + twh * 0.031);
+              const tspill = x < 10
+                ? ((y - 1) < 10 ? 'rgba(255,160,40,' : 'rgba(80,200,60,')
+                : ((y - 1) < 10 ? 'rgba(80,150,255,' : 'rgba(160,60,220,');
               const tgr = ctx.createRadialGradient(tcx, tcy, 0, tcx, tcy, cs * 5.5);
-              tgr.addColorStop(0, 'rgba(255,160,40,' + tgp.toFixed(2) + ')');
+              tgr.addColorStop(0, tspill + tgp.toFixed(2) + ')');
               tgr.addColorStop(1, 'transparent');
               ctx.fillStyle = tgr;
               ctx.fillRect((tcx - cs * 5.5) | 0, fp.y | 0, cs * 11, ts);
@@ -1192,15 +1203,18 @@ export function createRenderer(canvas, opts = {}) {
             const sg = ctx.createLinearGradient(specX - ts * 0.07, 0, specX + ts * 0.07, 0);
             sg.addColorStop(0, 'transparent'); sg.addColorStop(0.5, 'rgba(210,240,255,0.62)'); sg.addColorStop(1, 'transparent');
             ctx.fillStyle = sg; ctx.fillRect(px | 0, py | 0, pw2, ph2);
-            // Torch reflection: puddles below a torch wall pick up a warm amber shimmer
+            // Torch reflection: puddles below a torch wall pick up a section-tinted shimmer
             if (!b.floor[y - 1]?.[x]) {
               const twh = ((x * 1637 + (y - 1) * 3571) ^ 997) & 0xFFFF;
               if ((twh & 0xFF) >= 20 && ((twh >> 8) & 0xFF) < 16) {
                 const tflicker = 0.5 + 0.5 * Math.sin(clock / 850 + twh * 0.031);
                 const warmX = px + pw2 * (0.3 + 0.2 * Math.sin(clock / 1400 + twh * 0.019));
                 const wsg = ctx.createLinearGradient(warmX - ts * 0.10, 0, warmX + ts * 0.10, 0);
+                const reflCol = x < 10
+                  ? ((y - 1) < 10 ? 'rgba(255,160,40,' : 'rgba(80,200,60,')
+                  : ((y - 1) < 10 ? 'rgba(80,150,255,' : 'rgba(160,60,220,');
                 wsg.addColorStop(0, 'transparent');
-                wsg.addColorStop(0.5, 'rgba(255,160,40,' + (tflicker * 0.42).toFixed(2) + ')');
+                wsg.addColorStop(0.5, reflCol + (tflicker * 0.42).toFixed(2) + ')');
                 wsg.addColorStop(1, 'transparent');
                 ctx.fillStyle = wsg; ctx.fillRect(px | 0, py | 0, pw2, ph2);
               }
@@ -1760,12 +1774,15 @@ export function createRenderer(canvas, opts = {}) {
       ctx.drawImage(img, dx | 0, dy | 0, w, h);
     }
     ctx.restore();
-    // Torch warmth: units standing directly below a torch wall get a warm amber tint
+    // Torch warmth: units standing directly below a torch wall get a section-tinted glow
     if (state?.board && !state.board.floor[pos.y - 1]?.[pos.x]) {
       const twh = ((pos.x * 1637 + (pos.y - 1) * 3571) ^ 997) & 0xFFFF;
       if ((twh & 0xFF) >= 20 && ((twh >> 8) & 0xFF) < 16) {
         const twGlow = 0.10 + 0.06 * Math.sin(clock / 850 + twh * 0.031);
-        ctx.save(); ctx.globalAlpha = twGlow * alpha; ctx.fillStyle = '#ffa040';
+        const twCol = pos.x < 10
+          ? ((pos.y - 1) < 10 ? '#ffa040' : '#40d820')
+          : ((pos.y - 1) < 10 ? '#4090ff' : '#c040ff');
+        ctx.save(); ctx.globalAlpha = twGlow * alpha; ctx.fillStyle = twCol;
         ctx.fillRect(p.x | 0, dy | 0, TILE * s, h); ctx.restore();
       }
     }
