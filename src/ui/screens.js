@@ -2512,6 +2512,23 @@ export function makeGameScreen(app, g) {
         ctx.fillRect(mx + bx.x * MSCALE, mmy + bx.y * MSCALE, MSCALE, MSCALE);
         ctx.globalAlpha = 1;
       });
+      // Flags — dim colored dot for each unclaimed flag
+      const FLAG_MAP_COLOR = { Red: '#cc3333', Blue: '#3a6ee0', Green: '#3aa84a', Yellow: '#e0c63a' };
+      (b2.flags || []).forEach((f) => {
+        if (f.taken) return;
+        const cap = f.color[0].toUpperCase() + f.color.slice(1);
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = FLAG_MAP_COLOR[cap] ?? '#aaa';
+        ctx.fillRect(mx + f.x * MSCALE, mmy + f.y * MSCALE, MSCALE, MSCALE);
+        ctx.globalAlpha = 1;
+      });
+      // Revealed traps — dim orange pixel
+      ctx.globalAlpha = 0.50;
+      ctx.fillStyle = '#e07830';
+      (b2.traps || []).forEach((tr) => {
+        if (tr.revealed) ctx.fillRect(mx + tr.x * MSCALE, mmy + tr.y * MSCALE, MSCALE, MSCALE);
+      });
+      ctx.globalAlpha = 1;
       // Rescue NPC — cyan pulse
       if (b2.rescue && !b2.rescue.claimed) {
         ctx.globalAlpha = 0.6 + 0.4 * Math.sin(hudT * 2.5);
