@@ -540,6 +540,25 @@ const WALL_G = [ // cracked stone — a jagged fissure cuts diagonally through t
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_J = [ // carved cross — sunken panel bearing a chisel-cut cross rune
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGddddddddGGGX',
+  'XGGGdGGddGGdGGGX',
+  'XGGGdGGddGGdGGGX',
+  'XGGGddddddddGGGX',
+  'XGGGdGGddGGdGGGX',
+  'XGGGdGGddGGdGGGX',
+  'XGGGddddddddGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGgX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_I = [ // monolith — one tall slab, no horizontal mortar joint, subtle texture flecks
   'XXXXXXXXXXXXXXXX',
   'XcGGGGGGGGGGGGgX',
@@ -768,6 +787,25 @@ const FLOOR_Q = [ // mason's mark — a faint cross etched into the stone face
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_R = [ // four-diamond — dark stone inlays at quarter positions
+  'GGGGGGGGGGGGGGGG',
+  'GgGGGGGGGGGGGGGG',
+  'GGGdGGGGGGGdGGGG',
+  'GGdddGGGGGdddGGG',
+  'GGGdGGGGGGGdGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGgG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGdG',
+  'GGGdGGGGGGGdGGGG',
+  'GGdddGGGGGdddGGG',
+  'GGGdGGGGGGGdGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGgGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
 export const TILES = {
   floorA: { grid: FLOOR_A, palette: TILE_PALETTE },
   floorB: { grid: FLOOR_B, palette: TILE_PALETTE },
@@ -786,6 +824,7 @@ export const TILES = {
   floorO: { grid: FLOOR_O, palette: TILE_PALETTE },
   floorP: { grid: FLOOR_P, palette: TILE_PALETTE },
   floorQ: { grid: FLOOR_Q, palette: TILE_PALETTE },
+  floorR: { grid: FLOOR_R, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
@@ -796,6 +835,7 @@ export const TILES = {
   wallG: { grid: WALL_G, palette: TILE_PALETTE },
   wallH: { grid: WALL_H, palette: TILE_PALETTE },
   wallI: { grid: WALL_I, palette: TILE_PALETTE },
+  wallJ: { grid: WALL_J, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },

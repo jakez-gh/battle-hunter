@@ -1041,13 +1041,13 @@ export function createRenderer(canvas, opts = {}) {
     const y0 = Math.max(0, Math.floor(cam.y / TILE));
     const x1 = Math.min(b.w - 1, Math.ceil((cam.x + vw) / TILE));
     const y1 = Math.min(b.h - 1, Math.ceil((cam.y + vh) / TILE));
-    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH', 'floorI', 'floorJ', 'floorK', 'floorL', 'floorM', 'floorN', 'floorO', 'floorP', 'floorQ'];
+    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH', 'floorI', 'floorJ', 'floorK', 'floorL', 'floorM', 'floorN', 'floorO', 'floorP', 'floorQ', 'floorR'];
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
           // Show stone wall face where the wall borders a walkable floor below it.
-          const wallV = ((x * 2341 + y * 1013) ^ 571) % 9;
-          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : 'tile.wallI';
+          const wallV = ((x * 2341 + y * 1013) ^ 571) % 10;
+          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : wallV === 8 ? 'tile.wallI' : 'tile.wallJ';
           blitTile(b.floor[y + 1]?.[x] ? wallTile : 'tile.pit', x, y);
           // Moisture drip: ~8% of visible wall faces get an animated droplet
           if (b.floor[y + 1]?.[x]) {
@@ -1143,7 +1143,7 @@ export function createRenderer(canvas, opts = {}) {
           }
           continue;
         }
-        blitTile(`tile.${floors[(x * 7 + y * 13) % 17]}`, x, y);
+        blitTile(`tile.${floors[(x * 7 + y * 13) % 18]}`, x, y);
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
           // Section color temperature: each quadrant gets a faint ambient tint for character
           { const secTint = x < 10
@@ -1320,6 +1320,17 @@ export function createRenderer(canvas, opts = {}) {
             sg.addColorStop(0, 'rgba(0,0,0,0.28)'); sg.addColorStop(1, 'transparent');
             ctx.fillStyle = sg; ctx.fillRect(fp.x, fp.y, ts, sgw);
           }
+          // Corridor portal shimmer: tiles straddling a section seam glow softly (wayfinding)
+          { const isPortal = (x === 9 && b.floor[y]?.[x + 1]) || (x === 10 && b.floor[y]?.[x - 1]) ||
+              (y === 9 && b.floor[y + 1]?.[x]) || (y === 10 && b.floor[y - 1]?.[x]);
+            if (isPortal) {
+              const pa = 0.055 + 0.030 * Math.sin(clock / 2600);
+              const pcx = fp.x + ts * 0.5, pcy = fp.y + ts * 0.5;
+              const pgr = ctx.createRadialGradient(pcx, pcy, 0, pcx, pcy, ts * 0.85);
+              pgr.addColorStop(0, 'rgba(200,215,255,' + pa.toFixed(3) + ')');
+              pgr.addColorStop(1, 'transparent');
+              ctx.fillStyle = pgr; ctx.fillRect(fp.x | 0, fp.y | 0, ts, ts);
+            } }
         }
       }
     }
