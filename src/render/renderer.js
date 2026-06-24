@@ -1145,6 +1145,12 @@ export function createRenderer(canvas, opts = {}) {
         }
         blitTile(`tile.${floors[(x * 7 + y * 13) % 15]}`, x, y);
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
+          // Section color temperature: each quadrant gets a faint ambient tint for character
+          { const secTint = x < 10
+              ? (y < 10 ? 'rgba(255,200,60,' : 'rgba(60,200,80,')
+              : (y < 10 ? 'rgba(60,130,255,' : 'rgba(140,60,200,');
+            ctx.save(); ctx.globalAlpha = 0.035; ctx.fillStyle = secTint + '1)';
+            ctx.fillRect(fp.x | 0, fp.y | 0, ts, ts); ctx.restore(); }
           // Wall overhang shadow: floor tiles directly beneath a wall get a top-edge drop shadow
           if (!b.floor[y - 1]?.[x]) {
             const sg = ctx.createLinearGradient(fp.x, fp.y, fp.x, fp.y + cam.scale * 3.5);
