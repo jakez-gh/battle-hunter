@@ -1187,6 +1187,20 @@ export function createRenderer(canvas, opts = {}) {
             sr.addColorStop(0, 'rgba(0,0,0,0)'); sr.addColorStop(1, 'rgba(0,0,0,0.20)');
             ctx.fillStyle = sr; ctx.fillRect((fp.x + ts - cam.scale * 3) | 0, fp.y | 0, cam.scale * 3, ts);
           }
+          // Interior-corner AO: extra darkening where two perpendicular walls meet
+          { const wallL = !b.floor[y]?.[x - 1], wallR = !b.floor[y]?.[x + 1];
+            const wallT = !b.floor[y - 1]?.[x];
+            const cr = cam.scale * 4;
+            if (wallT && wallL) {
+              const cg = ctx.createRadialGradient(fp.x, fp.y, 0, fp.x, fp.y, cr);
+              cg.addColorStop(0, 'rgba(0,0,0,0.28)'); cg.addColorStop(1, 'rgba(0,0,0,0)');
+              ctx.fillStyle = cg; ctx.fillRect(fp.x | 0, fp.y | 0, cr, cr);
+            }
+            if (wallT && wallR) {
+              const cg = ctx.createRadialGradient(fp.x + ts, fp.y, 0, fp.x + ts, fp.y, cr);
+              cg.addColorStop(0, 'rgba(0,0,0,0.28)'); cg.addColorStop(1, 'rgba(0,0,0,0)');
+              ctx.fillStyle = cg; ctx.fillRect((fp.x + ts - cr) | 0, fp.y | 0, cr, cr);
+            } }
           // Torch-light pool: if the wall directly above this floor tile has a torch,
           // spill a section-tinted glow onto the top of this tile
           if (!b.floor[y - 1]?.[x]) {
