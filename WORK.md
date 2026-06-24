@@ -193,7 +193,7 @@ Phase hard; prove each phase is fun before funding the next. Promote to
 
 - Network play (WebRTC or WebSocket) for remote multiplayer
 - Replay/spectate mode (engine is deterministic; save action log + seed)
-- Additional board sections (currently 14; more variety = less repetition)
+- Additional board sections (now 20; six added 2026-06-24 — d82d1f2)
 - Sound effect for each item use type
 - High-score leaderboard (localStorage, top-10 per mode)
 - Accessibility: keyboard nav on all menus, colour-blind palette option
