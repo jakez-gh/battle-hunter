@@ -1052,6 +1052,10 @@ export function createRenderer(canvas, opts = {}) {
           // Section tint on wall faces (matches quadrant identity from floor tint)
           if (b.floor[y + 1]?.[x]) {
             const wp = worldToScreen(x, y, cam); const wts = TILE * cam.scale;
+            // Top-edge highlight: thin bright band where ambient light grazes the wall cap
+            { const hlg = ctx.createLinearGradient(0, wp.y + cam.scale, 0, wp.y + cam.scale * 4);
+              hlg.addColorStop(0, 'rgba(220,228,248,0.18)'); hlg.addColorStop(1, 'rgba(220,228,248,0)');
+              ctx.fillStyle = hlg; ctx.fillRect(wp.x + cam.scale | 0, (wp.y + cam.scale) | 0, wts - cam.scale * 2, cam.scale * 3); }
             const wTint = x < 10
               ? (y < 10 ? 'rgba(255,200,60,' : 'rgba(60,200,80,')
               : (y < 10 ? 'rgba(60,130,255,' : 'rgba(140,60,200,');
