@@ -559,6 +559,44 @@ const WALL_P = [ // toothed cornice — crenelated top course with notched parap
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_R = [ // dado wall — dado rail divides blank upper zone from panelled lower zone
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XgGGGGGGGGGGGGgX',
+  'XddddddddddddddX',
+  'XcGGGGGGXcGGGGgX',
+  'XGGdGGGGXGGGdGGX',
+  'XGGGGGGGXGGGGGGX',
+  'XGGGGGGGXGGGGGGX',
+  'XgGGGGGGXGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XXXXXXXXXXXXXXXX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const WALL_Q = [ // medallion — oval seal carved into upper wall face, d centre mark
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGdddddGGGGX',
+  'XGGGGdGGGGGdGGGX',
+  'XGGGdGGGGGGGdGGX',
+  'XGGdGGGGGGGGGdGX',
+  'XGGdGGGGdGGGGdGX',
+  'XGGdGGGGGGGGGdGX',
+  'XGGGdGGGGGGGdGGX',
+  'XGGGGdGGGGGdGGGX',
+  'XGGGGGdddddGGGGX',
+  'XGGGGGGGGGGGGGgX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_O = [ // diagonal slash — angled dark marks across two courses suggest raked brickwork
   'XXXXXXXXXXXXXXXX',
   'XcGGGGGGGGGGGGgX',
@@ -1036,6 +1074,8 @@ export const TILES = {
   wallN: { grid: WALL_N, palette: TILE_PALETTE },
   wallO: { grid: WALL_O, palette: TILE_PALETTE },
   wallP: { grid: WALL_P, palette: TILE_PALETTE },
+  wallQ: { grid: WALL_Q, palette: TILE_PALETTE },
+  wallR: { grid: WALL_R, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
