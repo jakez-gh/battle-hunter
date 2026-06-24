@@ -616,6 +616,44 @@ const WALL_V = [ // drip face — stalactite moisture streaks on block surface
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_W = [ // recessed panel — large inset rectangle suggesting architectural paneling
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGgX',
+  'XGGdGGGGGGGGdGGX',
+  'XGGdGGGGGGGGdGGX',
+  'XGGdGGGGGGGGdGGX',
+  'XGGdGGGGGGGGdGGX',
+  'XGgGddddddddGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGdGGGGGGdGGgX',
+  'XGGGdGGGGGdGGGGX',
+  'XGGGGdGGGdGGGGGX',
+  'XGGGGGdGdGGGGGGX',
+  'XGGGGGGdGGGGGGGX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const WALL_X = [ // basket weave — alternating horizontal and vertical stone courses
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGXGGGGGGX',
+  'XGGGGGGGXGGGGGGX',
+  'XGGXGGGGGGGGXGGX',
+  'XGGXGGGGGGGGXGGX',
+  'XGGGGGGGXGGGGGGX',
+  'XGgGGGGGXGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGXGGGGXGGgX',
+  'XGGGGXGGGGXGGGGX',
+  'XGXGGGGGXGGGGXGX',
+  'XGXGGGGGXGGGGXGX',
+  'XGGGGXGGGGXGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_S = [ // vermiculated — scattered worm-track pits across two-course block faces
   'XXXXXXXXXXXXXXXX',
   'XcGGGGGGGGGGGGgX',
@@ -1236,6 +1274,8 @@ export const TILES = {
   wallT: { grid: WALL_T, palette: TILE_PALETTE },
   wallU: { grid: WALL_U, palette: TILE_PALETTE },
   wallV: { grid: WALL_V, palette: TILE_PALETTE },
+  wallW: { grid: WALL_W, palette: TILE_PALETTE },
+  wallX: { grid: WALL_X, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
