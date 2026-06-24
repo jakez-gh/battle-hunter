@@ -1074,6 +1074,24 @@ export function createRenderer(canvas, opts = {}) {
               ctx.restore();
             }
           }
+          // Structural crack: ~5% of visible wall faces get a procedural zigzag fissure
+          if (b.floor[y + 1]?.[x]) {
+            const crh = ((x * 3137 + y * 2963) ^ 2221) & 0xFFFF;
+            if ((crh & 0xFF) < 13) {
+              const crwp = worldToScreen(x, y, cam); const cs = cam.scale;
+              const crx0 = crwp.x + ((crh >> 4 & 0xB) + 2) * cs;
+              const cry0 = crwp.y + ((crh >> 8 & 0x3) + 2) * cs;
+              const crsteps = 4 + (crh >> 12 & 3);
+              ctx.save(); ctx.globalAlpha = 0.28 + (crh >> 10 & 3) * 0.06; ctx.fillStyle = '#101018';
+              let cx2 = crx0, cy2 = cry0;
+              for (let ci = 0; ci < crsteps; ci++) {
+                const nx = cx2 + ((ci & 1) ? cs : -cs), ny = cy2 + cs;
+                ctx.fillRect(nx | 0, ny | 0, cs, cs);
+                cx2 = nx; cy2 = ny;
+              }
+              ctx.restore();
+            }
+          }
           // Moisture drip: ~8% of visible wall faces get an animated droplet
           if (b.floor[y + 1]?.[x]) {
             const wh = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;
