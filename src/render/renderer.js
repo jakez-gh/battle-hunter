@@ -2386,6 +2386,25 @@ export function createRenderer(canvas, opts = {}) {
     }
   }
 
+  function drawLightRays() {
+    if (!state?.board) return;
+    const vw = canvas.width, vh = canvas.height - HUD_H;
+    for (let i = 0; i < 4; i++) {
+      const ph = ((clock / 32000 + i * 0.25) % 1);
+      const alpha = Math.sin(ph * Math.PI) * 0.036;
+      if (alpha < 0.005) continue;
+      const xc = vw * (0.12 + i * 0.24 + Math.sin(clock / 15000 + i * 1.7) * 0.05);
+      const w2 = vw * (0.025 + i * 0.009);
+      const sk = vw * 0.07;
+      ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = '#e8f0ff';
+      ctx.beginPath();
+      ctx.moveTo(xc - w2, 0); ctx.lineTo(xc + w2, 0);
+      ctx.lineTo(xc + w2 + sk, vh); ctx.lineTo(xc - w2 + sk, vh);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function drawSectionSeams() {
     if (!state?.board) return;
     const vw = canvas.width, vh = canvas.height - HUD_H;
@@ -2988,6 +3007,7 @@ export function createRenderer(canvas, opts = {}) {
       drawBoard();
       drawFog();
       drawSectionSeams();
+      drawLightRays();
       drawAmbientShimmer();
       drawOverlays();
       drawUnits();
