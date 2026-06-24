@@ -1049,6 +1049,15 @@ export function createRenderer(canvas, opts = {}) {
           const wallV = ((x * 2341 + y * 1013) ^ 571) % 11;
           const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : wallV === 8 ? 'tile.wallI' : wallV === 9 ? 'tile.wallJ' : 'tile.wallK';
           blitTile(b.floor[y + 1]?.[x] ? wallTile : 'tile.pit', x, y);
+          // Section tint on wall faces (matches quadrant identity from floor tint)
+          if (b.floor[y + 1]?.[x]) {
+            const wp = worldToScreen(x, y, cam); const wts = TILE * cam.scale;
+            const wTint = x < 10
+              ? (y < 10 ? 'rgba(255,200,60,' : 'rgba(60,200,80,')
+              : (y < 10 ? 'rgba(60,130,255,' : 'rgba(140,60,200,');
+            ctx.save(); ctx.globalAlpha = 0.05; ctx.fillStyle = wTint + '1)';
+            ctx.fillRect(wp.x | 0, wp.y | 0, wts, wts); ctx.restore();
+          }
           // Moisture drip: ~8% of visible wall faces get an animated droplet
           if (b.floor[y + 1]?.[x]) {
             const wh = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;
@@ -2896,13 +2905,16 @@ export function createRenderer(canvas, opts = {}) {
                 vy: -0.55 - Math.random() * 0.25,
                 t: 0, ttl: 1600 + Math.random() * 700,
                 color: wh & 1 ? '#241420' : '#1c1428', round: true, alpha0: 0.26 });
-              // Rare glowing ember: ~5% chance, faster rise and warm amber
+              // Rare glowing ember: ~5% chance, faster rise, section-tinted
               if (Math.random() < 0.05) {
+                const emberCols = x < 10
+                  ? (y < 10 ? ['#ff9030', '#ffc840'] : ['#30c040', '#80e060'])
+                  : (y < 10 ? ['#3080ff', '#80c0ff'] : ['#c030ff', '#ff80ff']);
                 sparkles.push({ wx, wy: y + 0.82,
                   vx: (Math.random() - 0.5) * 0.10,
                   vy: -0.90 - Math.random() * 0.35,
                   t: 0, ttl: 500 + Math.random() * 320,
-                  color: Math.random() < 0.5 ? '#ff9030' : '#ffc840', round: true, alpha0: 0.60 });
+                  color: Math.random() < 0.5 ? emberCols[0] : emberCols[1], round: true, alpha0: 0.60 });
               }
             }
           }
