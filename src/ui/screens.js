@@ -1695,6 +1695,8 @@ export function makeGameScreen(app, g) {
   let frameDt = 1 / 60;
   let broken = false;
   let finished = false;
+  let lastHumanId = null;   // hotseat: track whose turn it was
+  let handoff = null;       // { name } — waiting for new human to confirm before revealing hand
 
   const say = (s, dur = 2.2, color = GOLD) => { banner = { text: s, t: dur, color }; };
   const snapshot = (s) => { try { return structuredClone(s); } catch { return JSON.parse(JSON.stringify(s)); } };
@@ -1954,7 +1956,17 @@ export function makeGameScreen(app, g) {
         return;
       }
 
-      // human's decision — wait for animations before showing UI
+      // human's decision — detect hotseat handoff (new human player's turn)
+      { const chooser = A.resolveUnit(st, A.currentChooser(st));
+        if (chooser && chooser.id !== lastHumanId) {
+          const wasKnown = lastHumanId !== null;
+          lastHumanId = chooser.id;
+          const multiHuman = (st.hunters || []).filter((h) => h.human).length > 1;
+          if (wasKnown && multiHuman) handoff = { name: chooser.name ?? chooser.id };
+        } }
+      if (handoff) return; // wait for handoff confirmation
+
+      // wait for animations before showing UI
       if (A.rendererBusy(g.renderer)) return;
       if (timing) {
         timing.t += dt;
@@ -1967,6 +1979,7 @@ export function makeGameScreen(app, g) {
 
     onKey(k, e) {
       if (broken) { if (k === 'cancel') { app.music('hub'); app.stack.pop(); } return; }
+      if (handoff) { handoff = null; return; }
       if (k === 'cancel' && !host.top()) {
         host.push(makeMenu(
           [
@@ -2015,6 +2028,7 @@ export function makeGameScreen(app, g) {
 
     onClick(pos) {
       if (broken) return;
+      if (handoff) { handoff = null; return; }
       if (A.rendererBusy(g.renderer)) { A.rendererSkip(g.renderer); return; }
       if (timing) {
         const p = markerPos(timing.t);
@@ -2456,9 +2470,16 @@ export function makeGameScreen(app, g) {
     // AI speed hint — always visible so players discover the [ / ] keys
     text(ctx, `[ / ] AI speed: ${aiSpeed}\xd7`, X + 10, 498, { size: 10, color: DIM });
 
-    // the human's hand, mini cards
-    const me = (st.hunters || []).find((x) => x.human);
-    if (me) {
+    // the human's hand, mini cards — show active human's hand; handoff card in multi-human games
+    const me = A.isHumanTurn(st) ? A.resolveUnit(st, A.currentChooser(st)) : null;
+    if (me && handoff) {
+      box(ctx, X, 576, W, 136, { title: 'HAND', stroke: '#4a7dff' });
+      ctx.save(); ctx.globalAlpha = 0.18; ctx.fillStyle = '#4a7dff';
+      ctx.fillRect(X + 4, 580, W - 8, 128); ctx.restore();
+      text(ctx, `${handoff.name}'s HAND`, X + W / 2, 608, { size: 13, align: 'center', color: '#4a7dff' });
+      text(ctx, 'pass the device', X + W / 2, 630, { size: 11, align: 'center', color: DIM });
+      text(ctx, 'press any key to reveal', X + W / 2, 648, { size: 11, align: 'center', color: DIM });
+    } else if (me) {
       box(ctx, X, 576, W, 136, { title: 'HAND' });
       (me.hand || []).slice(0, 6).forEach((cid, i) => {
         const cx = X + 10 + (i % 5) * 43, cy = 604 + Math.floor(i / 5) * 50;

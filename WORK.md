@@ -166,8 +166,8 @@ it cheap). Quick wins first — every one lifts the floor of *every* mode.
   magnitude-scaled audio pitch; dedicated WYRM-spawn cinematic (clip-worthy).
 - [ ] **Rival voice** — 10–20 short lines for Keld/Mira/RAVEN on found-target /
   defeated / steal / WYRM. Cheap characterization; shows up in reviews.
-- [ ] **Hotseat hidden-hand fix** — render the active player's hand + a
-  pass-the-device handoff card (4-player Normal is currently unplayable).
+- [x] **Hotseat hidden-hand fix** — render the active player's hand + a
+  pass-the-device handoff card (4-player Normal is currently unplayable). `8d...`
 
 ### Big bet (weeks-to-months): "Relic Dive" seeded run + Daily Hunt
 
