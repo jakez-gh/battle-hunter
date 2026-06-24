@@ -1330,6 +1330,24 @@ export function createRenderer(canvas, opts = {}) {
             }
             ctx.restore();
           }
+          // Glowing mushroom: ~3% of floor tiles get a tiny bioluminescent speck
+          { const gmh = ((x * 4603 + y * 1193) ^ 2819) & 0xFFFF;
+            if ((gmh & 0xFF) < 8) {
+              const gmc = cam.scale;
+              const gmx = (fp.x + (2 + (gmh >> 4 & 0xD)) * gmc) | 0;
+              const gmy = (fp.y + (3 + (gmh >> 9 & 0x9)) * gmc) | 0;
+              const gmCol = x < 10
+                ? (y < 10 ? '#ffb040' : '#40e870')
+                : (y < 10 ? '#60b0ff' : '#c060ff');
+              const gmpulse = 0.35 + 0.25 * Math.sin(clock / 1100 + (gmh & 0xF) * 0.4);
+              const gmg = ctx.createRadialGradient(gmx, gmy, 0, gmx, gmy, gmc * 3);
+              gmg.addColorStop(0, gmCol); gmg.addColorStop(0.4, gmCol); gmg.addColorStop(1, 'transparent');
+              ctx.save(); ctx.globalAlpha = gmpulse * 0.55; ctx.fillStyle = gmg;
+              ctx.fillRect(gmx - gmc * 3, gmy - gmc * 3, gmc * 6, gmc * 6);
+              ctx.globalAlpha = gmpulse * 0.90; ctx.fillStyle = '#ffffff';
+              ctx.fillRect(gmx, gmy, Math.max(1, gmc * 0.5), Math.max(1, gmc * 0.5));
+              ctx.restore();
+            } }
           // Bone fragment: ~2% of floor tiles bear a faint cross-shaped battle relic
           { const bfh = ((x * 3107 + y * 2477) ^ 1847) & 0xFFFF;
             if ((bfh & 0xFF) < 5) {
