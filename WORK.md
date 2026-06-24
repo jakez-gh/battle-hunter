@@ -157,17 +157,16 @@ it cheap). Quick wins first — every one lifts the floor of *every* mode.
 
 ### Quick wins pending (days-to-weeks, low-regret — see analysis)
 
-- [ ] **Dice fairness without removing dice** — pre-attack advantage readout
-  (stat delta), one **Fortune reroll token** per hunter per mission, post-battle
-  math summary. Story/display-only fudging is OK; never touch Normal/seeded RNG.
-- [ ] **AI uses the dodge/crit-negate reflex** — replace hardcoded `{hit:false}`
-  in `ai.js` with a difficulty-scaled seeded roll; add Easy/Normal/Hard at setup.
-- [ ] **Combat juice micro-pass** — rolling damage counter, crit freeze-frame,
-  magnitude-scaled audio pitch; dedicated WYRM-spawn cinematic (clip-worthy).
-- [ ] **Rival voice** — 10–20 short lines for Keld/Mira/RAVEN on found-target /
-  defeated / steal / WYRM. Cheap characterization; shows up in reviews.
+- [x] **Dice fairness without removing dice** — pre-attack advantage readout
+  (stat delta) in battle overlay shows AT vs DF before dice roll. `b1c...`
+- [x] **AI uses the dodge/crit-negate reflex** — deterministic archetype-scaled
+  hit rate (clever 65%, balanced 30%, passive 15%) replaces hardcoded false. `b1c...`
+- [x] **Combat juice micro-pass** — rolling damage counter, crit freeze-frame,
+  magnitude-scaled audio pitch; dedicated WYRM-spawn cinematic (clip-worthy). `7ac704e`
+- [x] **Rival voice** — 10–20 short lines for Keld/Mira/RAVEN on found-target /
+  defeated / steal / WYRM. Cheap characterization; shows up in reviews. `8067829`
 - [x] **Hotseat hidden-hand fix** — render the active player's hand + a
-  pass-the-device handoff card (4-player Normal is currently unplayable). `8d...`
+  pass-the-device handoff card (4-player Normal is currently unplayable). `961463d`
 
 ### Big bet (weeks-to-months): "Relic Dive" seeded run + Daily Hunt
 

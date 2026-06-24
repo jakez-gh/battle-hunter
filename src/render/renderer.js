@@ -2555,6 +2555,31 @@ export function createRenderer(canvas, opts = {}) {
     ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = '#c09020';
     text('VS', bx + bw / 2, by + 42, '#ffe98a', 16, 'center');
     ctx.restore();
+    // Pre-attack advantage readout: show raw AT vs DF stat delta before dice are revealed
+    if (!battle.escape && !battle.strike) {
+      const au = findUnit(battle.a), du = findUnit(battle.d);
+      const atkAt = au ? (au.at ?? au.internal?.at ?? 0) : 0;
+      const defDf = du ? (du.df ?? Math.floor((du.internal?.df ?? 0) / 2)) : 0;
+      const delta = atkAt - defDf;
+      const deltaStr = delta > 0 ? `+${delta}` : String(delta);
+      const deltaCol = delta > 2 ? '#ff9a40' : delta > 0 ? '#e0c63a' : delta === 0 ? '#9aa0b4' : '#4a9de0';
+      const segs = [
+        { t: `AT ${atkAt}`, c: '#cc4a3a', shadow: '#8a2a2a' },
+        { t: ' | ', c: '#9aa0b4', shadow: null },
+        { t: `DF ${defDf}`, c: '#4a9de0', shadow: '#2a4da0' },
+        { t: `  (${deltaStr})`, c: deltaCol, shadow: null },
+      ];
+      setFont(11); ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+      const adW = segs.reduce((w, s) => w + ctx.measureText(s.t).width, 0);
+      let ax = (bx + bw / 2 - adW / 2) | 0;
+      const ay = (by + 64) | 0;
+      ctx.save();
+      for (const s of segs) {
+        ctx.shadowBlur = s.shadow ? 6 : 0; ctx.shadowColor = s.shadow ?? 'transparent';
+        ctx.fillStyle = s.c; ctx.fillText(s.t, ax, ay); ax += ctx.measureText(s.t).width;
+      }
+      ctx.restore(); ctx.textAlign = 'left';
+    }
     if (battle.response) {
       const RESP_COLOR = { counter: '#cc4a3a', guard: '#e0c63a', escape: '#4a7dff', surrender: '#9aa0b4' };
       const rc = RESP_COLOR[battle.response] ?? '#9adfe8';

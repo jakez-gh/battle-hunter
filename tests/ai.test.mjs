@@ -37,24 +37,40 @@ function mkState(phase, actions, opts = {}) {
     mode: opts.mode ?? 'normal',
     relicLevel: opts.relicLevel ?? 1,
     deck: opts.deck ?? Array(90).fill('R1'),
+    events: opts.events ?? [],
   };
 }
 
 // ---------------------------------------------------------------------------
-// Timing phases (react.dodge / react.crit) → always timing false (no dodge).
+// Timing phases (react.dodge / react.crit) → archetype-scaled probability.
 
-test('react.dodge: AI returns timing hit:false', () => {
+test('react.dodge: AI returns a timing action', () => {
   const state = mkState('react.dodge', [{ type: 'timing', hit: false }, { type: 'timing', hit: true }]);
   const act = chooseAction(state);
   assert.equal(act.type, 'timing');
-  assert.equal(act.hit, false);
+  assert.equal(typeof act.hit, 'boolean');
 });
 
-test('react.crit: AI returns timing hit:false', () => {
+test('react.crit: AI returns a timing action', () => {
   const state = mkState('react.crit', [{ type: 'timing', hit: false }, { type: 'timing', hit: true }]);
   const act = chooseAction(state);
   assert.equal(act.type, 'timing');
-  assert.equal(act.hit, false);
+  assert.equal(typeof act.hit, 'boolean');
+});
+
+test('react.crit: clever archetype succeeds more than passive over 100 rounds', () => {
+  // Deterministic hash produces different hit rates per archetype.
+  let cleverHits = 0, passiveHits = 0;
+  for (let round = 0; round < 100; round++) {
+    const clever = mkState('react.crit', [{ type: 'timing', hit: false }, { type: 'timing', hit: true }],
+      { hunters: [mkHunter({ archetype: 'Elite' })], round });
+    const passive = mkState('react.crit', [{ type: 'timing', hit: false }, { type: 'timing', hit: true }],
+      { hunters: [mkHunter({ archetype: 'Turtle' })], round });
+    if (chooseAction(clever).hit) cleverHits++;
+    if (chooseAction(passive).hit) passiveHits++;
+  }
+  assert.ok(cleverHits > passiveHits,
+    `clever hits (${cleverHits}) should exceed passive hits (${passiveHits}) over 100 rounds`);
 });
 
 // ---------------------------------------------------------------------------

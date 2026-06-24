@@ -218,7 +218,13 @@ export function chooseAction(state) {
     const { priority, restHp } = beh;
 
     if (phase === 'react.dodge' || phase === 'react.crit') {
-      return { type: 'timing', hit: false };
+      // Deterministic success rate by archetype — clever AIs react faster.
+      const rates = { clever: 65, aggressive: 45, balanced: 30, passive: 15, panicked: 25 };
+      const rate = rates[priority] ?? 30;
+      // Hash from round + unit index + event count so each timing event is independent.
+      const h = ((state?.round ?? 0) * 7919 + (state?.current?.index ?? 0) * 4001
+        + (state?.events?.length ?? 0) * 127) % 100;
+      return { type: 'timing', hit: h < rate };
     }
 
     if (phase === 'turn.steer') {
