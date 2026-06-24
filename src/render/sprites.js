@@ -692,6 +692,25 @@ const FLOOR_L = [ // corner bracket marks — layout survey marks at each quadra
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_P = [ // diagonal X — two crossing grooves from opposite corners
+  'GGGGGGGGGGGGGGGG',
+  'GgGGGGGGGGGGGGgG',
+  'GGdGGGGGGGGGGdGG',
+  'GGGdGGGGGGGGdGGG',
+  'GGGGdGGGGGGdGGGG',
+  'GGGGGdGGGGdGGGGG',
+  'GGGGGGdGGdGGGGGG',
+  'GGGGGGGddGGGGGGG',
+  'GGGGGGGddGGGGGGG',
+  'GGGGGGdGGdGGGGGG',
+  'GGGGGdGGGGdGGGGG',
+  'GGGGdGGGGGGdGGGG',
+  'GGGdGGGGGGGGdGGG',
+  'GGdGGGGGGGGGGdGG',
+  'GGGGGGGGGGGGGgGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
 export const TILES = {
   floorA: { grid: FLOOR_A, palette: TILE_PALETTE },
   floorB: { grid: FLOOR_B, palette: TILE_PALETTE },
@@ -708,6 +727,7 @@ export const TILES = {
   floorM: { grid: FLOOR_M, palette: TILE_PALETTE },
   floorN: { grid: FLOOR_N, palette: TILE_PALETTE },
   floorO: { grid: FLOOR_O, palette: TILE_PALETTE },
+  floorP: { grid: FLOOR_P, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },

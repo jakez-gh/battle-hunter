@@ -1,5 +1,5 @@
-// Canvas 2D renderer: draws a GameState and animates the engine event queue
-// (DESIGN 1.3, 1.4, 3.3). Pure presentation — no engine imports; state and
+﻿// Canvas 2D renderer: draws a GameState and animates the engine event queue
+// (DESIGN 1.3, 1.4, 3.3). Pure presentation â€” no engine imports; state and
 // events arrive as plain data and nothing here mutates them. The engine
 // advances instantly; this module's queue plays catch-up visually, one timed
 // step per event, all skippable. Module top level is pure (projection math,
@@ -10,7 +10,7 @@ import { buildAtlas, PALETTE_NAMES } from './sprites.js';
 export const TILE = 16;       // sprite-space pixels per board tile
 export const HUD_H = 76;      // screen pixels reserved for the bottom strip
 
-// ms per event type — every DESIGN 3.3 event animates as one timed step.
+// ms per event type â€” every DESIGN 3.3 event animates as one timed step.
 export const EVENT_DURATIONS = {
   turnStarted: 150,
   dieRolled: 270,
@@ -50,7 +50,7 @@ export const EVENT_DURATIONS = {
 // Events that carry stakes/drama. During fast-AI playback (timeScale > 1) these
 // are only mildly compressed so battles, steals, status hits and boss spawns
 // stay readable, while trivial locomotion (steps, dice, draws, monster shuffles)
-// flies by — killing the "watch the AI crawl" dead-air without hiding the drama.
+// flies by â€” killing the "watch the AI crawl" dead-air without hiding the drama.
 const DECISIVE_EVENTS = new Set([
   'battleStarted', 'responseChosen', 'escapeRolled', 'strikeRolled',
   'statusInflicted', 'critNegated', 'hunterDefeated', 'itemTaken', 'surrendered',
@@ -61,7 +61,7 @@ const MAX_DECISIVE_SPEEDUP = 3; // decisive events compress at most this much
 const MIN_EVENT_MS = 16;        // never shorter than ~one frame
 
 // Effective on-screen time for an event at a given playback scale. timeScale<=1
-// is full ceremony; >1 compresses trivial events fully (÷timeScale) and decisive
+// is full ceremony; >1 compresses trivial events fully (Ã·timeScale) and decisive
 // ones gently (capped) so AI dead-air vanishes without hiding the drama. Pure.
 export function eventDuration(type, timeScale = 1) {
   const base = EVENT_DURATIONS[type] ?? 200;
@@ -91,7 +91,7 @@ const SLOT_COLORS = ['#3a6ee0', '#cc4a3a', '#e0c63a', '#3aa84a']; // P1..P4
 const CARD_MINI = { R: '#cc4a3a', Y: '#d8b83a', B: '#3a6ee0', G: '#3aa84a' };
 const RIVAL_VOICE = {
   KELD: {
-    targetFound: ["Mine. Try taking it.", "Got it. Come at me.", "Finally — a real game."],
+    targetFound: ["Mine. Try taking it.", "Got it. Come at me.", "Finally â€” a real game."],
     hunterDefeated: ["Next time.", "Lucky shot.", "I'll be back."],
     wyrmSpawned: ["A WYRM. Good.", "Getting interesting.", "Better this than nothing."],
     flagClaimed: ["Count that.", "My board."],
@@ -149,7 +149,7 @@ export function createRenderer(canvas, opts = {}) {
   let anim = null;                     // { ev, t, dur }
   const cam = { x: 0, y: 0, scale };
   let camSnapped = false;
-  let manualPan = null;                // {x,y} tile — scout mode camera target
+  let manualPan = null;                // {x,y} tile â€” scout mode camera target
 
   const visual = new Map();            // unitKey -> {x,y} display pos (tiles)
   const facing = new Map();            // unitKey -> 1 | -1 (last horiz move)
@@ -168,7 +168,7 @@ export function createRenderer(canvas, opts = {}) {
   let smokeSeed = 0;                   // timer for torch-smoke emission
   let shake = null;                    // {t,dur,mag}
   let unitFlash = null;                // {key,t,dur,color}
-  let turnFlash = null;                // {color,t,dur} — screen-edge glow on turn start
+  let turnFlash = null;                // {color,t,dur} â€” screen-edge glow on turn start
   let battle = null;                   // battle overlay model
   let banner = null;                   // {text,color}
 
@@ -343,7 +343,7 @@ export function createRenderer(canvas, opts = {}) {
               vx: Math.cos(a) * 0.5, vy: Math.sin(a) * 0.5 - 0.3,
               t: 0, ttl: 280, color: i === 0 ? '#d8dcf0' : sc });
           }
-          // Target carrier: golden wake — larger, longer-lived particles
+          // Target carrier: golden wake â€” larger, longer-lived particles
           if (su?.hasTarget) {
             for (let i = 0; i < 10; i++) {
               const a = (i / 10) * Math.PI * 2;
@@ -516,7 +516,7 @@ export function createRenderer(canvas, opts = {}) {
       case 'trapDodged': {
         addFloat(k, 'DODGE', '#9adfe8');
         addSparkles(k, '#9adfe8');
-        // Fast sideways scatter — suggests a quick roll to the side
+        // Fast sideways scatter â€” suggests a quick roll to the side
         const ddp = displayPos(k);
         if (ddp) {
           for (let i = 0; i < 8; i++) {
@@ -562,7 +562,7 @@ export function createRenderer(canvas, opts = {}) {
                 color: i % 5 === 0 ? '#fff' : i % 3 === 0 ? '#ffd040' : '#ffe98a' });
             }
           } }
-        // Exit portal also erupts gold — exit is now "live"
+        // Exit portal also erupts gold â€” exit is now "live"
         { const ex = state?.board?.exit;
           if (ex) {
             for (let i = 0; i < 12; i++) {
@@ -601,7 +601,7 @@ export function createRenderer(canvas, opts = {}) {
         const ewu = findUnit(k);
         const ewSlotCol = k?.[0] === 'h' ? (SLOT_COLORS[(ewu?.slot ?? 0) % 4] ?? '#3a6ee0') : '#3a6ee0';
         addSparkles(k, '#7ee8a0');
-        // Slot-colored ring from the escaping hunter — "I made it out!"
+        // Slot-colored ring from the escaping hunter â€” "I made it out!"
         const ewp = displayPos(k);
         if (ewp) {
           for (let i = 0; i < 10; i++) {
@@ -613,7 +613,7 @@ export function createRenderer(canvas, opts = {}) {
         }
         turnFlash = { color: '#7ee8a0', t: 0, dur: 650 };
         shake = { t: 0, dur: 260, mag: 2.0 };
-        // Portal eruption at the exit tile — expanded burst mixing slot + portal green
+        // Portal eruption at the exit tile â€” expanded burst mixing slot + portal green
         const ex = state?.board?.exit;
         if (ex) {
           addSparklesAt(ex.x, ex.y, '#7ee8a0');
@@ -632,7 +632,7 @@ export function createRenderer(canvas, opts = {}) {
         addFloat(k, 'NO CARD', '#8d8d9e');
         const dbp = displayPos(k);
         if (dbp) {
-          // Downward scatter — empty hand, spirits fall
+          // Downward scatter â€” empty hand, spirits fall
           for (let i = 0; i < 6; i++) {
             sparkles.push({ wx: dbp.x + 0.25 + i * 0.1, wy: dbp.y + 0.3,
               vx: (i - 2.5) * 0.22, vy: 0.8 + (i % 3) * 0.3,
@@ -741,7 +741,7 @@ export function createRenderer(canvas, opts = {}) {
       case 'surrendered': {
         addFloat(k, 'SURRENDER', '#c8ccd8', { big: true, ttl: 900 });
         turnFlash = { color: '#8d8d9e', t: 0, dur: 500 };
-        // Falling white-flag debris: particles scattered upward then fall — suggests collapse
+        // Falling white-flag debris: particles scattered upward then fall â€” suggests collapse
         const sdp = displayPos(k);
         if (sdp) {
           for (let i = 0; i < 14; i++) {
@@ -833,7 +833,7 @@ export function createRenderer(canvas, opts = {}) {
         const killCol = KILL_COLORS[killKind] ?? '#ff8866';
         const kpos = deadGhost?.pos ?? displayPos(gk ?? k);
         if (kpos && killKind === 'WYRM') {
-          // WYRM death: void detonation — 3 rings at staggered radii + shock wave + screen blowout
+          // WYRM death: void detonation â€” 3 rings at staggered radii + shock wave + screen blowout
           shake = { t: 0, dur: 560, mag: 5.0 };
           turnFlash = { color: '#9c28f8', t: 0, dur: 700 };
           // Shock wave ring: fast, very short-lived
@@ -871,7 +871,7 @@ export function createRenderer(canvas, opts = {}) {
       }
       case 'healed': {
         addFloat(k, `+${ev.amount ?? ''}`, '#8fd17e', { big: true });
-        // Rising green cross-sparks (upward only, slight spread) — suggests HP lifting
+        // Rising green cross-sparks (upward only, slight spread) â€” suggests HP lifting
         const hp = displayPos(k);
         if (hp) {
           for (let i = 0; i < 8; i++) {
@@ -1041,7 +1041,7 @@ export function createRenderer(canvas, opts = {}) {
     const y0 = Math.max(0, Math.floor(cam.y / TILE));
     const x1 = Math.min(b.w - 1, Math.ceil((cam.x + vw) / TILE));
     const y1 = Math.min(b.h - 1, Math.ceil((cam.y + vh) / TILE));
-    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH', 'floorI', 'floorJ', 'floorK', 'floorL', 'floorM', 'floorN', 'floorO'];
+    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH', 'floorI', 'floorJ', 'floorK', 'floorL', 'floorM', 'floorN', 'floorO', 'floorP'];
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
@@ -1110,7 +1110,7 @@ export function createRenderer(canvas, opts = {}) {
             const ts = TILE * cam.scale;
             const vh = ((x * 3571 + y * 1637) ^ 1013) & 0xFFFF;
             const vcx = vp.x + ts * 0.5, vcy = vp.y + ts * 0.5;
-            // Deep black center — gives the pit actual visual depth
+            // Deep black center â€” gives the pit actual visual depth
             const vdg = ctx.createRadialGradient(vcx, vcy, 0, vcx, vcy, ts * 0.52);
             vdg.addColorStop(0, 'rgba(0,0,0,0.42)'); vdg.addColorStop(0.5, 'rgba(0,0,0,0.22)'); vdg.addColorStop(1, 'transparent');
             ctx.fillStyle = vdg; ctx.fillRect(vp.x | 0, vp.y | 0, ts, ts);
@@ -1143,7 +1143,7 @@ export function createRenderer(canvas, opts = {}) {
           }
           continue;
         }
-        blitTile(`tile.${floors[(x * 7 + y * 13) % 15]}`, x, y);
+        blitTile(`tile.${floors[(x * 7 + y * 13) % 16]}`, x, y);
         { const fp = worldToScreen(x, y, cam); const ts = TILE * cam.scale;
           // Section color temperature: each quadrant gets a faint ambient tint for character
           { const secTint = x < 10
@@ -1284,7 +1284,7 @@ export function createRenderer(canvas, opts = {}) {
             lsg.addColorStop(0, 'rgba(0,0,0,0.45)'); lsg.addColorStop(1, 'transparent');
             ctx.fillStyle = lsg; ctx.fillRect(fp.x, fp.y, vd, ts);
           }
-          // Section seam groove: faint darkening where the four 10×10 quadrants meet
+          // Section seam groove: faint darkening where the four 10Ã—10 quadrants meet
           const sgw = 5 * cam.scale;
           if (x === 9 && b.floor[y]?.[x + 1]) {
             const sg = ctx.createLinearGradient(fp.x + ts - sgw, 0, fp.x + ts, 0);
@@ -1325,7 +1325,7 @@ export function createRenderer(canvas, opts = {}) {
       }
     }
     ctx.restore();
-    // Mineral gleam: 1-in-20 floor tiles briefly shine white — quartz embedded in stone
+    // Mineral gleam: 1-in-20 floor tiles briefly shine white â€” quartz embedded in stone
     for (let sy = y0; sy <= y1; sy++) {
       for (let sx = x0; sx <= x1; sx++) {
         if (!b.floor[sy]?.[sx]) continue;
@@ -1363,7 +1363,7 @@ export function createRenderer(canvas, opts = {}) {
       ctx.strokeStyle = '#7ee8a0'; ctx.lineWidth = cam.scale;
       ctx.strokeRect(ep.x + cam.scale, ep.y + cam.scale, es - 2 * cam.scale, es - 2 * cam.scale);
       ctx.restore();
-      // Gold urgent glow when someone holds the Target — "finish line is live"
+      // Gold urgent glow when someone holds the Target â€” "finish line is live"
       if (targetActive) {
         const urgPulse = 0.5 + 0.5 * Math.sin(clock / 380);
         const ug = ctx.createRadialGradient(ecx, ecy, 0, ecx, ecy, es * 0.9);
@@ -1388,7 +1388,7 @@ export function createRenderer(canvas, opts = {}) {
         ctx.fillRect((mx - cam.scale * 0.5) | 0, my | 0, cam.scale, cam.scale * 1.5);
         ctx.restore();
       }
-      // Four sparkle particles orbiting the exit — cross/star shape
+      // Four sparkle particles orbiting the exit â€” cross/star shape
       const orbitColor = targetActive ? '#ffe98a' : '#7ee8a0';
       for (let j = 0; j < 4; j++) {
         const angle = clock / 1100 + j * Math.PI / 2;
@@ -1428,14 +1428,14 @@ export function createRenderer(canvas, opts = {}) {
       if (closed) {
         const bp = worldToScreen(box.x, box.y, cam);
         const pulse = 0.10 + 0.08 * Math.sin(clock / 1100 + box.x * 3.7 + box.y * 2.3);
-        // Radial glow centered on box — fades beyond tile edges for a softer ambient
+        // Radial glow centered on box â€” fades beyond tile edges for a softer ambient
         { const ts = TILE * cam.scale;
           const bcx = bp.x + ts / 2, bcy = bp.y + ts / 2;
           const bg = ctx.createRadialGradient(bcx, bcy, 0, bcx, bcy, ts * 0.88);
           bg.addColorStop(0, '#e8d87e'); bg.addColorStop(0.52, '#e8d87e'); bg.addColorStop(1, 'transparent');
           ctx.save(); ctx.globalAlpha = pulse; ctx.fillStyle = bg;
           ctx.fillRect(bp.x - ts * 0.18, bp.y - ts * 0.18, ts * 1.36, ts * 1.36); ctx.restore(); }
-        // Star-sparkle twinkle above closed boxes — 4-arm cross + 4 diagonal corner dots
+        // Star-sparkle twinkle above closed boxes â€” 4-arm cross + 4 diagonal corner dots
         const gleamPhase = ((clock * 0.5 + box.x * 417 + box.y * 293) % 2800) / 2800;
         if (gleamPhase < 0.12) {
           const ga = Math.min(gleamPhase, 0.12 - gleamPhase) / 0.06;
@@ -1460,7 +1460,7 @@ export function createRenderer(canvas, opts = {}) {
     for (const f of b.flags ?? []) {
       if (f.taken && !standingFlags.has(key(f.x, f.y))) continue;
       const cap = f.color[0].toUpperCase() + f.color.slice(1);
-      // gentle two-axis sway — vertical bob + horizontal drift simulate wind
+      // gentle two-axis sway â€” vertical bob + horizontal drift simulate wind
       const sway = Math.sin(clock / 900 + f.x * 1.4 + f.y * 0.9) * 0.4;
       const swayH = Math.cos(clock / 700 + f.x * 1.1 + f.y * 1.3) * 0.25;
       const fp = worldToScreen(f.x, f.y, cam);
@@ -1492,7 +1492,7 @@ export function createRenderer(canvas, opts = {}) {
         ctx.fillRect(fesx, fesy, cam.scale, cam.scale); ctx.restore();
       }
     }
-    // Rescue NPC — glowing survivor marker (rescue missions only)
+    // Rescue NPC â€” glowing survivor marker (rescue missions only)
     if (b.rescue && !b.rescue.claimed) {
       const rp = worldToScreen(b.rescue.x, b.rescue.y, cam);
       const rs = TILE * cam.scale;
@@ -1513,7 +1513,7 @@ export function createRenderer(canvas, opts = {}) {
       // Dark shadow block behind figure for readability on any floor tile
       ctx.save(); ctx.globalAlpha = 0.45; ctx.fillStyle = '#001806';
       ctx.fillRect((rp.x + 1 * s) | 0, (rp.y + 0 * s) | 0, 5 * s, 12 * s); ctx.restore();
-      // Person silhouette: head (3×3 at 2,1), body (3×4 at 2,4), outstretched arms, legs
+      // Person silhouette: head (3Ã—3 at 2,1), body (3Ã—4 at 2,4), outstretched arms, legs
       ctx.save();
       ctx.fillStyle = '#e8f8ec';
       ctx.fillRect((rp.x + 2 * s) | 0, (rp.y + 1 * s) | 0, 3 * s, 3 * s); // head
@@ -1523,7 +1523,7 @@ export function createRenderer(canvas, opts = {}) {
       ctx.fillRect((rp.x + 2 * s) | 0, (rp.y + 8 * s) | 0, s, 3 * s);     // left leg
       ctx.fillRect((rp.x + 4 * s) | 0, (rp.y + 8 * s) | 0, s, 3 * s);     // right leg
       ctx.restore();
-      // "!" urgency label above the figure — flashes with the pulse
+      // "!" urgency label above the figure â€” flashes with the pulse
       ctx.save();
       ctx.font = `bold ${(3 * s) | 0}px Consolas, monospace`;
       ctx.textAlign = 'center';
@@ -1567,7 +1567,7 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillStyle = '#fff';
     ctx.fillRect(cx - s, cy - s, 2 * s, 2 * s);
     ctx.restore();
-    // 4 orbiting sentinel markers — slow mechanical rotation signals it's armed
+    // 4 orbiting sentinel markers â€” slow mechanical rotation signals it's armed
     const orbR = 5.2 * s;
     const orbAng = clock / 3200;
     for (let oi = 0; oi < 4; oi++) {
@@ -1578,7 +1578,7 @@ export function createRenderer(canvas, opts = {}) {
       ctx.fillRect(((cx + Math.cos(oa) * orbR) - s * 0.5) | 0, ((cy + Math.sin(oa) * orbR) - s * 0.5) | 0, s, s);
       ctx.restore();
     }
-    // Status icon in diamond center — shows what the trap does (revealed traps only)
+    // Status icon in diamond center â€” shows what the trap does (revealed traps only)
     const trapIcon = atlas[`status.${t.kind}`];
     if (trapIcon && s >= 2) {
       ctx.save();
@@ -1693,7 +1693,7 @@ export function createRenderer(canvas, opts = {}) {
         ctx.restore();
       }
     }
-    // Target carrier: pulsing gold tile border — visible from anywhere on the board
+    // Target carrier: pulsing gold tile border â€” visible from anywhere on the board
     if (k[0] === 'h' && u?.hasTarget) {
       const gp = 0.14 + 0.12 * Math.sin(clock / 500);
       const ts = TILE * s;
@@ -1702,7 +1702,7 @@ export function createRenderer(canvas, opts = {}) {
       ctx.strokeRect(p.x + s * 0.5, p.y + s * 0.5, ts - s, ts - s);
       ctx.restore();
     }
-    // Low-HP danger glow: pulsing red around tile edges at ≤25% HP
+    // Low-HP danger glow: pulsing red around tile edges at â‰¤25% HP
     if (u && u.maxHp && u.hp / u.maxHp <= 0.25) {
       const hpRatio = u.hp / u.maxHp;
       const urgency = 1 - hpRatio * 4; // 0 at 25%, 1 at 0HP
@@ -1769,7 +1769,7 @@ export function createRenderer(canvas, opts = {}) {
         }
         ix += 8 * s;
       }
-      // Ambient status particles — drawn clock-based, no sparkles array
+      // Ambient status particles â€” drawn clock-based, no sparkles array
       const scx = p.x + TILE * s / 2, scy = p.y + TILE * s * 0.4 - bobPx;
       if (u.status?.stun) {
         // Stun: 4 yellow stars orbiting above the unit's head
@@ -2001,14 +2001,14 @@ export function createRenderer(canvas, opts = {}) {
       const barY = labelY + 10;
       const ratio = m.maxHp ? clamp(m.hp / m.maxHp, 0, 1) : 0;
       const labelCol = MONSTER_LABEL_COLOR[m.kind] ?? '#ff8866';
-      // Kind label above HP bar — colored glow matches monster brand color
+      // Kind label above HP bar â€” colored glow matches monster brand color
       ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = labelCol;
       text(m.kind, cx, labelY, labelCol, 9, 'center');
       ctx.restore();
       // Dark backdrop behind HP bar
       ctx.save(); ctx.globalAlpha = 0.72; ctx.fillStyle = '#080a12';
       ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2); ctx.restore();
-      // Colored HP fill — WYRM gets purple, others red-orange (matches sidebar)
+      // Colored HP fill â€” WYRM gets purple, others red-orange (matches sidebar)
       const fill = Math.round(barW * ratio);
       if (fill > 0) {
         const isWyrm = m.kind === 'WYRM';
@@ -2054,7 +2054,7 @@ export function createRenderer(canvas, opts = {}) {
       list.push({ k, u: null, pos: g.pos, alpha: ghostAlpha });
     }
     list.sort((a, b) => (a.pos?.y ?? 0) - (b.pos?.y ?? 0));
-    // Soft team-color glow beneath each hunter — active hunter pulses brighter
+    // Soft team-color glow beneath each hunter â€” active hunter pulses brighter
     for (const d of list) {
       if (d.k[0] !== 'h' || !d.pos) continue;
       const hslot = d.u?.slot ?? 0;
@@ -2111,7 +2111,7 @@ export function createRenderer(canvas, opts = {}) {
       }
     }
     blit(`chip.${clamp(v, 1, 6) | 0}`, cx, cy, chipScale);
-    // Diagonal gloss — top-left specular highlight fading to transparent
+    // Diagonal gloss â€” top-left specular highlight fading to transparent
     { const cw = 8 * chipScale;
       const shineG = ctx.createLinearGradient(cx, cy, cx + cw * 0.62, cy + cw * 0.62);
       shineG.addColorStop(0, 'rgba(255,255,255,0.30)');
@@ -2202,7 +2202,7 @@ export function createRenderer(canvas, opts = {}) {
     const lp = ap
       ? worldToScreen(ap.x + 0.5, ap.y + 0.5, cam)
       : { x: canvas.width / 2, y: (canvas.height - HUD_H) / 2 };
-    // Slow breathing: outer radius ±2%, inner radius ±1.5% — gives a "living darkness" feel
+    // Slow breathing: outer radius Â±2%, inner radius Â±1.5% â€” gives a "living darkness" feel
     const fogBreathe = 0.02 * Math.sin(clock / 4500);
     const fr = Math.max(canvas.width, canvas.height) * (0.60 + fogBreathe);
     const innerR = fr * (0.15 + 0.015 * Math.sin(clock / 2900 + 1.1));
@@ -2579,7 +2579,7 @@ export function createRenderer(canvas, opts = {}) {
     { const vg = ctx.createRadialGradient(bx + bw / 2, by + bh / 2, 20, bx + bw / 2, by + bh / 2, bh * 0.85);
       vg.addColorStop(0, 'rgba(30,28,44,0.0)'); vg.addColorStop(1, 'rgba(0,0,0,0.45)');
       ctx.fillStyle = vg; ctx.fillRect(bx, by, bw, bh); }
-    // Team color backdrops — attacker left (red), defender right (cyan)
+    // Team color backdrops â€” attacker left (red), defender right (cyan)
     { const al = ctx.createRadialGradient(bx + 70, by + 90, 0, bx + 70, by + 90, 80);
       al.addColorStop(0, 'rgba(200,55,35,0.22)'); al.addColorStop(1, 'transparent');
       ctx.fillStyle = al; ctx.fillRect(bx, by, bw / 2, bh); }
@@ -2610,7 +2610,7 @@ export function createRenderer(canvas, opts = {}) {
     const defW = defImg ? defImg.width * 3 : 48;
     drawCombatant(battle.a, bx + 24, by + 28, false);
     drawCombatant(battle.d, bx + bw - 24 - defW, by + 28, true);
-    // Center divider — thin vertical line with gradient fade to top/bottom
+    // Center divider â€” thin vertical line with gradient fade to top/bottom
     { const dvx = (bx + bw / 2) | 0;
       const dvAlpha = 0.18 + 0.10 * Math.sin(clock / 900);
       const dvg = ctx.createLinearGradient(dvx, by + 18, dvx, by + bh - 8);
@@ -2715,7 +2715,7 @@ export function createRenderer(canvas, opts = {}) {
           // popP: 0 at dice-stop (anim 50%), 1 at anim 85%
           const popP = (anim?.ev.type === 'strikeRolled') ? Math.min(1, (anim.t / anim.dur - 0.5) / 0.35) : 1;
           const popScale = 1 + Math.sin(Math.max(0, popP) * Math.PI) * 0.40;
-          // Rolling counter: tick from 0 → damage during first half of pop phase,
+          // Rolling counter: tick from 0 â†’ damage during first half of pop phase,
           // so the number locks at full value exactly when the bounce-in peaks (popP=0.5).
           const showDmg = (anim?.ev.type === 'strikeRolled' && popP < 0.5)
             ? Math.max(1, Math.round(st.damage * (popP / 0.5)))
@@ -2740,7 +2740,7 @@ export function createRenderer(canvas, opts = {}) {
             cg.addColorStop(0.4, `rgba(220,160,20,${(fadeAlpha * 0.5).toFixed(2)})`);
             cg.addColorStop(1, 'transparent');
             ctx.save(); ctx.fillStyle = cg; ctx.fillRect(bx, by, bw, bh); ctx.restore();
-            // White rim flash — only during initial burst
+            // White rim flash â€” only during initial burst
             if (fadeAlpha > 0.2) {
               ctx.save(); ctx.globalAlpha = fadeAlpha * 0.35; ctx.fillStyle = '#fff';
               ctx.fillRect(bx, by, bw, bh); ctx.restore();
@@ -2776,7 +2776,7 @@ export function createRenderer(canvas, opts = {}) {
     ctx.fillRect(0, by, bw, 2);
     ctx.fillRect(0, by + 38, bw, 2);
     ctx.restore();
-    // drop-shadow + main text — scale pop on appear
+    // drop-shadow + main text â€” scale pop on appear
     const age = clock - (banner.startMs ?? clock);
     const popT = Math.min(age / 280, 1);
     const bscale = 1 + Math.sin(popT * Math.PI) * 0.18;
@@ -2881,7 +2881,7 @@ export function createRenderer(canvas, opts = {}) {
       drawCursor();
       ctx.restore();
       drawVignette();
-      // Heartbeat edge glow when any hunter is at critical HP (≤25%)
+      // Heartbeat edge glow when any hunter is at critical HP (â‰¤25%)
       if (state?.hunters) {
         for (const hh of state.hunters) {
           if (!(hh.hp > 0) || !hh.maxHp) continue;
