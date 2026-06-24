@@ -8,6 +8,7 @@
 // items, missions, board, combat, sprites, audio, save) are imported direct.
 
 import { interpolateInternal, RIVALS, rivalStats } from './engine/missions.js';
+import { makeRng } from './engine/rng.js';
 import { reachableTiles, occupiedSet } from './engine/board.js';
 import { buildAtlas } from './render/sprites.js';
 import { playMusic, stopMusic } from './audio/music.js';
@@ -58,7 +59,7 @@ function archetypeInternal(name, level) {
 }
 
 // Build a §3.1-shaped hunter entry for createGame's config (§1.1).
-function aiHunterConfig(opponent, slot, level, used) {
+function aiHunterConfig(opponent, slot, level, used, rng) {
   let name, archetype, internal;
   if (opponent === 'keld' || opponent === 'mira') {
     name = RIVALS[opponent].name.toUpperCase();
@@ -67,19 +68,19 @@ function aiHunterConfig(opponent, slot, level, used) {
   } else if (opponent === 'RAVEN') {
     name = `RAVEN-${slot}`;
     archetype = 'RAVEN'; // always behaves Panicked (§2.15)
-    internal = archetypeInternal(ARCHETYPE_NAMES[Math.floor(Math.random() * ARCHETYPE_NAMES.length)], level);
+    internal = archetypeInternal(ARCHETYPE_NAMES[rng.int(ARCHETYPE_NAMES.length)], level);
   } else {
     archetype = ARCHETYPES[opponent] ? opponent : 'Normal';
     internal = archetypeInternal(archetype, level);
     const pool = AI_NAMES.filter((n) => !used.has(n));
-    name = pool[Math.floor(Math.random() * pool.length)] ?? `CPU-${slot}`;
+    name = pool[rng.int(pool.length)] ?? `CPU-${slot}`;
     used.add(name);
   }
   return {
     id: `ai-${slot}`,
     slot,
     name,
-    spriteId: Math.floor(Math.random() * 8),
+    spriteId: rng.int(8),
     palette: SLOT_PALETTES[slot],
     human: false,
     archetype,
@@ -96,13 +97,17 @@ function aiHunterConfig(opponent, slot, level, used) {
 function buildMissionConfig(mission, recs, mode) {
   const used = new Set();
   const level = mode === 'story' ? mission.level : recs[0].level;
+  // Generate the game seed first so all subsequent setup (opponent names, sprites,
+  // archetypes) derives from it — same seed → identical game every time.
+  const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
+  const setupRng = makeRng(seed);
   let opponents = mission.opponents;
   const aiCount = Math.max(0, 4 - recs.length);
   if (!opponents || !opponents.length) { // normal free-play: random AI fill
-    opponents = Array.from({ length: aiCount }, () => ARCHETYPE_NAMES[Math.floor(Math.random() * ARCHETYPE_NAMES.length)]);
+    opponents = Array.from({ length: aiCount }, () => ARCHETYPE_NAMES[setupRng.int(ARCHETYPE_NAMES.length)]);
   }
   return {
-    seed: (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0,
+    seed,
     mode,
     mission,
     hunters: [
@@ -119,7 +124,7 @@ function buildMissionConfig(mission, recs, mode) {
         maxHp: rec.maxHp, // hospital damage persists (§2.8)
         items: rec.items.map((s) => ({ ...s })),
       })),
-      ...opponents.slice(0, aiCount).map((o, i) => aiHunterConfig(o, recs.length + i, level, used)),
+      ...opponents.slice(0, aiCount).map((o, i) => aiHunterConfig(o, recs.length + i, level, used, setupRng)),
     ],
   };
 }

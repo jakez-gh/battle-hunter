@@ -73,6 +73,25 @@ const FOUR_HUNTERS = [
 ];
 
 // ---------------------------------------------------------------------------
+// 0. Seed-replay determinism (Phase-0 acceptance gate)
+
+test('engine replay: same seed+config produces identical event sequence', () => {
+  const config = {
+    seed: 7, mode: 'normal',
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  };
+  const run1 = runGame(config, 5000);
+  const run2 = runGame(config, 5000);
+  assert.equal(run1.steps, run2.steps, 'step count must match');
+  assert.equal(run1.state.phase, run2.state.phase, 'terminal phase must match');
+  assert.deepEqual(
+    run1.events.map((e) => e.type),
+    run2.events.map((e) => e.type),
+    'event type sequence must be identical',
+  );
+});
+
+// ---------------------------------------------------------------------------
 // 1. Game Termination
 
 test('normal 2-hunter game terminates within 3000 steps', () => {

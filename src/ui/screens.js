@@ -1919,7 +1919,7 @@ export function makeGameScreen(app, g) {
 
   return {
     enter() {
-      g.songBase = Math.random() < 0.5 ? 'dungeon1' : 'dungeon2';
+      g.songBase = ((g.state.seed ^ (g.state.seed >>> 7)) & 1) ? 'dungeon2' : 'dungeon1';
       app.music(g.songBase);
       fadeIn = 0;
     },
