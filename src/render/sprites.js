@@ -540,6 +540,25 @@ const WALL_G = [ // cracked stone — a jagged fissure cuts diagonally through t
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_H = [ // pillar-panel — slim stone columns flank a deep recessed centre
+  'XXXXXXXXXXXXXXXX',
+  'XcGXdddddddddXgX',
+  'XGGXdddddddddXGX',
+  'XGGXdddddddddXGX',
+  'XGGXdddddddddXGX',
+  'XgGXdddddddddXgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGXdddddddddXgX',
+  'XGGXdddddddddXGX',
+  'XGGXdddddddddXGX',
+  'XgGXdddddddddXgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_B = [ // stone-block face — three narrow sub-blocks in lower band
   'XXXXXXXXXXXXXXXX',  // ceiling cap
   'XcGGGGGGGGGGGGgX',  // upper block, lit corner
@@ -736,6 +755,7 @@ export const TILES = {
   wallE: { grid: WALL_E, palette: TILE_PALETTE },
   wallF: { grid: WALL_F, palette: TILE_PALETTE },
   wallG: { grid: WALL_G, palette: TILE_PALETTE },
+  wallH: { grid: WALL_H, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },

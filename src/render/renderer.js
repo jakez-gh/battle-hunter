@@ -1046,8 +1046,8 @@ export function createRenderer(canvas, opts = {}) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
           // Show stone wall face where the wall borders a walkable floor below it.
-          const wallV = ((x * 2341 + y * 1013) ^ 571) % 7;
-          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : 'tile.wallG';
+          const wallV = ((x * 2341 + y * 1013) ^ 571) % 8;
+          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : 'tile.wallH';
           blitTile(b.floor[y + 1]?.[x] ? wallTile : 'tile.pit', x, y);
           // Moisture drip: ~8% of visible wall faces get an animated droplet
           if (b.floor[y + 1]?.[x]) {
@@ -1714,6 +1714,14 @@ export function createRenderer(canvas, opts = {}) {
       ctx.strokeRect(p.x + s * 0.4, p.y + s * 0.4, ts - s * 0.8, ts - s * 0.8);
       ctx.restore();
     }
+    // Ground shadow: squashed ellipse anchored to floor, giving units visual weight
+    { const shcx = dx + w / 2, shcy = p.y + TILE * s - s * 0.5;
+      ctx.save(); ctx.globalAlpha = alpha * 0.38;
+      ctx.translate(shcx, shcy); ctx.scale(1, 0.30);
+      const shg = ctx.createRadialGradient(0, 0, 0, 0, 0, 5 * s);
+      shg.addColorStop(0, 'rgba(0,0,0,0.75)'); shg.addColorStop(1, 'transparent');
+      ctx.fillStyle = shg; ctx.fillRect(-6 * s, -6 * s, 12 * s, 12 * s);
+      ctx.restore(); }
     ctx.save();
     ctx.globalAlpha = alpha;
     if (facing.get(k) === -1) {
