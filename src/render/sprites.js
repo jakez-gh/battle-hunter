@@ -1072,6 +1072,44 @@ const FLOOR_X = [ // cobblestone joints — organic d marks suggest irregular st
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_Y = [ // herringbone — diagonal brick pairs alternate direction every course
+  'GGGGGGGGGGGGGGgG',
+  'GgGGGGGGGGGGGGGG',
+  'dGGGGGdGGGGGdGGG',
+  'GdGGGGGdGGGGGdGG',
+  'GGdGGGGGdGGGGGdG',
+  'GGGdGGGGGdGGGGGd',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGGdGGGGGdGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGdGGGGGdGGGGGd',
+  'GGdGGGGGdGGGGGdG',
+  'GdGGGGGdGGGGGdGG',
+  'dGGGGGdGGGGGdGGG',
+  'GGGGGGGGGGGGGGgG',
+  'GGGGGGGGGGGGGgGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const FLOOR_Z = [ // wide slab — horizontal coursed stone with thick mortar lines
+  'GGGGGGGGGGGGGGgG',
+  'GgGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGdG',
+  'dddddddddddddddd',
+  'GGGGGGGGGGGGGGgG',
+  'GgGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGgG',
+  'dddddddddddddddd',
+  'GgGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGgG',
+  'GGGGGGGGGGGGGGdG',
+  'GgGGGGGGGGGGGGGG',
+  'dddddddddddddddd',
+  'GGGGGGGGGGGGGgGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const FLOOR_W = [ // running bond — brick rows with half-offset vertical mortar joints
   'GGGGGGGGGGGGGGgG',
   'GgGGGGGGGGGGGGGG',
@@ -1173,6 +1211,8 @@ export const TILES = {
   floorV: { grid: FLOOR_V, palette: TILE_PALETTE },
   floorW: { grid: FLOOR_W, palette: TILE_PALETTE },
   floorX: { grid: FLOOR_X, palette: TILE_PALETTE },
+  floorY: { grid: FLOOR_Y, palette: TILE_PALETTE },
+  floorZ: { grid: FLOOR_Z, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
