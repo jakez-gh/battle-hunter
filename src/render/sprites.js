@@ -359,8 +359,24 @@ const FLOOR_H = [ // plus-cross groove: orthogonal cross (vertical + horizontal)
   'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
   'GGGGGGGGGGGGGgGG', 'GGGGGGGGGGGGGGGG',
 ];
-const PIT = Array.from({ length: 16 }, (_, y) =>
-  y === 0 ? 'XXXdXXXXXXXdXXXX' : 'X'.repeat(16));
+const PIT = [
+  'ddXXXXXXXXXXXXdd',  // lighter shadow rim
+  'dXXXXXXXXXXXXXXd',
+  'XOOOOOOOOOOOOOOX',  // deep void interior
+  'XOOOOOOOOOOOOOOX',
+  'XOOOOOOOOOOOOOOX',
+  'XOOOdOOOOOOdOOOX',  // faint crack suggestion
+  'XOOOOOOOOOOOOOOX',
+  'XOOOOOOOOOOOOOOX',
+  'XOOOOOOOOOOOOOOX',
+  'XOOOOOOOOOOOOOOX',
+  'XOOdOOOOOOOOdOOX',  // second crack band
+  'XOOOOOOOOOOOOOOX',
+  'XOOOOOOOOOOOOOOX',
+  'XOOOOOOOOOOOOOOX',
+  'XOOOOOOOOOOOOOOX',
+  'XXXXXXXXXXXXXXXX',  // bottom edge
+];
 const EXIT = [
   'GGGGGGGGGGGGGGGG', 'GOOOOOOOOOOOOOOG', 'GOeeeeeeeeeeeeOG', 'GOeEEEEEEEEEEeOG',
   'GOeEeeeeeeeeEeOG', 'GOeEeEEEEEEeEeOG', 'GOeEeEeeeeEeEeOG', 'GOeEeEeWWeEeEeOG',
