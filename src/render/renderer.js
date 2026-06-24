@@ -1278,6 +1278,28 @@ export function createRenderer(canvas, opts = {}) {
             lsg.addColorStop(0, 'rgba(0,0,0,0.45)'); lsg.addColorStop(1, 'transparent');
             ctx.fillStyle = lsg; ctx.fillRect(fp.x, fp.y, vd, ts);
           }
+          // Section seam groove: faint darkening where the four 10×10 quadrants meet
+          const sgw = 5 * cam.scale;
+          if (x === 9 && b.floor[y]?.[x + 1]) {
+            const sg = ctx.createLinearGradient(fp.x + ts - sgw, 0, fp.x + ts, 0);
+            sg.addColorStop(0, 'transparent'); sg.addColorStop(1, 'rgba(0,0,0,0.28)');
+            ctx.fillStyle = sg; ctx.fillRect(fp.x + ts - sgw, fp.y, sgw, ts);
+          }
+          if (x === 10 && b.floor[y]?.[x - 1]) {
+            const sg = ctx.createLinearGradient(fp.x, 0, fp.x + sgw, 0);
+            sg.addColorStop(0, 'rgba(0,0,0,0.28)'); sg.addColorStop(1, 'transparent');
+            ctx.fillStyle = sg; ctx.fillRect(fp.x, fp.y, sgw, ts);
+          }
+          if (y === 9 && b.floor[y + 1]?.[x]) {
+            const sg = ctx.createLinearGradient(0, fp.y + ts - sgw, 0, fp.y + ts);
+            sg.addColorStop(0, 'transparent'); sg.addColorStop(1, 'rgba(0,0,0,0.28)');
+            ctx.fillStyle = sg; ctx.fillRect(fp.x, fp.y + ts - sgw, ts, sgw);
+          }
+          if (y === 10 && b.floor[y - 1]?.[x]) {
+            const sg = ctx.createLinearGradient(0, fp.y, 0, fp.y + sgw);
+            sg.addColorStop(0, 'rgba(0,0,0,0.28)'); sg.addColorStop(1, 'transparent');
+            ctx.fillStyle = sg; ctx.fillRect(fp.x, fp.y, ts, sgw);
+          }
         }
       }
     }
