@@ -1348,6 +1348,35 @@ export function createRenderer(canvas, opts = {}) {
             }
             ctx.restore();
           }
+          // Cobweb: floor tiles in concave wall corners get faint grey diagonal strands
+          { const wallL = !b.floor[y]?.[x - 1], wallR = !b.floor[y]?.[x + 1];
+            const wallT = !b.floor[y - 1]?.[x];
+            const wallTL = !b.floor[y - 1]?.[x - 1], wallTR = !b.floor[y - 1]?.[x + 1];
+            const cs = cam.scale;
+            if (wallL && wallTL) {
+              const wh = ((x * 4231 + y * 3079) ^ 2503) & 0xFF;
+              if (wh < 90) {
+                ctx.save(); ctx.globalAlpha = 0.08 + (wh & 0xF) * 0.004;
+                ctx.strokeStyle = '#9090a8'; ctx.lineWidth = 0.7;
+                ctx.beginPath();
+                ctx.moveTo(fp.x, fp.y); ctx.lineTo(fp.x + cs * 4, fp.y + cs * 4);
+                ctx.moveTo(fp.x, fp.y + cs); ctx.lineTo(fp.x + cs * 3, fp.y + cs * 4);
+                ctx.moveTo(fp.x + cs, fp.y); ctx.lineTo(fp.x + cs * 4, fp.y + cs * 3);
+                ctx.stroke(); ctx.restore();
+              }
+            }
+            if (wallR && wallTR) {
+              const wh = ((x * 3947 + y * 4421) ^ 2917) & 0xFF;
+              if (wh < 90) {
+                ctx.save(); ctx.globalAlpha = 0.08 + (wh & 0xF) * 0.004;
+                ctx.strokeStyle = '#9090a8'; ctx.lineWidth = 0.7;
+                ctx.beginPath();
+                ctx.moveTo(fp.x + ts, fp.y); ctx.lineTo(fp.x + ts - cs * 4, fp.y + cs * 4);
+                ctx.moveTo(fp.x + ts, fp.y + cs); ctx.lineTo(fp.x + ts - cs * 3, fp.y + cs * 4);
+                ctx.moveTo(fp.x + ts - cs, fp.y); ctx.lineTo(fp.x + ts - cs * 4, fp.y + cs * 3);
+                ctx.stroke(); ctx.restore();
+              }
+            } }
           // Glowing mushroom: ~3% of floor tiles get a tiny bioluminescent speck
           { const gmh = ((x * 4603 + y * 1193) ^ 2819) & 0xFFFF;
             if ((gmh & 0xFF) < 8) {
