@@ -147,12 +147,16 @@ it cheap). Quick wins first — every one lifts the floor of *every* mode.
   step (no die re-roll); snapshot-based, relies on engine purity (new game.test
   invariant). Antidote to "died to a hidden trap I couldn't see." Commit: `1ac3d2b`
 
+- [x] **Crush AI dead-air** — renderer now compresses event playback during AI
+  turns by `aiSpeed` (new pure `eventDuration(type, scale)`): trivial locomotion
+  (steps/dice/draws/monster shuffles) flies by while decisive events (battles,
+  steals, status, target/flag, boss spawns) compress at most 3× so the drama
+  still reads. Human turns + results stay full-speed. Plus an always-visible
+  `[ / ]` AI-speed hint (the keys were undiscoverable). `setTimeScale` on the
+  renderer, threaded via `adapt.rendererDraw`. (this commit)
+
 ### Quick wins pending (days-to-weeks, low-regret — see analysis)
 
-- [~] **Crush AI dead-air** — `aiSpeed` exists (default 8) but the per-substep
-  gate is uniform. Make non-decisive substeps (plain walk/draw/rest) near-instant
-  (~50–80ms); keep full ceremony only for battles / target-found / flag-6 /
-  WYRM-spawn. Surface the speed control (keys `[`/`]` are undiscoverable).
 - [ ] **Dice fairness without removing dice** — pre-attack advantage readout
   (stat delta), one **Fortune reroll token** per hunter per mission, post-battle
   math summary. Story/display-only fudging is OK; never touch Normal/seeded RNG.

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createRenderer, EVENT_DURATIONS, worldToScreen, screenToWorld, TILE, HUD_H,
+  createRenderer, EVENT_DURATIONS, eventDuration, worldToScreen, screenToWorld, TILE, HUD_H,
 } from '../src/render/renderer.js';
 
 // Hardcoded from DESIGN.md 3.3 — the full renderer/audio event contract.
@@ -15,6 +15,34 @@ const EVENT_TYPES = [
   'wyrmRespawned', 'healed', 'actAgain', 'missionWon', 'missionLost',
   'scoreTallied',
 ];
+
+// eventDuration: fast-AI playback compression (kills dead-air, keeps drama).
+test('eventDuration: timeScale <= 1 is full ceremony', () => {
+  for (const t of EVENT_TYPES) {
+    assert.equal(eventDuration(t, 1), EVENT_DURATIONS[t]);
+    assert.equal(eventDuration(t, 0.5), EVENT_DURATIONS[t]);
+    assert.equal(eventDuration(t), EVENT_DURATIONS[t]); // default scale = 1
+  }
+});
+
+test('eventDuration: trivial events compress fully, decisive ones only gently', () => {
+  // Trivial locomotion compresses by the full factor.
+  assert.equal(eventDuration('stepped', 8), Math.max(16, EVENT_DURATIONS.stepped / 8));
+  assert.equal(eventDuration('monsterMoved', 4), EVENT_DURATIONS.monsterMoved / 4);
+
+  // Decisive drama compresses at most 3x, no matter how high the scale.
+  for (const t of ['strikeRolled', 'hunterDefeated', 'wyrmSpawned', 'targetFound', 'flagClaimed']) {
+    assert.equal(eventDuration(t, 8), EVENT_DURATIONS[t] / 3, `${t} should cap at 3x`);
+    assert.equal(eventDuration(t, 64), EVENT_DURATIONS[t] / 3, `${t} should cap at 3x`);
+  }
+
+  // A decisive event is always given more on-screen time than a trivial one at
+  // the same high scale (the drama still reads).
+  assert.ok(eventDuration('strikeRolled', 8) > eventDuration('stepped', 8));
+
+  // Never shorter than ~one frame.
+  assert.ok(eventDuration('stepped', 1000) >= 16);
+});
 
 test('module imports without a DOM and exports its API', () => {
   assert.equal(typeof createRenderer, 'function');

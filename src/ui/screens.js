@@ -1676,6 +1676,16 @@ export function makeOptionsScreen(app) {
 
 const DIR_BY_KEY = { up: 'N', down: 'S', left: 'W', right: 'E' };
 const TIMING = { period: 0.9, window: 0.08, timeout: 2.7 };
+// Events that deserve full ceremony (battle, surprise, milestone). Everything
+// else (walk, draw, die-roll, rest) gets near-instant delay to crush dead-air.
+const DECISIVE_EVENTS = new Set([
+  'battleStarted', 'responseChosen', 'strikeRolled', 'escapeRolled',
+  'critNegated', 'statusInflicted', 'surrendered', 'hunterDefeated', 'monsterKilled',
+  'targetFound', 'flagClaimed',
+  'wyrmSpawned', 'wyrmRespawned',
+  'trapTriggered', 'monsterSpawned', 'exitWarpedAway',
+  'missionWon', 'missionLost',
+]);
 
 export function makeGameScreen(app, g) {
   // g: { state, renderer, mission, outcome:{} } built by app.startMission
@@ -1687,6 +1697,7 @@ export function makeGameScreen(app, g) {
   let timing = null;       // { t } while a react.* minigame runs
   let aiSpeed = app.options().aiSpeed ?? 8;
   let aiDelay = 0.2 / aiSpeed;
+  let lastEvents = [];
   let infoIndex = 0;
   let banner = null;       // { text, t }
   let inBattleMusic = false;
@@ -2050,7 +2061,11 @@ export function makeGameScreen(app, g) {
       // Steering: show how far this move can still reach + the path walked so
       // far (the renderer's range/path overlays). Cleared in every other phase.
       if (steering) A.steerOverlay(g.renderer, st); else A.clearOverlays(g.renderer);
-      A.rendererDraw(g.renderer, st, frameDt);
+      // Fast-forward trivial AI animation (walks/dice/draws) by aiSpeed while it
+      // is not a human's decision; battles/steals/boss spawns stay readable, and
+      // the player's own turns + the results sequence always play at full speed.
+      const turbo = (!A.isHumanTurn(st) && !st.result) ? aiSpeed : 1;
+      A.rendererDraw(g.renderer, st, frameDt, turbo);
       // Soft vertical shadow at dungeon/HUD boundary (x=720)
       { const sg = ctx.createLinearGradient(706, 0, 724, 0);
         sg.addColorStop(0, 'transparent'); sg.addColorStop(1, 'rgba(0,0,0,0.55)');
@@ -2091,6 +2106,13 @@ export function makeGameScreen(app, g) {
         ctx.restore();
       }
       if (A.rendererBusy(g.renderer)) text(ctx, 'any key: skip', 712, 700, { size: 11, align: 'right', color: DIM });
+      // Always-visible AI-speed control hint (the [ ] keys are otherwise hidden);
+      // brightens while the AI is acting, which is when it actually matters.
+      {
+        const aiActing = !A.isHumanTurn(st) && !st.result;
+        text(ctx, `[ / ] AI speed ${aiSpeed}×`, 8, 700,
+          { size: 11, align: 'left', color: aiActing ? '#7e9fee' : DIM });
+      }
       // Entry fade-in from black (0.75s)
       if (fadeIn < 0.75) {
         ctx.save(); ctx.globalAlpha = Math.max(0, 1 - fadeIn / 0.75);

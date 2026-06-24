@@ -188,9 +188,10 @@ const adapt = {
   rendererSkip(r) {
     try { r?.skip?.(); } catch { /* optional */ }
   },
-  rendererDraw(r, state, dt) {
+  rendererDraw(r, state, dt, timeScale = 1) {
     if (r) {
       try {
+        r.setTimeScale?.(timeScale); // >1 compresses non-decisive event playback (fast AI)
         r.update(dt * 1000); // renderer clocks in ms
         r.draw();
         return;

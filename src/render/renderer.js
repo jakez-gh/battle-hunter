@@ -47,6 +47,29 @@ export const EVENT_DURATIONS = {
   scoreTallied: 400,
 };
 
+// Events that carry stakes/drama. During fast-AI playback (timeScale > 1) these
+// are only mildly compressed so battles, steals, status hits and boss spawns
+// stay readable, while trivial locomotion (steps, dice, draws, monster shuffles)
+// flies by — killing the "watch the AI crawl" dead-air without hiding the drama.
+const DECISIVE_EVENTS = new Set([
+  'battleStarted', 'responseChosen', 'escapeRolled', 'strikeRolled',
+  'statusInflicted', 'critNegated', 'hunterDefeated', 'itemTaken', 'surrendered',
+  'targetFound', 'flagClaimed', 'monsterSpawned', 'monsterKilled',
+  'wyrmSpawned', 'wyrmRespawned', 'missionWon', 'missionLost',
+]);
+const MAX_DECISIVE_SPEEDUP = 3; // decisive events compress at most this much
+const MIN_EVENT_MS = 16;        // never shorter than ~one frame
+
+// Effective on-screen time for an event at a given playback scale. timeScale<=1
+// is full ceremony; >1 compresses trivial events fully (÷timeScale) and decisive
+// ones gently (capped) so AI dead-air vanishes without hiding the drama. Pure.
+export function eventDuration(type, timeScale = 1) {
+  const base = EVENT_DURATIONS[type] ?? 200;
+  if (!(timeScale > 1)) return base;
+  const sc = DECISIVE_EVENTS.has(type) ? Math.min(timeScale, MAX_DECISIVE_SPEEDUP) : timeScale;
+  return Math.max(MIN_EVENT_MS, base / sc);
+}
+
 // --- Pure projection (camera = { x, y } world px top-left + integer scale) --
 export function worldToScreen(tx, ty, cam) {
   return {
@@ -116,6 +139,7 @@ export function createRenderer(canvas, opts = {}) {
 
   let overlays = { range: null, path: null };
   let cursor = null;
+  let timeScale = 1;                   // >1 compresses event playback (fast AI)
   let floats = [];                     // {text,color,icon,wx,wy,t,ttl,big}
   let sparkles = [];                   // {wx,wy,vx,vy,t,ttl,color[,round,alpha0]}
   let smokeSeed = 0;                   // timer for torch-smoke emission
@@ -2635,7 +2659,7 @@ export function createRenderer(canvas, opts = {}) {
         if (!anim) {
           if (!queue.length) break;
           const ev = queue.shift();
-          anim = { ev, t: 0, dur: EVENT_DURATIONS[ev.type] ?? 200 };
+          anim = { ev, t: 0, dur: eventDuration(ev.type, timeScale) };
           startEvent(ev);
         }
         const step = Math.min(rem, anim.dur - anim.t);
@@ -2787,6 +2811,10 @@ export function createRenderer(canvas, opts = {}) {
 
     setCursor(pos) {
       cursor = pos ?? null;
+    },
+
+    setTimeScale(s) {
+      timeScale = typeof s === 'number' && s > 0 ? s : 1;
     },
 
     showRange(cells) {
