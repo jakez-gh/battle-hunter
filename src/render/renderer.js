@@ -1046,8 +1046,8 @@ export function createRenderer(canvas, opts = {}) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
           // Show stone wall face where the wall borders a walkable floor below it.
-          const wallV = ((x * 2341 + y * 1013) ^ 571) % 18;
-          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : wallV === 8 ? 'tile.wallI' : wallV === 9 ? 'tile.wallJ' : wallV === 10 ? 'tile.wallK' : wallV === 11 ? 'tile.wallL' : wallV === 12 ? 'tile.wallM' : wallV === 13 ? 'tile.wallN' : wallV === 14 ? 'tile.wallO' : wallV === 15 ? 'tile.wallP' : wallV === 16 ? 'tile.wallQ' : 'tile.wallR';
+          const wallV = ((x * 2341 + y * 1013) ^ 571) % 20;
+          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : wallV === 8 ? 'tile.wallI' : wallV === 9 ? 'tile.wallJ' : wallV === 10 ? 'tile.wallK' : wallV === 11 ? 'tile.wallL' : wallV === 12 ? 'tile.wallM' : wallV === 13 ? 'tile.wallN' : wallV === 14 ? 'tile.wallO' : wallV === 15 ? 'tile.wallP' : wallV === 16 ? 'tile.wallQ' : wallV === 17 ? 'tile.wallR' : wallV === 18 ? 'tile.wallS' : 'tile.wallT';
           blitTile(b.floor[y + 1]?.[x] ? wallTile : 'tile.pit', x, y);
           // Section tint on wall faces (matches quadrant identity from floor tint)
           if (b.floor[y + 1]?.[x]) {

@@ -559,6 +559,44 @@ const WALL_P = [ // toothed cornice — crenelated top course with notched parap
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_T = [ // engaged column — central pilaster shaft with capital and base bands
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGdddGGGGGX',
+  'XGGGGGGdddGGGGGX',
+  'XGGGGGGGdGGGGGGX',
+  'XGGGGGGGdGGGGGGX',
+  'XGGGGGGGdGGGGGGX',
+  'XgGGGGGGdGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGdGGGGgX',
+  'XGGGGGGGGdGGGGGX',
+  'XGGGGGGdddGGGGGX',
+  'XGgGGGGdddGGGggX',
+  'XXXXXXXXXXXXXXXX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const WALL_S = [ // vermiculated — scattered worm-track pits across two-course block faces
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGdGGGGGGGdGGGX',
+  'XGGGGdGGGGGGGdGX',
+  'XGdGGGGdGGGGGGGX',
+  'XGGGGGGGGdGGdGGX',
+  'XgGdGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGdGGGGGGGgX',
+  'XGGGGGGGGdGGdGGX',
+  'XGGdGGGGGGGGGGGX',
+  'XGGGGGGdGGGGdGGX',
+  'XgGGGGGGGdGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_R = [ // dado wall — dado rail divides blank upper zone from panelled lower zone
   'XXXXXXXXXXXXXXXX',
   'XcGGGGGGGGGGGGgX',
@@ -1116,6 +1154,8 @@ export const TILES = {
   wallP: { grid: WALL_P, palette: TILE_PALETTE },
   wallQ: { grid: WALL_Q, palette: TILE_PALETTE },
   wallR: { grid: WALL_R, palette: TILE_PALETTE },
+  wallS: { grid: WALL_S, palette: TILE_PALETTE },
+  wallT: { grid: WALL_T, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
