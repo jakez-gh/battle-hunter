@@ -15,7 +15,8 @@ import { STORY_MISSIONS, makeNormalMission, applyResults, displayStats, LEVEL_UP
 import { PALETTE_NAMES, HUNTERS as HUNTER_SPRITES } from '../render/sprites.js';
 import { setVolumes } from '../audio/synth.js';
 import { sfx } from '../audio/sfx.js';
-import { makeHunterRecord, exportSave, importSave, loadRoster } from '../save.js';
+import { makeHunterRecord, exportSave, importSave, loadRoster,
+         loadRelicDiveBest, saveRelicDiveBest, todayDateKey, dateToSeed, buildShareString } from '../save.js';
 
 // ---------------------------------------------------------------------------
 // Screen stack
@@ -1002,6 +1003,8 @@ export function makeHubScreen(app) {
   ];
   let idx = 0;
   let t = 0;
+  const DIVE_BTN = { x: 120, y: 520, w: 200, h: 36 };
+  const DAILY_BTN = { x: 340, y: 520, w: 200, h: 36 };
   const open = (id) => {
     sfx.menuConfirm();
     if (id === 'office') app.stack.push(makeRosterScreen(app, { manage: true }));
@@ -1009,16 +1012,23 @@ export function makeHubScreen(app) {
     else if (id === 'hospital') app.stack.push(makeHospitalScreen(app));
     else app.stack.push(makeOptionsScreen(app));
   };
+  const openRelicDive = (daily) => {
+    if (!currentHunter(app)) return;
+    sfx.menuConfirm();
+    app.stack.push(makeRelicDiveScreen(app, { daily }));
+  };
   const iconRect = (i) => ({ x: 120 + i * 190, y: 160, w: 150, h: 130 });
   return {
     enter() { app.music('hub'); },
     resume() { app.music('hub'); },
     update(dt) { t += dt; },
-    onKey(k) {
+    onKey(k, e) {
       if (k === 'left') { idx = (idx + ICONS.length - 1) % ICONS.length; sfx.menuMove(); }
       else if (k === 'right') { idx = (idx + 1) % ICONS.length; sfx.menuMove(); }
       else if (k === 'confirm') open(ICONS[idx].id);
       else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); } // back to title
+      else if (e?.code === 'KeyD') openRelicDive(false);
+      else if (e?.code === 'KeyH') openRelicDive(true);
     },
     onClick(pos) {
       for (let i = 0; i < ICONS.length; i++) {
@@ -1028,6 +1038,8 @@ export function makeHubScreen(app) {
           return;
         }
       }
+      if (inRect(pos, DIVE_BTN)) { openRelicDive(false); return; }
+      if (inRect(pos, DAILY_BTN)) { openRelicDive(true); return; }
     },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
@@ -1148,8 +1160,27 @@ export function makeHubScreen(app) {
           }
         } else {
           ctx.save(); ctx.shadowBlur = 7; ctx.shadowColor = OK;
-          text(ctx, 'NORMAL free-play', 120, 500, { size: 15, color: OK, shadow: false });
+          text(ctx, 'NORMAL free-play', 120, 505, { size: 13, color: OK, shadow: false });
           ctx.restore();
+          // Relic Dive + Daily Hunt entry buttons
+          const diveBest = loadRelicDiveBest();
+          const todayKey = todayDateKey();
+          const dailyPlayed = diveBest.daily?.dateKey === todayKey;
+          for (const [btn, label, daily] of [[DIVE_BTN, '[ D ] RELIC DIVE', false], [DAILY_BTN, '[ H ] DAILY HUNT', true]]) {
+            const isDailyDisabled = daily && dailyPlayed;
+            const col = isDailyDisabled ? DIM : (daily ? '#3aacc8' : '#9060d8');
+            box(ctx, btn.x, btn.y, btn.w, btn.h, { stroke: isDailyDisabled ? '#2a2a3c' : col + '88' });
+            if (!isDailyDisabled) {
+              ctx.save(); ctx.globalAlpha = 0.09 + 0.05 * Math.sin(t * 1.8);
+              ctx.fillStyle = col; ctx.fillRect(btn.x + 1, btn.y + 1, btn.w - 2, btn.h - 2);
+              ctx.restore();
+            }
+            text(ctx, label + (isDailyDisabled ? ' (played)' : ''), btn.x + btn.w / 2, btn.y + 13, { size: 13, align: 'center', color: col });
+          }
+          if (diveBest.best) {
+            text(ctx, `Best: ${diveBest.best.score} pts  Depth ${diveBest.best.depths}  Streak ${diveBest.streak}`,
+              120, 568, { size: 12, color: DIM });
+          }
         }
         drawItemList(ctx, rec.items, 640, 412, t);
       } else {
@@ -1158,6 +1189,138 @@ export function makeHubScreen(app) {
         ctx.restore();
       }
       text(ctx, 'Esc: back to title', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// RELIC DIVE — entry screen (mode select + best/daily info) for Phase 1 run mode.
+
+export function makeRelicDiveScreen(app, opts = {}) {
+  const daily = !!opts.daily;
+  let best = loadRelicDiveBest();
+  const todayKey = todayDateKey();
+  const dailyAlreadyPlayed = best.daily?.dateKey === todayKey;
+
+  // If requested daily but already played today, fall back to normal dive
+  const mode = (daily && dailyAlreadyPlayed) ? 'dive' : (daily ? 'daily' : 'dive');
+  let t = 0;
+
+  function startRun() {
+    const rec = currentHunter(app);
+    if (!rec) return;
+    if (mode === 'daily' && dailyAlreadyPlayed) return;
+    const rootSeed = mode === 'daily'
+      ? dateToSeed(todayKey)
+      : ((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
+    const runState = {
+      rootSeed,
+      depth: 1,
+      startRelicLevel: Math.max(1, Math.min(15, rec.level)),
+      daily: mode === 'daily',
+      dateKey: mode === 'daily' ? todayKey : null,
+      depthResults: [],
+    };
+    // Track daily streak: increment only when starting a new daily
+    if (mode === 'daily') {
+      best = loadRelicDiveBest();
+      const yesterday = (() => {
+        const d = new Date(); d.setUTCDate(d.getUTCDate() - 1);
+        return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      })();
+      const streakYesterday = best.daily?.dateKey === yesterday;
+      best.streak = streakYesterday ? (best.streak ?? 0) + 1 : 1;
+      saveRelicDiveBest(best);
+    }
+    app.session.mode = 'relic-dive';
+    app.startRelicDiveDepth(runState);
+  }
+
+  return {
+    enter() { app.music('hub'); },
+    update(dt) { t += dt; },
+    onKey(k) {
+      if (k === 'confirm') startRun();
+      else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); }
+    },
+    onClick(pos) {
+      if (pos.y > 580 && pos.y < 620) startRun();
+      else if (pos.y > 640) { sfx.menuCancel(); app.stack.pop(); }
+    },
+    draw(ctx) {
+      drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      const cx = app.W / 2;
+      // Header bloom
+      const bloom = ctx.createRadialGradient(cx, 50, 8, cx, 50, 160);
+      bloom.addColorStop(0, `rgba(90,30,160,${(0.3 + 0.07 * Math.sin(t * 0.9)).toFixed(3)})`);
+      bloom.addColorStop(1, 'transparent');
+      ctx.fillStyle = bloom; ctx.fillRect(cx - 160, 0, 320, 140);
+      ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = '#7030c0';
+      text(ctx, 'RELIC DIVE', cx, 40, { size: 38, align: 'center', color: '#c090ff', shadow: false });
+      ctx.restore();
+
+      // Mode
+      const modeLabel = mode === 'daily' ? `DAILY HUNT — ${todayKey}` : 'NORMAL DIVE';
+      const modeColor = mode === 'daily' ? '#3aacc8' : '#9060d8';
+      ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = modeColor;
+      text(ctx, modeLabel, cx, 90, { size: 18, align: 'center', color: modeColor, shadow: false });
+      ctx.restore();
+
+      // Separator
+      ctx.save(); ctx.fillStyle = '#3c3464'; ctx.globalAlpha = 0.7;
+      ctx.fillRect(120, 112, app.W - 240, 1); ctx.restore();
+
+      // Best / streak info
+      const freshBest = loadRelicDiveBest();
+      if (freshBest.best) {
+        text(ctx, `Personal Best: ${freshBest.best.score} pts — Depth ${freshBest.best.depths}`,
+          cx, 140, { size: 15, align: 'center', color: GOLD });
+        text(ctx, `Daily Streak: ${freshBest.streak ?? 0} day${freshBest.streak !== 1 ? 's' : ''}`,
+          cx, 162, { size: 13, align: 'center', color: DIM });
+      } else {
+        text(ctx, 'No personal best yet — be the first!', cx, 140, { size: 15, align: 'center', color: DIM });
+      }
+
+      // Daily status
+      if (freshBest.daily) {
+        const sameDay = freshBest.daily.dateKey === todayKey;
+        if (sameDay) {
+          text(ctx, `Today's run: ${freshBest.daily.score} pts — Depth ${freshBest.daily.depths}`,
+            cx, 190, { size: 14, align: 'center', color: '#3aacc8' });
+          if (mode === 'daily') {
+            text(ctx, 'Daily Hunt already played today. Switch to NORMAL DIVE.',
+              cx, 212, { size: 12, align: 'center', color: BAD });
+          }
+        } else {
+          text(ctx, 'Daily Hunt available!', cx, 190, { size: 14, align: 'center', color: OK });
+        }
+      }
+
+      // Separator
+      ctx.save(); ctx.fillStyle = '#3c3464'; ctx.globalAlpha = 0.7;
+      ctx.fillRect(120, 230, app.W - 240, 1); ctx.restore();
+
+      // Dive info
+      const rec = currentHunter(app);
+      if (rec) {
+        text(ctx, `Hunter: ${rec.name}  (Lv${rec.level})`, cx, 258, { size: 15, align: 'center', color: FG });
+        const startLv = Math.max(1, Math.min(15, rec.level));
+        text(ctx, `Starting Relic Level ${startLv}  →  rises each depth  →  cap Lv15`,
+          cx, 282, { size: 12, align: 'center', color: DIM });
+        text(ctx, 'Clear a depth, then DESCEND for harder loot or BANK OUT to keep your score.',
+          cx, 302, { size: 12, align: 'center', color: DIM });
+      }
+
+      // Start / Cancel buttons
+      const startDisabled = !rec || (mode === 'daily' && dailyAlreadyPlayed);
+      box(ctx, cx - 140, 580, 260, 40, { stroke: startDisabled ? '#2a2a3c' : '#9060d8' });
+      if (!startDisabled) {
+        ctx.save(); ctx.globalAlpha = 0.13 + 0.06 * Math.sin(t * 2.2);
+        ctx.fillStyle = '#9060d8'; ctx.fillRect(cx - 139, 581, 258, 38); ctx.restore();
+      }
+      text(ctx, startDisabled ? 'ALREADY PLAYED TODAY' : 'START DIVE', cx, 594, { size: 16, align: 'center', color: startDisabled ? DIM : '#c090ff' });
+
+      text(ctx, 'Esc: back to hub', cx, 660, { size: 13, align: 'center', color: DIM });
     },
   };
 }
@@ -2620,6 +2783,7 @@ export function makeResultsScreen(app, g) {
   const placeOf = (id) => order.findIndex((r) => r.id === id);
   const win = !!(st.result?.win ?? g.outcome.won);
   let applied = false;
+  let depthScore = 0; // primary hunter's score for this depth (relic dive)
 
   function applyToRoster() {
     if (applied) return;
@@ -2645,6 +2809,9 @@ export function makeResultsScreen(app, g) {
         targetPrice: ITEMS[st.targetItemId]?.price ?? 0,
       };
     });
+    // Capture primary score for relic dive depth result
+    const primaryEntry = hunterEntries.find((e) => e.id === primaryId) ?? hunterEntries[0];
+    depthScore = primaryEntry?.score ?? 0;
     app.roster.hunters = applyResults(app.roster.hunters, {
       relicLevel: st.relicLevel, win: primaryWon, wipe, storyCleared,
       hunters: hunterEntries,
@@ -2712,10 +2879,19 @@ export function makeResultsScreen(app, g) {
         if (t < 1.8) { t = 1.8; return; } // skip count-up on first press
         sfx.menuConfirm();
         applyToRoster();
+        if (g.runState) {
+          g.runState.depthResults.push({ won: win, score: depthScore });
+          if (win) {
+            app.stack.replace(makeDepthTransitionScreen(app, g));
+          } else {
+            app.stack.replace(makeRunSummaryScreen(app, g));
+          }
+          return;
+        }
         app.stack.pop(); // back to the hub
         return;
       }
-      if (e?.code === 'KeyR' && g.mission) {
+      if (e?.code === 'KeyR' && g.mission && !g.runState) {
         if (t < 1.8) t = 1.8;
         sfx.menuConfirm();
         applyToRoster();
@@ -2934,8 +3110,11 @@ export function makeResultsScreen(app, g) {
         text(ctx, 'STORY COMPLETE! All 15 missions cleared.', app.W / 2, 560, { size: 15, align: 'center', color: GOLD, shadow: false });
         ctx.restore();
       }
-      const replayHint = g.mission ? '   R: replay' : '';
-      const exitHint = t < 1.8 ? 'Enter: skip' : 'Enter: return to hub';
+      const replayHint = (g.mission && !g.runState) ? '   R: replay' : '';
+      const exitHint = t < 1.8 ? 'Enter: skip'
+        : g.runState && win ? 'Enter: Descend or Bank Out'
+        : g.runState ? 'Enter: end run'
+        : 'Enter: return to hub';
       text(ctx, exitHint + replayHint, app.W / 2, 600, { size: 15, align: 'center', color: FG });
     },
   };
@@ -2957,6 +3136,233 @@ export function makeResultsScreen(app, g) {
       return { id: h.id, name: h.name, moved, damage, flagPts, killPts, handicap, itemPts, total, credits };
     });
   }
+}
+
+// ---------------------------------------------------------------------------
+// DEPTH TRANSITION — "DESCEND or BANK OUT" push-your-luck choice between depths.
+
+export function makeDepthTransitionScreen(app, g) {
+  const rs = g.runState;
+  const depth = rs.depth;
+  const totalScore = rs.depthResults.reduce((s, d) => s + d.score, 0);
+  const nextRelicLevel = Math.min(15, rs.startRelicLevel + depth); // depth N+1
+  const canDescend = nextRelicLevel <= 15 && depth < 10;
+  let t = 0;
+  let idx = canDescend ? 0 : 1; // 0 = DESCEND, 1 = BANK OUT
+
+  function descend() {
+    rs.depth++;
+    sfx.menuConfirm();
+    app.startRelicDiveDepth(rs); // replaces screen with GAME for next depth
+  }
+
+  function bankOut() {
+    sfx.menuConfirm();
+    app.stack.replace(makeRunSummaryScreen(app, g));
+  }
+
+  return {
+    enter() { app.music('hub'); },
+    update(dt) { t += dt; },
+    onKey(k) {
+      if (k === 'left' || k === 'right') {
+        if (canDescend) { idx = 1 - idx; sfx.menuMove(); }
+      } else if (k === 'confirm') {
+        if (idx === 0 && canDescend) descend(); else bankOut();
+      } else if (k === 'cancel') bankOut();
+    },
+    onClick(pos) {
+      if (canDescend && pos.x < app.W / 2 && pos.y > 440 && pos.y < 490) descend();
+      else if (pos.x >= app.W / 2 && pos.y > 440 && pos.y < 490) bankOut();
+      else if (pos.y > 440 && pos.y < 490) bankOut();
+    },
+    draw(ctx) {
+      drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      const cx = app.W / 2;
+
+      // Header
+      const bloom = ctx.createRadialGradient(cx, 55, 8, cx, 55, 160);
+      bloom.addColorStop(0, `rgba(20,120,60,${(0.32 + 0.06 * Math.sin(t * 1.1)).toFixed(3)})`);
+      bloom.addColorStop(1, 'transparent');
+      ctx.fillStyle = bloom; ctx.fillRect(cx - 160, 0, 320, 140);
+      ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = OK;
+      text(ctx, `DEPTH ${depth} CLEARED`, cx, 46, { size: 34, align: 'center', color: OK, shadow: false });
+      ctx.restore();
+      const relicLvLabel = `Relic Level ${rs.startRelicLevel + depth - 1}`;
+      text(ctx, relicLvLabel, cx, 84, { size: 15, align: 'center', color: DIM });
+
+      // Depth row so far
+      ctx.save(); ctx.fillStyle = '#2a2a3c'; ctx.globalAlpha = 0.6;
+      ctx.fillRect(cx - 200, 108, 400, 36); ctx.restore();
+      const depthEmoji = rs.depthResults.map((d) => (d.won ? '▣' : '▢')).join('  ');
+      text(ctx, depthEmoji, cx, 116, { size: 14, align: 'center', color: GOLD });
+      text(ctx, `Run Score: ${totalScore}  (${rs.depthResults.length} depth${rs.depthResults.length !== 1 ? 's' : ''})`,
+        cx, 134, { size: 14, align: 'center', color: FG });
+
+      // Separator
+      ctx.save(); ctx.fillStyle = OK; ctx.globalAlpha = 0.35;
+      ctx.fillRect(120, 156, app.W - 240, 1); ctx.restore();
+
+      // Next depth preview
+      if (canDescend) {
+        text(ctx, `DEPTH ${depth + 1}  ›  Relic Level ${nextRelicLevel}`,
+          cx, 184, { size: 16, align: 'center', color: '#a090ff' });
+        text(ctx, 'Harder dungeon, better score multiplier, items carry over.',
+          cx, 206, { size: 13, align: 'center', color: DIM });
+      } else {
+        text(ctx, 'Maximum depth reached.', cx, 190, { size: 15, align: 'center', color: DIM });
+      }
+
+      // DESCEND / BANK OUT buttons
+      const BW = 200, BH = 44;
+      if (canDescend) {
+        const dSel = idx === 0;
+        box(ctx, cx - 230, 440, BW, BH, { stroke: dSel ? '#a090ff' : '#3c3464' });
+        if (dSel) {
+          ctx.save(); ctx.globalAlpha = 0.14 + 0.06 * Math.sin(t * 2.5);
+          ctx.fillStyle = '#9060d8'; ctx.fillRect(cx - 229, 441, BW - 2, BH - 2); ctx.restore();
+        }
+        text(ctx, 'DESCEND ▼', cx - 130, 458, { size: 17, align: 'center', color: dSel ? '#c090ff' : DIM });
+      }
+      const bSel = idx === 1;
+      const bx = canDescend ? cx + 30 : cx - BW / 2;
+      box(ctx, bx, 440, BW, BH, { stroke: bSel ? GOLD : '#3c3464' });
+      if (bSel) {
+        ctx.save(); ctx.globalAlpha = 0.14 + 0.06 * Math.sin(t * 2.5);
+        ctx.fillStyle = '#806010'; ctx.fillRect(bx + 1, 441, BW - 2, BH - 2); ctx.restore();
+      }
+      text(ctx, 'BANK OUT ✓', bx + BW / 2, 458, { size: 17, align: 'center', color: bSel ? GOLD : DIM });
+
+      if (canDescend)
+        text(ctx, '← → choose   Enter: confirm', cx, 506, { size: 13, align: 'center', color: DIM });
+      else
+        text(ctx, 'Enter: bank out and see results', cx, 506, { size: 13, align: 'center', color: DIM });
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// RUN SUMMARY — final screen after a relic dive ends (bank out or loss).
+
+export function makeRunSummaryScreen(app, g) {
+  const rs = g.runState;
+  const totalScore = rs.depthResults.reduce((s, d) => s + d.score, 0);
+  const depthsCleared = rs.depthResults.filter((d) => d.won).length;
+  const ranOut = rs.depthResults.length > 0 && !rs.depthResults.at(-1).won;
+  let t = 0;
+  let saved = false;
+  let shareStr = '';
+  let newBest = false;
+
+  function saveRun() {
+    if (saved) return;
+    saved = true;
+    const record = loadRelicDiveBest();
+    shareStr = buildShareString({ daily: rs.daily, dateKey: rs.dateKey, startLevel: rs.startRelicLevel, depthResults: rs.depthResults });
+    if (!record.best || totalScore > record.best.score) {
+      record.best = { score: totalScore, depths: depthsCleared, shareStr };
+      newBest = true;
+    }
+    if (rs.daily) {
+      if (!record.daily || record.daily.dateKey !== rs.dateKey || totalScore > record.daily.score) {
+        record.daily = { dateKey: rs.dateKey, score: totalScore, depths: depthsCleared, shareStr };
+      }
+    }
+    saveRelicDiveBest(record);
+  }
+
+  function copyShare() {
+    try {
+      if (typeof navigator?.clipboard?.writeText === 'function') {
+        navigator.clipboard.writeText(shareStr).catch(() => {});
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = shareStr;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+    } catch { /* clipboard unavailable */ }
+  }
+
+  return {
+    enter() { saveRun(); app.music(ranOut ? 'gameover' : 'results'); },
+    update(dt) { t += dt; },
+    onKey(k, e) {
+      if (k === 'confirm' || k === 'cancel') {
+        sfx.menuConfirm();
+        app.stack.pop(); // back to hub
+      }
+      if (e?.code === 'KeyS') copyShare();
+    },
+    onClick(pos) {
+      if (pos.y > 620 && pos.y < 660) copyShare();
+      else { sfx.menuConfirm(); app.stack.pop(); }
+    },
+    draw(ctx) {
+      drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      const cx = app.W / 2;
+
+      // Header
+      const headerColor = ranOut ? BAD : GOLD;
+      const headerText = ranOut ? 'RUN ENDED' : 'RUN COMPLETE';
+      const bloom = ctx.createRadialGradient(cx, 55, 8, cx, 55, 160);
+      bloom.addColorStop(0, ranOut ? `rgba(120,20,20,0.34)` : `rgba(140,110,10,0.34)`);
+      bloom.addColorStop(1, 'transparent');
+      ctx.fillStyle = bloom; ctx.fillRect(cx - 160, 0, 320, 140);
+      ctx.save(); ctx.shadowBlur = 22; ctx.shadowColor = headerColor;
+      text(ctx, headerText, cx, 46, { size: 34, align: 'center', color: headerColor, shadow: false });
+      ctx.restore();
+      const typeLabel = rs.daily ? `Daily Hunt — ${rs.dateKey}` : 'Relic Dive';
+      text(ctx, typeLabel, cx, 84, { size: 14, align: 'center', color: rs.daily ? '#3aacc8' : '#9060d8' });
+
+      // Depth row
+      ctx.save(); ctx.fillStyle = '#2a2a3c'; ctx.globalAlpha = 0.6;
+      ctx.fillRect(cx - 220, 108, 440, 36); ctx.restore();
+      const depthRow = rs.depthResults.map((d) => (d.won ? '▣' : '▢')).join('  ');
+      text(ctx, depthRow, cx, 116, { size: 14, align: 'center', color: GOLD });
+      text(ctx, `Depths reached: ${rs.depthResults.length}  ·  Cleared: ${depthsCleared}`,
+        cx, 134, { size: 13, align: 'center', color: FG });
+
+      // Separator
+      ctx.save(); ctx.fillStyle = headerColor; ctx.globalAlpha = 0.35;
+      ctx.fillRect(120, 156, app.W - 240, 1); ctx.restore();
+
+      // Score
+      ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = GOLD;
+      text(ctx, `${totalScore}`, cx, 210, { size: 48, align: 'center', color: GOLD, shadow: false });
+      ctx.restore();
+      text(ctx, 'total score', cx, 246, { size: 14, align: 'center', color: DIM });
+
+      // New best callout
+      if (newBest) {
+        const bp = 0.75 + 0.25 * Math.sin(t * 2.0);
+        ctx.save(); ctx.globalAlpha = bp; ctx.shadowBlur = 14; ctx.shadowColor = GOLD;
+        text(ctx, 'NEW PERSONAL BEST!', cx, 278, { size: 16, align: 'center', color: GOLD, shadow: false });
+        ctx.restore();
+      }
+
+      // Start level info
+      text(ctx, `Started at Relic Level ${rs.startRelicLevel}`,
+        cx, 310, { size: 13, align: 'center', color: DIM });
+
+      // Share string box
+      if (shareStr) {
+        box(ctx, 120, 340, app.W - 240, 80, { stroke: '#3c3464' });
+        const lines = shareStr.split('\n');
+        lines.forEach((line, i) => text(ctx, line, cx, 358 + i * 20, { size: 13, align: 'center', color: FG }));
+      }
+
+      // Copy button
+      box(ctx, cx - 100, 432, 200, 36, { stroke: '#3a6ee0' });
+      ctx.save(); ctx.globalAlpha = 0.10; ctx.fillStyle = '#3a6ee0';
+      ctx.fillRect(cx - 99, 433, 198, 34); ctx.restore();
+      text(ctx, '[ S ] COPY SHARE', cx, 445, { size: 14, align: 'center', color: '#6a9eee' });
+
+      text(ctx, 'Enter: return to hub', cx, 508, { size: 14, align: 'center', color: FG });
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------

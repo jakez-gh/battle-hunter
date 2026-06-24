@@ -226,7 +226,7 @@ Prerequisite: Phase 0 done at `319521e`.
 
 ### UI lane
 
-- [ ] **1C — Hub + Relic Dive entry screen (`screens.js`)**
+- [x] **1C — Hub + Relic Dive entry screen (`screens.js`)**
   Add a "RELIC DIVE" button to the Hub screen (alongside Story / Normal).
   New `makeRelicDiveScreen`: shows personal-best score + streak; shows
   whether today's Daily Hunt has been played and, if so, the score; two
@@ -234,7 +234,7 @@ Prerequisite: Phase 0 done at `319521e`.
   disabled after first play today). Hunter selection flows same as Normal.
   Depends on 1A for `loadRelicDiveBest()` / `dateToSeed`.
 
-- [ ] **1D — Depth-transition + run-summary screens (`screens.js`)**
+- [x] **1D — Depth-transition + run-summary screens (`screens.js`)**
   After each won depth, show `makeDepthClearedScreen`: depth score, run
   total, "DESCEND" (→ next depth config via 1B) / "BANK OUT" (→ run
   summary). On loss: run ends; show `makeRunSummaryScreen` with all depths
