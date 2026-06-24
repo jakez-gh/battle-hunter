@@ -1176,6 +1176,17 @@ export function createRenderer(canvas, opts = {}) {
             ctx.fillStyle = sg;
             ctx.fillRect(fp.x | 0, fp.y | 0, ts, cam.scale * 3.5);
           }
+          // Side-wall shadow: floor tiles adjacent to a wall get a lateral shadow
+          if (!b.floor[y]?.[x - 1]) {
+            const sl = ctx.createLinearGradient(fp.x, fp.y, fp.x + cam.scale * 3, fp.y);
+            sl.addColorStop(0, 'rgba(0,0,0,0.20)'); sl.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = sl; ctx.fillRect(fp.x | 0, fp.y | 0, cam.scale * 3, ts);
+          }
+          if (!b.floor[y]?.[x + 1]) {
+            const sr = ctx.createLinearGradient(fp.x + ts - cam.scale * 3, fp.y, fp.x + ts, fp.y);
+            sr.addColorStop(0, 'rgba(0,0,0,0)'); sr.addColorStop(1, 'rgba(0,0,0,0.20)');
+            ctx.fillStyle = sr; ctx.fillRect((fp.x + ts - cam.scale * 3) | 0, fp.y | 0, cam.scale * 3, ts);
+          }
           // Torch-light pool: if the wall directly above this floor tile has a torch,
           // spill a section-tinted glow onto the top of this tile
           if (!b.floor[y - 1]?.[x]) {
