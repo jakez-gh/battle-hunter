@@ -2386,6 +2386,30 @@ export function createRenderer(canvas, opts = {}) {
     }
   }
 
+  function drawSectionSeams() {
+    if (!state?.board) return;
+    const vw = canvas.width, vh = canvas.height - HUD_H;
+    const seamX = worldToScreen(10, 0, cam).x;
+    const seamY = worldToScreen(0, 10, cam).y;
+    const pulse = 0.08 + 0.04 * Math.sin(clock / 4200);
+    // Vertical seam: amber (left sections) → white center → blue (right sections)
+    { const g = ctx.createLinearGradient(seamX - 3, 0, seamX + 3, 0);
+      g.addColorStop(0, 'rgba(255,190,50,0)');
+      g.addColorStop(0.28, `rgba(255,190,50,${(pulse * 0.7).toFixed(3)})`);
+      g.addColorStop(0.5, `rgba(220,228,255,${pulse.toFixed(3)})`);
+      g.addColorStop(0.72, `rgba(60,130,255,${(pulse * 0.7).toFixed(3)})`);
+      g.addColorStop(1, 'rgba(60,130,255,0)');
+      ctx.fillStyle = g; ctx.fillRect(seamX - 3, 0, 6, vh); }
+    // Horizontal seam: lavender (top half) → white center → mint (bottom half)
+    { const g = ctx.createLinearGradient(0, seamY - 3, 0, seamY + 3);
+      g.addColorStop(0, 'rgba(200,185,230,0)');
+      g.addColorStop(0.28, `rgba(200,185,230,${(pulse * 0.7).toFixed(3)})`);
+      g.addColorStop(0.5, `rgba(220,228,255,${pulse.toFixed(3)})`);
+      g.addColorStop(0.72, `rgba(80,210,130,${(pulse * 0.7).toFixed(3)})`);
+      g.addColorStop(1, 'rgba(80,210,130,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, seamY - 3, vw, 6); }
+  }
+
   function drawVignette() {
     const w = canvas.width;
     const h = canvas.height - HUD_H;
@@ -2937,6 +2961,7 @@ export function createRenderer(canvas, opts = {}) {
       }
       drawBoard();
       drawFog();
+      drawSectionSeams();
       drawAmbientShimmer();
       drawOverlays();
       drawUnits();
