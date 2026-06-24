@@ -901,6 +901,44 @@ const FLOOR_S = [ // worn center — polished diamond where foot traffic brighte
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_V = [ // chevron groove — V-shaped channels across the tile suggest carved stone coursing
+  'GGGGGGGGGGGGGGgG',
+  'GgGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGdG',
+  'dGGGGGGGdGGGGGGd',
+  'GdGGGGGdGdGGGGdG',
+  'GGdGGGdGGGdGGdGG',
+  'GGGdGdGGGGGdGdGG',
+  'GGGGdGGGGGGGdGGG',
+  'GGGGdGGGGGGGdGGG',
+  'GGGdGdGGGGGdGdGG',
+  'GGdGGGdGGGdGGdGG',
+  'GdGGGGGdGdGGGGdG',
+  'dGGGGGGGdGGGGGGd',
+  'GGGGGGGGGGGGGGdG',
+  'GGGGGGGGGGGGGgGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const FLOOR_U = [ // lozenge inlay — paired diamond motifs with darker centre stones
+  'GGGGGGGGGGGGGGgG',
+  'GgGGGGGGGGGGGGGG',
+  'GGGGdGGGGGGGdGGG',
+  'GGGdGgGGGGGdGgGG',
+  'GGdGGGdGGGdGGGdG',
+  'GGGdGgGGGGGdGgGG',
+  'GGGGdGGGGGGGdGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGdGGGGGGGdGGG',
+  'GGGdGgGGGGGdGgGG',
+  'GGdGGGdGGGdGGGdG',
+  'GGGdGgGGGGGdGgGG',
+  'GGGGdGGGGGGGdGGG',
+  'GGGGGGGGGGGGGgGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const FLOOR_T = [ // compass rose — N/S/E/W arms with intercardinal ticks, c hub
   'GGGGGGGGGGGGGGGG',
   'GgGGGGGGGGGGGGgG',
@@ -941,6 +979,8 @@ export const TILES = {
   floorR: { grid: FLOOR_R, palette: TILE_PALETTE },
   floorS: { grid: FLOOR_S, palette: TILE_PALETTE },
   floorT: { grid: FLOOR_T, palette: TILE_PALETTE },
+  floorU: { grid: FLOOR_U, palette: TILE_PALETTE },
+  floorV: { grid: FLOOR_V, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
