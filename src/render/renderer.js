@@ -3438,6 +3438,41 @@ export function createRenderer(canvas, opts = {}) {
           }
         }
       }
+      // Status condition ambient particles
+      if (state?.hunters || state?.monsters) {
+        for (const h of state.hunters ?? []) {
+          const hpos = displayPos(`h${h.id}`);
+          if (!hpos) continue;
+          if ((h.status?.stun ?? 0) > 0 && Math.random() > 0.92) {
+            const ang = (clock / 520) + h.id * 2.1 + Math.random() * 0.8;
+            sparkles.push({ wx: hpos.x + 0.5 + Math.cos(ang) * 0.38, wy: hpos.y + 0.18 + Math.sin(ang) * 0.22,
+              vx: 0, vy: -0.10, t: 0, ttl: 460 + Math.random() * 180,
+              color: '#ffe060', round: false, alpha0: 0.62 });
+          }
+          if ((h.status?.panic ?? 0) > 0 && Math.random() > 0.90) {
+            sparkles.push({ wx: hpos.x + 0.1 + Math.random() * 0.8, wy: hpos.y + Math.random() * 0.7,
+              vx: (Math.random() - 0.5) * 0.52, vy: -0.16 - Math.random() * 0.10,
+              t: 0, ttl: 320 + Math.random() * 180,
+              color: Math.random() < 0.6 ? '#70a8ff' : '#d8eeff', round: true, alpha0: 0.48 });
+          }
+        }
+        for (const m of state.monsters ?? []) {
+          const mpos = displayPos(`m${m.id}`);
+          if (!mpos) continue;
+          if ((m.status?.stun ?? 0) > 0 && Math.random() > 0.92) {
+            const ang = (clock / 520) + m.id * 2.1 + Math.random() * 0.8;
+            sparkles.push({ wx: mpos.x + 0.5 + Math.cos(ang) * 0.38, wy: mpos.y + 0.18 + Math.sin(ang) * 0.22,
+              vx: 0, vy: -0.10, t: 0, ttl: 460 + Math.random() * 180,
+              color: '#ffe060', round: false, alpha0: 0.62 });
+          }
+          if ((m.status?.panic ?? 0) > 0 && Math.random() > 0.90) {
+            sparkles.push({ wx: mpos.x + 0.1 + Math.random() * 0.8, wy: mpos.y + Math.random() * 0.7,
+              vx: (Math.random() - 0.5) * 0.52, vy: -0.16 - Math.random() * 0.10,
+              t: 0, ttl: 320 + Math.random() * 180,
+              color: Math.random() < 0.6 ? '#70a8ff' : '#d8eeff', round: true, alpha0: 0.48 });
+          }
+        }
+      }
       // Die chip tumble: scatter small stone-dust flecks while the die is rolling
       if (anim?.ev.type === 'dieRolled' && anim.t / anim.dur < 0.6 && Math.random() > 0.82) {
         const k = evKey(anim.ev);
