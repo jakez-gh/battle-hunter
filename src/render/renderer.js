@@ -1046,8 +1046,8 @@ export function createRenderer(canvas, opts = {}) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
           // Show stone wall face where the wall borders a walkable floor below it.
-          const wallV = ((x * 2341 + y * 1013) ^ 571) % 24;
-          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : wallV === 8 ? 'tile.wallI' : wallV === 9 ? 'tile.wallJ' : wallV === 10 ? 'tile.wallK' : wallV === 11 ? 'tile.wallL' : wallV === 12 ? 'tile.wallM' : wallV === 13 ? 'tile.wallN' : wallV === 14 ? 'tile.wallO' : wallV === 15 ? 'tile.wallP' : wallV === 16 ? 'tile.wallQ' : wallV === 17 ? 'tile.wallR' : wallV === 18 ? 'tile.wallS' : wallV === 19 ? 'tile.wallT' : wallV === 20 ? 'tile.wallU' : wallV === 21 ? 'tile.wallV' : wallV === 22 ? 'tile.wallW' : 'tile.wallX';
+          const wallV = ((x * 2341 + y * 1013) ^ 571) % 26;
+          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : wallV === 8 ? 'tile.wallI' : wallV === 9 ? 'tile.wallJ' : wallV === 10 ? 'tile.wallK' : wallV === 11 ? 'tile.wallL' : wallV === 12 ? 'tile.wallM' : wallV === 13 ? 'tile.wallN' : wallV === 14 ? 'tile.wallO' : wallV === 15 ? 'tile.wallP' : wallV === 16 ? 'tile.wallQ' : wallV === 17 ? 'tile.wallR' : wallV === 18 ? 'tile.wallS' : wallV === 19 ? 'tile.wallT' : wallV === 20 ? 'tile.wallU' : wallV === 21 ? 'tile.wallV' : wallV === 22 ? 'tile.wallW' : wallV === 23 ? 'tile.wallX' : wallV === 24 ? 'tile.wallY' : 'tile.wallZ';
           blitTile(b.floor[y + 1]?.[x] ? wallTile : 'tile.pit', x, y);
           // Section tint on wall faces (matches quadrant identity from floor tint)
           if (b.floor[y + 1]?.[x]) {
@@ -1092,6 +1092,25 @@ export function createRenderer(canvas, opts = {}) {
               ctx.fillRect((mx0 + cam.scale) | 0, (my - cam.scale * 0.5) | 0, mw - cam.scale * 2, cam.scale * 0.5 + 1);
               ctx.restore();
             }
+            // Water patina: ~8% of visible wall faces show faint horizontal staining streaks
+            { const pah = ((x * 1871 + y * 3209) ^ 1433) & 0xFFFF;
+              if ((pah & 0xFF) < 20) {
+                const pcs = cam.scale;
+                const nstreaks = 1 + (pah >> 12 & 1);
+                for (let si = 0; si < nstreaks; si++) {
+                  const srow = 2 + ((pah >> (4 + si * 3)) & 0x7);
+                  const sx = wp.x + pcs;
+                  const sy = wp.y + srow * pcs;
+                  const sw = (9 + (pah >> 8 & 5)) * pcs;
+                  const spg = ctx.createLinearGradient(sx, sy, sx + sw, sy);
+                  spg.addColorStop(0, 'rgba(20,24,40,0)');
+                  spg.addColorStop(0.25, 'rgba(20,24,40,0.13)');
+                  spg.addColorStop(0.75, 'rgba(20,24,40,0.13)');
+                  spg.addColorStop(1, 'rgba(20,24,40,0)');
+                  ctx.fillStyle = spg;
+                  ctx.fillRect(sx | 0, sy | 0, sw, pcs);
+                }
+              } }
           }
           // Structural crack: ~5% of visible wall faces get a procedural zigzag fissure
           if (b.floor[y + 1]?.[x]) {
@@ -1476,6 +1495,10 @@ export function createRenderer(canvas, opts = {}) {
           ctx.fillStyle = 'rgba(0,0,0,0.22)';
           ctx.fillRect(fp.x, fp.y + ts - 1, ts, 1);
           ctx.fillRect(fp.x + ts - 1, fp.y, 1, ts - 1);
+          // Top-left bevel: faint highlight completes the raised-tile depth bevel
+          ctx.fillStyle = 'rgba(220,228,255,0.06)';
+          ctx.fillRect(fp.x, fp.y, ts, 1);
+          ctx.fillRect(fp.x, fp.y, 1, ts);
           const vd = 6 * cam.scale;
           if (y > 0 && !b.floor[y - 1]?.[x]) {
             // Gradient wall-face shadow: stronger and smoother than flat strip
@@ -2596,6 +2619,29 @@ export function createRenderer(canvas, opts = {}) {
     }
   }
 
+  function drawAmbientShadow() {
+    if (!state?.board) return;
+    const vw = canvas.width, vh = canvas.height - HUD_H;
+    // Two slow drifting elliptical shadows suggesting something large far above
+    for (let i = 0; i < 2; i++) {
+      const period = 38000 + i * 17000;
+      const phase = ((clock + i * (period >> 1)) % period) / period;
+      const cx = vw * (0.12 + 0.76 * ((Math.sin(phase * Math.PI * 2 + i * 1.4) + 1) / 2));
+      const cy = vh * (0.15 + 0.70 * ((Math.sin(phase * Math.PI * 2 * 0.63 + i * 2.1) + 1) / 2));
+      const rx = vw * 0.12;
+      const yscale = 0.44;
+      ctx.save();
+      ctx.scale(1, yscale);
+      const sg = ctx.createRadialGradient(cx, cy / yscale, 0, cx, cy / yscale, rx);
+      sg.addColorStop(0, 'rgba(0,0,0,0.042)');
+      sg.addColorStop(0.55, 'rgba(0,0,0,0.018)');
+      sg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = sg;
+      ctx.fillRect(cx - rx, cy / yscale - rx, rx * 2, rx * 2);
+      ctx.restore();
+    }
+  }
+
   function drawLightRays() {
     if (!state?.board) return;
     const vw = canvas.width, vh = canvas.height - HUD_H;
@@ -3235,6 +3281,7 @@ export function createRenderer(canvas, opts = {}) {
         ctx.translate(Math.round((Math.random() * 2 - 1) * m), Math.round((Math.random() * 2 - 1) * m));
       }
       drawBoard();
+      drawAmbientShadow();
       drawFog();
       drawSectionSeams();
       drawLightRays();

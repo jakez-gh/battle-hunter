@@ -863,6 +863,44 @@ const WALL_H = [ // pillar-panel — slim stone columns flank a deep recessed ce
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_Y = [ // dentil frieze — classical toothed molding row above a plain lower panel
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGXcGGXcGGXcGX',
+  'XGGGXGGGXGGGXGGX',
+  'XgGGXgGGXgGGXgGX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const WALL_Z = [ // offset running bond — classic half-offset coursed masonry, three full courses
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGXGGGGGgX',
+  'XGGGGGGGXGGGGGgX',
+  'XgGGGGGGXGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGXcGGGGGXGgX',
+  'XGGGGXGGGGGGXGgX',
+  'XgGGGXGGGGGGXGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGXGGGGGgX',
+  'XGGGGGGGXGGGGGgX',
+  'XgGGGGGGXGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGXcGGGGGXGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_B = [ // stone-block face — three narrow sub-blocks in lower band
   'XXXXXXXXXXXXXXXX',  // ceiling cap
   'XcGGGGGGGGGGGGgX',  // upper block, lit corner
@@ -1276,6 +1314,8 @@ export const TILES = {
   wallV: { grid: WALL_V, palette: TILE_PALETTE },
   wallW: { grid: WALL_W, palette: TILE_PALETTE },
   wallX: { grid: WALL_X, palette: TILE_PALETTE },
+  wallY: { grid: WALL_Y, palette: TILE_PALETTE },
+  wallZ: { grid: WALL_Z, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
