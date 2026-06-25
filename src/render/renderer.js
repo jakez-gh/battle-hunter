@@ -1049,6 +1049,23 @@ export function createRenderer(canvas, opts = {}) {
           const wallV = ((x * 2341 + y * 1013) ^ 571) % 30;
           const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : wallV === 8 ? 'tile.wallI' : wallV === 9 ? 'tile.wallJ' : wallV === 10 ? 'tile.wallK' : wallV === 11 ? 'tile.wallL' : wallV === 12 ? 'tile.wallM' : wallV === 13 ? 'tile.wallN' : wallV === 14 ? 'tile.wallO' : wallV === 15 ? 'tile.wallP' : wallV === 16 ? 'tile.wallQ' : wallV === 17 ? 'tile.wallR' : wallV === 18 ? 'tile.wallS' : wallV === 19 ? 'tile.wallT' : wallV === 20 ? 'tile.wallU' : wallV === 21 ? 'tile.wallV' : wallV === 22 ? 'tile.wallW' : wallV === 23 ? 'tile.wallX' : wallV === 24 ? 'tile.wallY' : wallV === 25 ? 'tile.wallZ' : wallV === 26 ? 'tile.wallAA' : wallV === 27 ? 'tile.wallAB' : wallV === 28 ? 'tile.wallAC' : 'tile.wallAD';
           blitTile(b.floor[y + 1]?.[x] ? wallTile : 'tile.pit', x, y);
+          // Pit depth: rim catch-light + slow-pulsing void shimmer
+          if (!b.floor[y + 1]?.[x]) {
+            const pp = worldToScreen(x, y, cam); const ps = TILE * cam.scale;
+            // Ambient light grazing the top rim of the abyss
+            { const rimG = ctx.createLinearGradient(pp.x, pp.y, pp.x, pp.y + ps * 0.22);
+              rimG.addColorStop(0, 'rgba(70,85,115,0.10)'); rimG.addColorStop(1, 'rgba(0,0,0,0)');
+              ctx.fillStyle = rimG; ctx.fillRect(pp.x | 0, pp.y | 0, ps, ps * 0.22); }
+            // Slow pulsing depth shimmer deep in the void (every ~12 s per pit)
+            { const pph = ((x * 2777 + y * 3571) ^ 1337) & 0xFFFF;
+              const pphase = 0.5 + 0.5 * Math.sin(clock / (2600 + (pph & 0x5FF)) + pph * 0.021);
+              if (pphase > 0.70) {
+                const pa = (pphase - 0.70) / 0.30 * 0.055;
+                const pcx = pp.x + ps * 0.5, pcy = pp.y + ps * 0.62;
+                const pg = ctx.createRadialGradient(pcx, pcy, 0, pcx, pcy, ps * 0.38);
+                pg.addColorStop(0, `rgba(30,45,90,${pa.toFixed(3)})`); pg.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = pg; ctx.fillRect(pp.x | 0, (pp.y + ps * 0.25) | 0, ps, ps * 0.75); } }
+          }
           // Section tint on wall faces (matches quadrant identity from floor tint)
           if (b.floor[y + 1]?.[x]) {
             const wp = worldToScreen(x, y, cam); const wts = TILE * cam.scale;
@@ -3377,6 +3394,22 @@ export function createRenderer(canvas, opts = {}) {
                   t: 0, ttl: 500 + Math.random() * 320,
                   color: Math.random() < 0.5 ? emberCols[0] : emberCols[1], round: true, alpha0: 0.60 });
               }
+            }
+          }
+          // Cold air wisps rising from pit tiles
+          for (let y = y0; y <= y1; y++) {
+            for (let x = x0; x <= x1; x++) {
+              if (b.floor[y]?.[x] || b.floor[y + 1]?.[x]) continue; // only pits
+              if (Math.random() > 0.022) continue;
+              const pph = ((x * 3131 + y * 2777) ^ 1783) & 0xFFFF;
+              sparkles.push({
+                wx: x + ((pph >> 4 & 0xF) + 1) / 16,
+                wy: y + 0.38 + ((pph >> 8) & 7) / 14,
+                vx: (Math.random() - 0.5) * 0.07,
+                vy: -0.30 - Math.random() * 0.18,
+                t: 0, ttl: 1300 + Math.random() * 700,
+                color: pph & 1 ? '#1e2840' : '#222c4a', round: true, alpha0: 0.15,
+              });
             }
           }
         }
