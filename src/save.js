@@ -204,3 +204,53 @@ export function buildShareString(runResult) {
   const footer = `Depth ${depthsReached} | Score ${totalScore} | L${startLevel}`;
   return `${header}\n${depthRow}\n${footer}`;
 }
+
+// ---------------------------------------------------------------------------
+// Leaderboard — top-10 per mode, separate key (does not touch the roster)
+// ---------------------------------------------------------------------------
+// Entry shape: { name, score, mode, ts, extras }
+// extras: mode-specific, e.g. { missionId } for story, { depths } for relic-dive.
+// ts is a numeric timestamp used only to keep entries stable across equal scores.
+
+export const LEADERBOARD_KEY = 'battle-hunter-leaderboard-v1';
+const LEADERBOARD_MAX = 10;
+
+function loadAllLeaderboards() {
+  try {
+    const raw = storageArea().getItem(LEADERBOARD_KEY);
+    if (!raw) return {};
+    const p = JSON.parse(raw);
+    return (p && typeof p === 'object' && !Array.isArray(p)) ? p : {};
+  } catch { return {}; }
+}
+
+function saveAllLeaderboards(all) {
+  try { storageArea().setItem(LEADERBOARD_KEY, JSON.stringify(all)); } catch { /* quota/blocked */ }
+}
+
+// Returns sorted entries (best first) for the given mode.
+export function getLeaderboard(mode) {
+  const all = loadAllLeaderboards();
+  return Array.isArray(all[mode]) ? all[mode] : [];
+}
+
+// Add an entry { name, score, extras? } and persist the updated top-N list.
+// Returns 0-based rank of the new entry, or -1 if it didn't make the top-N.
+export function addLeaderboardEntry(mode, entry) {
+  const all = loadAllLeaderboards();
+  const board = Array.isArray(all[mode]) ? [...all[mode]] : [];
+  const newEntry = { name: entry.name, score: entry.score, mode, ts: Date.now(), extras: entry.extras ?? {} };
+  board.push(newEntry);
+  board.sort((a, b) => b.score - a.score || a.ts - b.ts);
+  const rank = board.indexOf(newEntry); // object identity — immune to ts collisions
+  const trimmed = board.slice(0, LEADERBOARD_MAX);
+  all[mode] = trimmed;
+  saveAllLeaderboards(all);
+  return rank < LEADERBOARD_MAX ? rank : -1;
+}
+
+export function clearLeaderboard(mode) {
+  const all = loadAllLeaderboards();
+  delete all[mode];
+  saveAllLeaderboards(all);
+}
