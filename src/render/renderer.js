@@ -863,6 +863,10 @@ export function createRenderer(canvas, opts = {}) {
               vx: Math.cos(a) * 0.8, vy: Math.sin(a) * 0.8 - 0.2,
               t: 0, ttl: 900, color: i % 3 === 0 ? '#c898ff' : '#7c1cc8', round: true, alpha0: 0.7 });
           }
+          // WYRM void detonation rings: three staggered expanding shockwaves
+          pulseRings.push({ wx: kpos.x + 0.5, wy: kpos.y + 0.5, t: 0, ttl: 350, maxR: 2.5, color: '#e0c0ff', alpha0: 1.0 });
+          pulseRings.push({ wx: kpos.x + 0.5, wy: kpos.y + 0.5, t: 0, ttl: 600, maxR: 4.5, color: '#9838e8', alpha0: 0.75 });
+          pulseRings.push({ wx: kpos.x + 0.5, wy: kpos.y + 0.5, t: 0, ttl: 900, maxR: 6.5, color: '#5c1098', alpha0: 0.45 });
         } else if (kpos) {
           // Standard monster kill: type-colored 20-particle burst
           for (let i = 0; i < 20; i++) {
@@ -871,6 +875,8 @@ export function createRenderer(canvas, opts = {}) {
             sparkles.push({ wx: kpos.x + 0.5, wy: kpos.y + 0.5, vx: Math.cos(a) * spd,
               vy: Math.sin(a) * spd - 0.5, t: 0, ttl: 550, color: i % 4 === 0 ? '#fff' : killCol });
           }
+          // Type-branded kill ring expanding from monster's last position
+          pulseRings.push({ wx: kpos.x + 0.5, wy: kpos.y + 0.5, t: 0, ttl: 400, maxR: 2.5, color: killCol, alpha0: 0.65 });
         }
         break;
       }
