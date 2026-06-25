@@ -165,6 +165,7 @@ export function createRenderer(canvas, opts = {}) {
   let timeScale = 1;                   // >1 compresses event playback (fast AI)
   let floats = [];                     // {text,color,icon,wx,wy,t,ttl,big}
   let sparkles = [];                   // {wx,wy,vx,vy,t,ttl,color[,round,alpha0]}
+  let pulseRings = [];                 // {wx,wy,t,ttl,maxR,color,alpha0} — expanding arc rings (healed, etc.)
   let smokeSeed = 0;                   // timer for torch-smoke emission
   let _hudDotPat = null;               // lazily-baked 4×4 dot-grid canvas pattern for HUD texture
   let shake = null;                    // {t,dur,mag}
@@ -872,7 +873,7 @@ export function createRenderer(canvas, opts = {}) {
       }
       case 'healed': {
         addFloat(k, `+${ev.amount ?? ''}`, '#8fd17e', { big: true });
-        // Rising green cross-sparks (upward only, slight spread) â€” suggests HP lifting
+        // Rising green cross-sparks (upward only, slight spread) — suggests HP lifting
         const hp = displayPos(k);
         if (hp) {
           for (let i = 0; i < 8; i++) {
@@ -880,6 +881,9 @@ export function createRenderer(canvas, opts = {}) {
               vx: (i % 3 - 1) * 0.22, vy: -1.4 - (i % 3) * 0.35,
               t: 0, ttl: 600, color: i % 3 === 0 ? '#ffffff' : '#8fd17e' });
           }
+          // Expanding halo rings: inner fast pulse + slower outer wave
+          pulseRings.push({ wx: hp.x + 0.5, wy: hp.y + 0.5, t: 0, ttl: 300, maxR: 0.9, color: '#c8ffd8', alpha0: 0.9 });
+          pulseRings.push({ wx: hp.x + 0.5, wy: hp.y + 0.5, t: 0, ttl: 500, maxR: 1.7, color: '#7ee8a0', alpha0: 0.55 });
         }
         break;
       }
@@ -2526,6 +2530,18 @@ export function createRenderer(canvas, opts = {}) {
       }
       ctx.restore();
     }
+    // Expanding pulse rings (healed event etc.) — world-space, drawn as arc strokes
+    for (const ring of pulseRings) {
+      const frac = ring.t / ring.ttl;
+      const ease = 1 - Math.pow(1 - frac, 2);
+      const p = worldToScreen(ring.wx, ring.wy, cam);
+      const r = ease * ring.maxR * TILE * cam.scale;
+      const alpha = Math.max(0, ring.alpha0 * Math.sin(frac * Math.PI));
+      ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = ring.color;
+      ctx.lineWidth = Math.max(0.5, (1.2 - frac) * 2.2 * cam.scale);
+      ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1, r), 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
   }
 
   function drawCursor() {
@@ -3423,6 +3439,7 @@ export function createRenderer(canvas, opts = {}) {
       if (!anim && !queue.length && state) idleSync();
       floats = floats.filter((f) => (f.t += dtMs) < f.ttl);
       sparkles = sparkles.filter((s) => (s.t += dtMs) < s.ttl);
+      pulseRings = pulseRings.filter((r) => (r.t += dtMs) < r.ttl);
       // Torch smoke: periodically emit a wispy particle from wall torch tiles
       if (state?.board) {
         smokeSeed += dtMs;
@@ -3643,6 +3660,7 @@ export function createRenderer(canvas, opts = {}) {
       }
       floats = [];
       sparkles = [];
+      pulseRings = [];
       shake = null;
       turnFlash = null;
       unitFlash = null;
