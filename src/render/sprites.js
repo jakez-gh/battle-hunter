@@ -1338,6 +1338,44 @@ const FLOOR_AB = [ // tudor rose — 8-pointed light star with dark centre, medi
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_AC = [ // diagonal slab — three parallel 45° mortar joints (top-right to bottom-left), period-5, seamlessly tiling
+  'GGGGGdGGGGdGGGGd',
+  'GGGGdGGGGdGGGGdG',
+  'GGGdGGGGdGGGGdGG',
+  'GGdGGGGdGGGGdGGG',
+  'GdGGGGdGGGGdGGGG',
+  'dGGGGdGGGGdGGGGG',
+  'GGGGdGGGGdGGGGGd',
+  'GGGdGGGGdGGGGGdG',
+  'GGdGGGGdGGGGGdGG',
+  'GdGGGGdGGGGGdGGG',
+  'dGGGGdGGGGGdGGGG',
+  'GGGGdGGGGGdGGGGd',
+  'GGGdGGGGGdGGGGdG',
+  'GGdGGGGGdGGGGdGG',
+  'GdGGGGGdGGGGdGGG',
+  'dGGGGGdGGGGdGGGG',
+];
+
+const FLOOR_AD = [ // diamond crosshatch — two families of 45° diagonal grooves at period-8 create a continuous diamond grid
+  'dGGGGGGGdGGGGGGG',
+  'GdGGGGGdGdGGGGGd',
+  'GGdGGGdGGGdGGGdG',
+  'GGGdGdGGGGGdGdGG',
+  'GGGGdGGGGGGGdGGG',
+  'GGGdGdGGGGGdGdGG',
+  'GGdGGGdGGGdGGGdG',
+  'GdGGGGGdGdGGGGGd',
+  'dGGGGGGGdGGGGGGG',
+  'GdGGGGGdGdGGGGGd',
+  'GGdGGGdGGGdGGGdG',
+  'GGGdGdGGGGGdGdGG',
+  'GGGGdGGGGGGGdGGG',
+  'GGGdGdGGGGGdGdGG',
+  'GGdGGGdGGGdGGGdG',
+  'GdGGGGGdGdGGGGGd',
+];
+
 export const TILES = {
   floorA: { grid: FLOOR_A, palette: TILE_PALETTE },
   floorB: { grid: FLOOR_B, palette: TILE_PALETTE },
@@ -1367,6 +1405,8 @@ export const TILES = {
   floorZ: { grid: FLOOR_Z, palette: TILE_PALETTE },
   floorAA: { grid: FLOOR_AA, palette: TILE_PALETTE },
   floorAB: { grid: FLOOR_AB, palette: TILE_PALETTE },
+  floorAC: { grid: FLOOR_AC, palette: TILE_PALETTE },
+  floorAD: { grid: FLOOR_AD, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
