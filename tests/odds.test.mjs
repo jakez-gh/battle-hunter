@@ -5,7 +5,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { battleOdds, advantageLabel } from '../src/engine/odds.js';
+import { battleOdds, advantageLabel, describeOdds, explainStrike } from '../src/engine/odds.js';
 
 test('odds: probabilities are well-formed', () => {
   const o = battleOdds({ at: 4, df: 3 });
@@ -80,4 +80,19 @@ test('odds: advantageLabel buckets sensibly', () => {
   assert.equal(advantageLabel(0.2), 'weak');
   assert.equal(battleOdds({ at: 12, df: 0 }).advantage, 'strong');
   assert.equal(battleOdds({ at: 0, df: 12 }).advantage, 'weak');
+});
+
+test('odds: describeOdds renders a one-line pre-commit readout', () => {
+  const s = describeOdds(battleOdds({ at: 10, df: 1 }));
+  assert.match(s, /Strong|Even|Disadvantage/);
+  assert.match(s, /dmg/);
+  assert.match(s, /\d+% hit/);
+});
+
+test('odds: explainStrike makes the result legible (hit, crit, and zero)', () => {
+  assert.equal(
+    explainStrike({ attacker: 'You', defender: 'Keld', atkTotal: 12, defTotal: 9, damage: 3 }),
+    'You 12 vs Keld 9 — hit for 3');
+  assert.match(explainStrike({ atkTotal: 14, defTotal: 6, damage: 8, crit: true }), /CRIT! hit for 8/);
+  assert.match(explainStrike({ atkTotal: 7, defTotal: 10, damage: 0 }), /no damage/);
 });

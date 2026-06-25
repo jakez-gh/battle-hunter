@@ -77,3 +77,23 @@ export function advantageLabel(pHit) {
   if (pHit >= 0.4) return 'even';
   return 'weak';
 }
+
+// One-line PRE-commit readout for the battle UI (F5 agency tool). Feed it the
+// result of battleOdds(): e.g. "Strong · ~5.2 dmg · 81% hit".
+export function describeOdds(o) {
+  const label = { strong: 'Strong', even: 'Even', weak: 'Disadvantage' }[o.advantage] ?? 'Even';
+  return `${label} · ~${o.expectedDamage.toFixed(1)} dmg · ${Math.round(o.pHit * 100)}% hit`;
+}
+
+// POST-battle math summary (F5): make the outcome legible so a loss reads as
+// "the math", not "the dice screwed me". e.g.
+//   explainStrike({attacker:'You', defender:'Keld', atkTotal:12, defTotal:9, damage:3})
+//   -> "You 12 vs Keld 9 — hit for 3"
+export function explainStrike({
+  attacker = 'Attacker', defender = 'Defender',
+  atkTotal = 0, defTotal = 0, damage = 0, crit = false,
+} = {}) {
+  const head = `${attacker} ${atkTotal} vs ${defender} ${defTotal}`;
+  const body = damage > 0 ? `hit for ${damage}` : 'no damage';
+  return crit ? `${head} — CRIT! ${body}` : `${head} — ${body}`;
+}
