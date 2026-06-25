@@ -18,7 +18,7 @@ import { setVolumes } from '../audio/synth.js';
 import { sfx } from '../audio/sfx.js';
 import { makeHunterRecord, exportSave, importSave, loadRoster,
          loadRelicDiveBest, saveRelicDiveBest, todayDateKey, dateToSeed,
-         buildShareString, hashRunSeed, getLeaderboard } from '../save.js';
+         buildShareString, hashRunSeed, getLeaderboard, addLeaderboardEntry } from '../save.js';
 import { makeRng } from '../engine/rng.js';
 import { rollPerkChoices, describePerk } from '../engine/perks.js';
 
@@ -2911,6 +2911,15 @@ export function makeResultsScreen(app, g) {
       if (storyCleared && entry.id === primary.id && typeof g.mission?.id === 'number') {
         fresh.storyProgress = Math.max(fresh.storyProgress ?? 0, g.mission.id);
       }
+    }
+    // Record the primary human hunter's score in the personal-best board
+    if (primaryEntry && primaryEntry.score > 0) {
+      const lbMode = app.session.mode === 'story' ? 'story' : app.session.mode === 'relic-dive' ? 'relic-dive' : 'normal';
+      addLeaderboardEntry(lbMode, {
+        name: primary.name ?? 'Hunter',
+        score: primaryEntry.score,
+        extras: lbMode === 'relic-dive' ? { depths: g.runState?.depth ?? 1 } : { missionId: g.mission?.id ?? null },
+      });
     }
     app.save();
   }
