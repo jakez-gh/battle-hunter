@@ -3455,6 +3455,18 @@ export function createRenderer(canvas, opts = {}) {
               t: 0, ttl: 320 + Math.random() * 180,
               color: Math.random() < 0.6 ? '#70a8ff' : '#d8eeff', round: true, alpha0: 0.48 });
           }
+          if ((h.status?.leg ?? 0) > 0 && Math.random() > 0.93) {
+            sparkles.push({ wx: hpos.x + 0.25 + Math.random() * 0.5, wy: hpos.y + 0.6 + Math.random() * 0.3,
+              vx: (Math.random() - 0.5) * 0.08, vy: 0.18 + Math.random() * 0.12,
+              t: 0, ttl: 280 + Math.random() * 140,
+              color: Math.random() < 0.7 ? '#cc2828' : '#8a1818', round: true, alpha0: 0.55 });
+          }
+          if ((h.status?.empty ?? 0) > 0 && Math.random() > 0.94) {
+            sparkles.push({ wx: hpos.x + 0.2 + Math.random() * 0.6, wy: hpos.y + 0.1 + Math.random() * 0.6,
+              vx: (Math.random() - 0.5) * 0.30, vy: -0.06 - Math.random() * 0.08,
+              t: 0, ttl: 500 + Math.random() * 250,
+              color: Math.random() < 0.5 ? '#8090a0' : '#b0b8c8', round: true, alpha0: 0.30 });
+          }
         }
         for (const m of state.monsters ?? []) {
           const mpos = displayPos(`m${m.id}`);
@@ -3470,6 +3482,12 @@ export function createRenderer(canvas, opts = {}) {
               vx: (Math.random() - 0.5) * 0.52, vy: -0.16 - Math.random() * 0.10,
               t: 0, ttl: 320 + Math.random() * 180,
               color: Math.random() < 0.6 ? '#70a8ff' : '#d8eeff', round: true, alpha0: 0.48 });
+          }
+          if ((m.status?.leg ?? 0) > 0 && Math.random() > 0.93) {
+            sparkles.push({ wx: mpos.x + 0.25 + Math.random() * 0.5, wy: mpos.y + 0.6 + Math.random() * 0.3,
+              vx: (Math.random() - 0.5) * 0.08, vy: 0.18 + Math.random() * 0.12,
+              t: 0, ttl: 280 + Math.random() * 140,
+              color: Math.random() < 0.7 ? '#cc2828' : '#8a1818', round: true, alpha0: 0.55 });
           }
         }
       }
