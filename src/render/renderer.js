@@ -812,9 +812,21 @@ export function createRenderer(canvas, opts = {}) {
                   color: isFlair ? '#fff' : ring === 0 ? '#e8c8ff' : ring === 1 ? '#9838e8' : '#5c1098' });
               }
             }
+            // Void arrival halos: fast bright ring + massive slow outer wave
+            pulseRings.push({ wx: wp.x + 0.5, wy: wp.y + 0.5, t: 0, ttl: 400, maxR: 3.0, color: '#e8c8ff', alpha0: 1.0 });
+            pulseRings.push({ wx: wp.x + 0.5, wy: wp.y + 0.5, t: 0, ttl: 700, maxR: 5.5, color: '#6c1cac', alpha0: 0.60 });
           }
         } else if (ev.type !== 'monsterSpawned') {
           shake = { t: 0, dur: 400, mag: 2 };
+        }
+        // Type-branded arrival ring for standard monsters
+        if (ev.type === 'monsterSpawned' && mk) {
+          const spawnPos = displayPos(mk);
+          if (spawnPos) {
+            const SPAWN_RING = { VAC: '#50b0e8', OOZ: '#3cc850', FNG: '#e09040' };
+            const rCol = SPAWN_RING[kind] ?? '#cc3a22';
+            pulseRings.push({ wx: spawnPos.x + 0.5, wy: spawnPos.y + 0.5, t: 0, ttl: 350, maxR: 2.0, color: rCol, alpha0: 0.70 });
+          }
         }
         // A visible rival reacts to the WYRM arrival
         if (ev.type === 'wyrmSpawned' || ev.type === 'wyrmRespawned') {
