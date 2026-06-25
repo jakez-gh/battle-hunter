@@ -1061,6 +1061,25 @@ export function createRenderer(canvas, opts = {}) {
               : (y < 10 ? 'rgba(60,130,255,' : 'rgba(140,60,200,');
             ctx.save(); ctx.globalAlpha = 0.05; ctx.fillStyle = wTint + '1)';
             ctx.fillRect(wp.x | 0, wp.y | 0, wts, wts); ctx.restore();
+            // Lichen/mineral deposit: section-biased glowing patch in wall mid-face
+            { const lh = ((x * 3803 + y * 2441) ^ 3119) & 0xFFFF;
+              // BL section (green) gets 7%, others get 3-4%
+              const lthresh = (x < 10 && y < 10) ? 8 : (x >= 10 && y >= 10) ? 10 : (x < 10 && y >= 10) ? 18 : 8;
+              if ((lh & 0xFF) < lthresh) {
+                const lcs = cam.scale;
+                const lx = wp.x + ((lh >> 4 & 0xD) + 2) * lcs;
+                const ly = wp.y + ((lh >> 9 & 0x5) + 4) * lcs;
+                const lw = (2 + (lh >> 12 & 3)) * lcs;
+                const [lCol, lgCol] = x < 10
+                  ? (y < 10 ? ['#a0820a', 'rgba(220,180,30,'] : ['#2a8040', 'rgba(50,210,80,'])
+                  : (y < 10 ? ['#1860b0', 'rgba(60,140,255,'] : ['#701490', 'rgba(160,50,220,']);
+                const lpulse = 0.22 + 0.12 * Math.sin(clock / 1400 + (lh & 0xF) * 0.37);
+                const lgr = ctx.createRadialGradient(lx + lw / 2, ly, 0, lx + lw / 2, ly, lcs * 4);
+                lgr.addColorStop(0, lgCol + lpulse.toFixed(2) + ')'); lgr.addColorStop(1, 'transparent');
+                ctx.fillStyle = lgr; ctx.fillRect((lx - lcs * 3) | 0, (ly - lcs * 3) | 0, lcs * 8, lcs * 7);
+                ctx.save(); ctx.globalAlpha = lpulse * 1.2; ctx.fillStyle = lCol;
+                ctx.fillRect(lx | 0, ly | 0, lw, lcs); ctx.restore();
+              } }
             // Moss patch: ~9% of visible wall bases get a green-grey fringe along the bottom edge
             const mh = ((x * 2111 + y * 4073) ^ 1667) & 0xFFFF;
             if ((mh & 0xFF) < 23) {
