@@ -2,13 +2,12 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   storageArea, addLeaderboardEntry, getLeaderboard, clearLeaderboard,
+  resetMemoryStore, LEADERBOARD_KEY,
 } from '../src/save.js';
 
-// Reset the in-memory store between tests by clearing LEADERBOARD_KEY.
-import { LEADERBOARD_KEY } from '../src/save.js';
-
+// Wipe the entire in-memory store before each test to prevent cross-test pollution.
 beforeEach(() => {
-  storageArea().removeItem(LEADERBOARD_KEY);
+  resetMemoryStore();
 });
 
 describe('leaderboard', () => {

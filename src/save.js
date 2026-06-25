@@ -22,8 +22,14 @@ function makeMemoryStore() {
   };
 }
 
-const memory = makeMemoryStore();
+let memory = makeMemoryStore();
 let store = null;
+
+// For tests: wipe the in-memory store and force re-detection of the backing store.
+export function resetMemoryStore() {
+  memory = makeMemoryStore();
+  store = null;
+}
 
 // Active backing store: real localStorage when present and writable (probe
 // catches private-mode/quota errors), else the in-memory fallback. Exported
