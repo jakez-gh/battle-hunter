@@ -277,6 +277,6 @@ whoever holds the visual-polish claim first. Prerequisite: Phase 1 done at
 - Network play (WebRTC or WebSocket) for remote multiplayer
 - Replay/spectate mode (engine is deterministic; save action log + seed)
 - Additional board sections (now 20; six added 2026-06-24 — d82d1f2)
-- Sound effect for each item use type
-- High-score leaderboard (localStorage, top-10 per mode)
+- [x] **Sound effects per item use type** — distinct SFX for each item kind + counter-item activation. `4ac3571` + `0d611e6`
+- [x] **High-score leaderboard** — `addLeaderboardEntry` / `getLeaderboard` / `clearLeaderboard`, top-10 per mode, `LEADERBOARD_KEY v1`. `61055ac`
 - Accessibility: keyboard nav on all menus, colour-blind palette option
