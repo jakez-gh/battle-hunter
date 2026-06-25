@@ -10,6 +10,7 @@
 import { interpolateInternal, RIVALS, rivalStats } from './engine/missions.js';
 import { makeRng } from './engine/rng.js';
 import { reachableTiles, occupiedSet } from './engine/board.js';
+import { perkHasEffect } from './engine/perks.js';
 import { buildAtlas } from './render/sprites.js';
 import { playMusic, stopMusic } from './audio/music.js';
 import { setVolumes } from './audio/synth.js';
@@ -106,9 +107,12 @@ export function buildRelicDiveConfig(runState, recs) {
   const opponents = Array.from({ length: aiCount }, () =>
     ARCHETYPE_NAMES[setupRng.int(ARCHETYPE_NAMES.length)]
   );
+  const ownedPerks = runState.perks ?? [];
+  const luckyBonus = perkHasEffect(ownedPerks, 'reroll+1') ? 1 : 0;
   return {
     seed,
     mode: 'relic-dive',
+    fortune: 1 + luckyBonus,
     mission: {
       id: `relic-dive-d${runState.depth}`,
       title: `Depth ${runState.depth}`,
