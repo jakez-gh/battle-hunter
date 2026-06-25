@@ -1918,9 +1918,15 @@ export function makeGameScreen(app, g) {
     for (const ev of events || []) {
       playEventSfx(ev);
       switch (ev.type) {
-        case 'battleStarted':
+        case 'battleStarted': {
           if (!inBattleMusic) { inBattleMusic = true; app.music('battle'); }
+          const _atk = A.resolveUnit(g.state, ev.attacker);
+          const _def = A.resolveUnit(g.state, ev.defender);
+          if (_atk?.items && _def?.kind &&
+              _atk.items.some(it => ITEMS[it.itemId]?.effect === 'counter-' + _def.kind))
+            sfx.counterActivated();
           break;
+        }
         case 'turnStarted':
           if (inBattleMusic) { inBattleMusic = false; app.music(g.songBase); }
           break;
@@ -1967,7 +1973,11 @@ export function makeGameScreen(app, g) {
         else sfx.block();
         break;
       case 'critNegated': sfx.block(); break;
-      case 'statusInflicted': sfx.error(); break;
+      case 'statusInflicted': {
+        const statusSfx = { panic: sfx.statusPanic, stun: sfx.statusStun, leg: sfx.statusLeg, empty: sfx.statusEmpty };
+        (statusSfx[ev.kind] ?? sfx.error).call(sfx);
+        break;
+      }
       case 'surrendered': sfx.surrender(); break;
       case 'hunterDefeated': sfx.defeat(); break;
       case 'itemTaken': sfx.boxOpen(); break;
