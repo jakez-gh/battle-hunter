@@ -1262,6 +1262,44 @@ const FLOOR_T = [ // compass rose — N/S/E/W arms with intercardinal ticks, c h
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_AA = [ // large inset diamond — full-tile diamond outline, classic geometric paving
+  'GGGGGGGGGGGGGGgG',
+  'GGGGGGGdGGGGGGGG',
+  'GGGGGGdGdGGGGGGG',
+  'GGGGGdGGGdGGGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGdGGGGGGGdGGGG',
+  'GGdGGGGGGGGGdGGG',
+  'GdGGGGGGGGGGGdGG',
+  'dGGGGGGGGGGGGGdG',
+  'GdGGGGGGGGGGGdGG',
+  'GGdGGGGGGGGGdGGG',
+  'GGGdGGGGGGGdGGGG',
+  'GGGGdGGGGGdGGGGG',
+  'GGGGGdGGGdGGGGGG',
+  'GGGGGGdGdGGGGGGG',
+  'GGGGGGGdGGGGGGGG',
+];
+
+const FLOOR_AB = [ // tudor rose — 8-pointed light star with dark centre, medieval floor motif
+  'GGGGGGGGGGGGGGgG',
+  'GgGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGcGGGGGGG',
+  'GGGGGGcGGGcGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGcGGdGGcGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGcGGGcGGGGG',
+  'GGGGGGGGcGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGgGG',
+  'GGGGGGGGGGGGGGGG',
+];
+
 export const TILES = {
   floorA: { grid: FLOOR_A, palette: TILE_PALETTE },
   floorB: { grid: FLOOR_B, palette: TILE_PALETTE },
@@ -1289,6 +1327,8 @@ export const TILES = {
   floorX: { grid: FLOOR_X, palette: TILE_PALETTE },
   floorY: { grid: FLOOR_Y, palette: TILE_PALETTE },
   floorZ: { grid: FLOOR_Z, palette: TILE_PALETTE },
+  floorAA: { grid: FLOOR_AA, palette: TILE_PALETTE },
+  floorAB: { grid: FLOOR_AB, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },

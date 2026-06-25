@@ -1041,7 +1041,7 @@ export function createRenderer(canvas, opts = {}) {
     const y0 = Math.max(0, Math.floor(cam.y / TILE));
     const x1 = Math.min(b.w - 1, Math.ceil((cam.x + vw) / TILE));
     const y1 = Math.min(b.h - 1, Math.ceil((cam.y + vh) / TILE));
-    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH', 'floorI', 'floorJ', 'floorK', 'floorL', 'floorM', 'floorN', 'floorO', 'floorP', 'floorQ', 'floorR', 'floorS', 'floorT', 'floorU', 'floorV', 'floorW', 'floorX', 'floorY', 'floorZ'];
+    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH', 'floorI', 'floorJ', 'floorK', 'floorL', 'floorM', 'floorN', 'floorO', 'floorP', 'floorQ', 'floorR', 'floorS', 'floorT', 'floorU', 'floorV', 'floorW', 'floorX', 'floorY', 'floorZ', 'floorAA', 'floorAB'];
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
@@ -1399,6 +1399,12 @@ export function createRenderer(canvas, opts = {}) {
                 ctx.fillStyle = wsg; ctx.fillRect(px | 0, py | 0, pw2, ph2);
               }
             }
+            // Section ambient reflection: puddle surface takes on faint section color cast
+            { const secTint = x < 10
+                ? (y < 10 ? 'rgba(255,170,50,' : 'rgba(50,210,90,')
+                : (y < 10 ? 'rgba(80,150,255,' : 'rgba(180,80,240,');
+              ctx.save(); ctx.globalAlpha = 0.07; ctx.fillStyle = secTint + '1)';
+              ctx.fillRect(px | 0, py | 0, pw2, ph2); ctx.restore(); }
             ctx.restore();
             // Ripple ring: periodic water-drop concentric ring expanding from puddle center
             { const ripPeriod = 5200 + (ph & 0xFFF);
