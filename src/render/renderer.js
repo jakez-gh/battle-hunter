@@ -3136,6 +3136,19 @@ export function createRenderer(canvas, opts = {}) {
     ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
     ctx.strokeStyle = 'rgba(240,180,160,0.18)'; ctx.lineWidth = 1;
     ctx.strokeRect(bx + 3, by + 3, bw - 6, bh - 6);
+    // Ornamental corner brackets — L-shaped pixel-art brackets suggest a carved stone frame
+    { const ba = 0.35 + 0.18 * Math.sin(clock / 1100);
+      const blen = 10, btk = 2;
+      ctx.save(); ctx.globalAlpha = ba; ctx.fillStyle = '#e0b090';
+      // Top-left
+      ctx.fillRect(bx + 5, by + 5, blen, btk); ctx.fillRect(bx + 5, by + 5, btk, blen);
+      // Top-right
+      ctx.fillRect(bx + bw - 5 - blen, by + 5, blen, btk); ctx.fillRect(bx + bw - 5 - btk, by + 5, btk, blen);
+      // Bottom-left
+      ctx.fillRect(bx + 5, by + bh - 5 - btk, blen, btk); ctx.fillRect(bx + 5, by + bh - 5 - blen, btk, blen);
+      // Bottom-right
+      ctx.fillRect(bx + bw - 5 - blen, by + bh - 5 - btk, blen, btk); ctx.fillRect(bx + bw - 5 - btk, by + bh - 5 - blen, btk, blen);
+      ctx.restore(); }
     // Title bar
     ctx.fillStyle = 'rgba(180, 50, 40, 0.22)';
     ctx.fillRect(bx + 2, by + 2, bw - 4, 16);
