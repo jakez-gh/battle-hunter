@@ -218,11 +218,11 @@ test('resteal missions have a valid carrierIndex', () => {
 const approxPx = (str, sizePx) => str.length * sizePx * 0.6;
 
 // Respond menu: drawn at x=724, w=232, sz=13 → usable label+hint ≤ 212px.
-test('RESPONSE_HINTS is exported and has exactly the four known response keys', () => {
+test('RESPONSE_HINTS is exported and has the known response keys', () => {
   const { RESPONSE_HINTS } = Screens;
   assert.ok(RESPONSE_HINTS && typeof RESPONSE_HINTS === 'object', 'RESPONSE_HINTS must be exported');
   const keys = Object.keys(RESPONSE_HINTS).sort();
-  assert.deepEqual(keys, ['counter', 'escape', 'guard', 'surrender']);
+  assert.deepEqual(keys, ['counter', 'escape', 'fortune', 'guard', 'surrender']);
 });
 
 test('RESPONSE_HINTS: each hint fits in the 232px respond menu at size 13', () => {

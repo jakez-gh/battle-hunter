@@ -765,6 +765,7 @@ export function createGame(config) {
     result: null,
     events: [],
     turn: { moved: false, rested: false, actAgain: false },
+    fortune: config.fortune ?? 1, // reroll tokens (1 base per mission; Lucky perk adds more)
   };
   addEvent(state, { type: 'turnStarted', unit: state.current });
   return state;
@@ -845,6 +846,9 @@ function legalActions(state) {
         if ((defender.items || []).length > 0 || defender.hasTarget) {
           base.push({ type: 'respond', response: 'surrender' });
         }
+      }
+      if ((state.fortune ?? 0) > 0) {
+        base.push({ type: 'fortune' });
       }
       return base;
     }
@@ -1227,6 +1231,18 @@ function applyTiming(state, action, rng) {
   }
 }
 
+function applyFortune(state, rng) {
+  if (!state.battle || (state.fortune ?? 0) <= 0) return;
+  state.fortune -= 1;
+  // Burn 4 d6 rolls (= two 2d6 pairs) to skip the current dice outcome.
+  // The player sees the new odds (unchanged by this call) but will get
+  // different dice when the battle resolves — the only fair guaranty is change,
+  // not a better outcome (same as a physical re-roll token).
+  for (let i = 0; i < 4; i++) rng.d6();
+  addEvent(state, { type: 'fortuneUsed', remaining: state.fortune });
+  // Phase stays 'battle.response' — player still picks their response.
+}
+
 export function applyAction(state, action) {
   const next = clone(state);
   next.events = [];
@@ -1253,6 +1269,8 @@ export function applyAction(state, action) {
       applyPass(next, rng);
     } else if (next.phase === 'turn.action' && action.type === 'rest') {
       applyRest(next, rng);
+    } else if (next.phase === 'battle.response' && action.type === 'fortune') {
+      applyFortune(next, rng);
     } else if (next.phase === 'battle.response' && action.type === 'respond') {
       applyRespond(next, action, rng);
     } else if ((next.phase === 'battle.defCard' || next.phase === 'battle.atkCard') && action.type === 'battleCard') {

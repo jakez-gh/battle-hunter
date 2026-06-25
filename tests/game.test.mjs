@@ -994,3 +994,81 @@ test('calmant clears panic at turn start, not end', () => {
   // Calmant must have cleared h1's panic at the START of h1's turn
   assert.equal(after.hunters[1].status.panic, 0, 'calmant cleared panic at h1 turn start');
 });
+
+// ---------------------------------------------------------------------------
+// Fortune reroll token
+
+test('createGame initialises fortune to 1 by default', () => {
+  const state = makeGame(1);
+  assert.equal(state.fortune, 1);
+});
+
+test('createGame respects config.fortune override', () => {
+  const state = createGame({
+    seed: 1, mode: 'normal',
+    hunters: [hunter('h0', 0), hunter('h1', 1)],
+    fortune: 3,
+  });
+  assert.equal(state.fortune, 3);
+});
+
+test('fortune action available in battle.response when fortune > 0', () => {
+  const state = makeGame(1);
+  const s = JSON.parse(JSON.stringify(state));
+  s.phase = 'battle.response';
+  s.fortune = 1;
+  s.battle = {
+    attacker: { kind: 'hunter', index: 0 },
+    defender: { kind: 'hunter', index: 1 },
+    stage: 'response', response: null, defCard: null, atkCard: null,
+  };
+  const acts = legalActions(s);
+  assert.ok(acts.some((a) => a.type === 'fortune'), 'fortune action offered when token available');
+});
+
+test('fortune action NOT offered when fortune = 0', () => {
+  const state = makeGame(1);
+  const s = JSON.parse(JSON.stringify(state));
+  s.phase = 'battle.response';
+  s.fortune = 0;
+  s.battle = {
+    attacker: { kind: 'hunter', index: 0 },
+    defender: { kind: 'hunter', index: 1 },
+    stage: 'response', response: null, defCard: null, atkCard: null,
+  };
+  const acts = legalActions(s);
+  assert.ok(!acts.some((a) => a.type === 'fortune'), 'fortune action absent when no tokens');
+});
+
+test('applyAction fortune: decrements fortune, emits event, stays in battle.response', () => {
+  const state = makeGame(1);
+  const s = JSON.parse(JSON.stringify(state));
+  s.phase = 'battle.response';
+  s.fortune = 1;
+  s.battle = {
+    attacker: { kind: 'hunter', index: 0 },
+    defender: { kind: 'hunter', index: 1 },
+    stage: 'response', response: null, defCard: null, atkCard: null,
+  };
+  const { state: after, events } = applyAction(s, { type: 'fortune' });
+  assert.equal(after.fortune, 0, 'token consumed');
+  assert.equal(after.phase, 'battle.response', 'still in battle.response');
+  assert.ok(events.some((e) => e.type === 'fortuneUsed'), 'fortuneUsed event emitted');
+  assert.equal(events.find((e) => e.type === 'fortuneUsed').remaining, 0, 'remaining=0 in event');
+});
+
+test('applyAction fortune: produces different RNG state so dice will differ', () => {
+  const state = makeGame(1);
+  const s = JSON.parse(JSON.stringify(state));
+  s.phase = 'battle.response';
+  s.fortune = 2;
+  s.battle = {
+    attacker: { kind: 'hunter', index: 0 },
+    defender: { kind: 'hunter', index: 1 },
+    stage: 'response', response: null, defCard: null, atkCard: null,
+  };
+  const withoutFortune = JSON.parse(JSON.stringify(s));
+  const { state: withFortune } = applyAction(s, { type: 'fortune' });
+  // RNG seed must differ after consuming a fortune (proving dice will differ).
+  assert.notEqual(withFortune.rng.s, withoutFortune.rng.s, 'RNG advanced after fortune use');
+});

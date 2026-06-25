@@ -86,6 +86,7 @@ export const RESPONSE_HINTS = {
   guard: 'double DF',
   escape: 'flee roll',
   surrender: 'give item',
+  fortune: 'reroll dice',
 };
 
 const font = (px, bold = true) => `${bold ? 'bold ' : ''}${px}px "Consolas", "Cascadia Mono", "Monaco", monospace`;
@@ -1943,6 +1944,10 @@ export function makeGameScreen(app, g) {
           };
           break;
         }
+        case 'fortuneUsed':
+          sfx.menuConfirm();
+          say(`Fortune used! ${ev.remaining > 0 ? `${ev.remaining} left` : 'none left'}`, 2.0, GOLD);
+          break;
         case 'turnStarted':
           if (inBattleMusic) { inBattleMusic = false; app.music(g.songBase); }
           break;
@@ -2079,14 +2084,17 @@ export function makeGameScreen(app, g) {
     }
 
     if (phase === 'battle.response') {
-      const RESP_COL = { counter: '#cc4a3a', guard: '#e0c63a', escape: '#4a7dff', surrender: '#9aa0b4' };
-      const items = acts.map((a) => ({
-        label: actionLabel(st, a),
-        right: RESPONSE_HINTS[a.response] ?? '',
-        color: RESP_COL[a.response],
-        rightColor: RESP_COL[a.response],
-        value: () => act(a),
-      }));
+      const RESP_COL = { counter: '#cc4a3a', guard: '#e0c63a', escape: '#4a7dff', surrender: '#9aa0b4', fortune: GOLD };
+      const items = acts.map((a) => {
+        const isFortune = a.type === 'fortune';
+        return {
+          label: isFortune ? `Fortune (${st.fortune ?? 0} left)` : actionLabel(st, a),
+          right: isFortune ? RESPONSE_HINTS.fortune : (RESPONSE_HINTS[a.response] ?? ''),
+          color: isFortune ? GOLD : RESP_COL[a.response],
+          rightColor: isFortune ? GOLD : RESP_COL[a.response],
+          value: () => act(a),
+        };
+      });
       let oddsFooter = null;
       try {
         const _atk = A.resolveUnit(st, st.battle?.attacker);
@@ -2490,6 +2498,11 @@ export function makeGameScreen(app, g) {
     ctx.save(); ctx.shadowBlur = 4; ctx.shadowColor = '#7860a8';
     text(ctx, `relic L${st.relicLevel ?? '?'}`, X + 138, 13, { size: 13, color: '#a898c8', shadow: false });
     ctx.restore();
+    if ((st.fortune ?? 0) > 0) {
+      ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = GOLD;
+      text(ctx, `✦${st.fortune}`, X + W - 8, 13, { size: 12, align: 'right', color: GOLD, shadow: false });
+      ctx.restore();
+    }
 
     (st.hunters || []).forEach((h, i) => {
       const y = 42 + i * 62;
