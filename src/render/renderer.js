@@ -722,6 +722,9 @@ export function createRenderer(canvas, opts = {}) {
               vy: Math.sin(a) * spd - 0.6, t: 0, ttl: 700,
               color: i % 4 === 0 ? '#f7f7ff' : i % 4 === 1 ? '#ff6a5a' : dpSlotCol });
           }
+          // Death shockwave: fast crimson inner ring + slower slot-tinted outer ring
+          pulseRings.push({ wx: dp.x + 0.5, wy: dp.y + 0.5, t: 0, ttl: 480, maxR: 1.8, color: '#cc2020', alpha0: 0.85 });
+          pulseRings.push({ wx: dp.x + 0.5, wy: dp.y + 0.5, t: 0, ttl: 700, maxR: 2.8, color: dpSlotCol, alpha0: 0.50 });
         }
         addRivalVoice(k, 'hunterDefeated');
         break;
@@ -925,6 +928,9 @@ export function createRenderer(canvas, opts = {}) {
               vy: Math.sin(a) * spd - 0.7, t: 0, ttl: 750,
               color: WIN_COLS[i % WIN_COLS.length] });
           }
+          // Victory halos: gold inner burst + green outer wave from each hunter
+          pulseRings.push({ wx: wp2.x + 0.5, wy: wp2.y + 0.5, t: 0, ttl: 450, maxR: 1.8, color: '#ffe98a', alpha0: 1.0 });
+          pulseRings.push({ wx: wp2.x + 0.5, wy: wp2.y + 0.5, t: 0, ttl: 700, maxR: 3.5, color: '#7ee8a0', alpha0: 0.60 });
         }
         break;
       }
@@ -943,6 +949,9 @@ export function createRenderer(canvas, opts = {}) {
               vx: Math.cos(a) * spd, vy: Math.sin(a) * spd + 0.5,
               t: 0, ttl: 680, color: i % 4 === 0 ? '#fff' : i % 4 === 1 ? '#ff6a5a' : i % 4 === 2 ? '#882020' : '#2a1010' });
           }
+          // Defeat shockwave: fast scarlet ring + slow deep-crimson outer wave
+          pulseRings.push({ wx: mlp.x + 0.5, wy: mlp.y + 0.5, t: 0, ttl: 500, maxR: 2.0, color: '#cc1010', alpha0: 0.80 });
+          pulseRings.push({ wx: mlp.x + 0.5, wy: mlp.y + 0.5, t: 0, ttl: 800, maxR: 3.8, color: '#601010', alpha0: 0.40 });
         }
         break;
       }
