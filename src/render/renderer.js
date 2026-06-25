@@ -1041,13 +1041,13 @@ export function createRenderer(canvas, opts = {}) {
     const y0 = Math.max(0, Math.floor(cam.y / TILE));
     const x1 = Math.min(b.w - 1, Math.ceil((cam.x + vw) / TILE));
     const y1 = Math.min(b.h - 1, Math.ceil((cam.y + vh) / TILE));
-    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH', 'floorI', 'floorJ', 'floorK', 'floorL', 'floorM', 'floorN', 'floorO', 'floorP', 'floorQ', 'floorR', 'floorS', 'floorT', 'floorU', 'floorV', 'floorW', 'floorX', 'floorY', 'floorZ', 'floorAA', 'floorAB', 'floorAC', 'floorAD', 'floorAE', 'floorAF'];
+    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH', 'floorI', 'floorJ', 'floorK', 'floorL', 'floorM', 'floorN', 'floorO', 'floorP', 'floorQ', 'floorR', 'floorS', 'floorT', 'floorU', 'floorV', 'floorW', 'floorX', 'floorY', 'floorZ', 'floorAA', 'floorAB', 'floorAC', 'floorAD', 'floorAE', 'floorAF', 'floorAG', 'floorAH'];
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
           // Show stone wall face where the wall borders a walkable floor below it.
-          const wallV = ((x * 2341 + y * 1013) ^ 571) % 32;
-          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : wallV === 8 ? 'tile.wallI' : wallV === 9 ? 'tile.wallJ' : wallV === 10 ? 'tile.wallK' : wallV === 11 ? 'tile.wallL' : wallV === 12 ? 'tile.wallM' : wallV === 13 ? 'tile.wallN' : wallV === 14 ? 'tile.wallO' : wallV === 15 ? 'tile.wallP' : wallV === 16 ? 'tile.wallQ' : wallV === 17 ? 'tile.wallR' : wallV === 18 ? 'tile.wallS' : wallV === 19 ? 'tile.wallT' : wallV === 20 ? 'tile.wallU' : wallV === 21 ? 'tile.wallV' : wallV === 22 ? 'tile.wallW' : wallV === 23 ? 'tile.wallX' : wallV === 24 ? 'tile.wallY' : wallV === 25 ? 'tile.wallZ' : wallV === 26 ? 'tile.wallAA' : wallV === 27 ? 'tile.wallAB' : wallV === 28 ? 'tile.wallAC' : wallV === 29 ? 'tile.wallAD' : wallV === 30 ? 'tile.wallAE' : 'tile.wallAF';
+          const wallV = ((x * 2341 + y * 1013) ^ 571) % 34;
+          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : wallV === 8 ? 'tile.wallI' : wallV === 9 ? 'tile.wallJ' : wallV === 10 ? 'tile.wallK' : wallV === 11 ? 'tile.wallL' : wallV === 12 ? 'tile.wallM' : wallV === 13 ? 'tile.wallN' : wallV === 14 ? 'tile.wallO' : wallV === 15 ? 'tile.wallP' : wallV === 16 ? 'tile.wallQ' : wallV === 17 ? 'tile.wallR' : wallV === 18 ? 'tile.wallS' : wallV === 19 ? 'tile.wallT' : wallV === 20 ? 'tile.wallU' : wallV === 21 ? 'tile.wallV' : wallV === 22 ? 'tile.wallW' : wallV === 23 ? 'tile.wallX' : wallV === 24 ? 'tile.wallY' : wallV === 25 ? 'tile.wallZ' : wallV === 26 ? 'tile.wallAA' : wallV === 27 ? 'tile.wallAB' : wallV === 28 ? 'tile.wallAC' : wallV === 29 ? 'tile.wallAD' : wallV === 30 ? 'tile.wallAE' : wallV === 31 ? 'tile.wallAF' : wallV === 32 ? 'tile.wallAG' : 'tile.wallAH';
           blitTile(b.floor[y + 1]?.[x] ? wallTile : 'tile.pit', x, y);
           // Pit depth: rim catch-light + slow-pulsing void shimmer
           if (!b.floor[y + 1]?.[x]) {
@@ -3436,6 +3436,21 @@ export function createRenderer(canvas, opts = {}) {
               });
             }
           }
+        }
+      }
+      // Die chip tumble: scatter small stone-dust flecks while the die is rolling
+      if (anim?.ev.type === 'dieRolled' && anim.t / anim.dur < 0.6 && Math.random() > 0.82) {
+        const k = evKey(anim.ev);
+        const pos = displayPos(k);
+        if (pos) {
+          sparkles.push({
+            wx: pos.x + 0.2 + Math.random() * 0.6,
+            wy: pos.y - 0.05 + Math.random() * 0.25,
+            vx: (Math.random() - 0.5) * 0.55,
+            vy: -0.28 - Math.random() * 0.22,
+            t: 0, ttl: 180 + Math.random() * 140,
+            color: Math.random() < 0.55 ? '#c4ae8a' : '#e8dfc8', round: false, alpha0: 0.38,
+          });
         }
       }
       if (shake && (shake.t += dtMs) >= shake.dur) shake = null;

@@ -939,6 +939,44 @@ const WALL_AB = [ // banded ashlar — smooth dressed stone with a band of dense
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_AG = [ // alternating monolith + two-stone courses (quoin-style); large ashlar alternates with split double blocks
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGgXcGGGGGgX',
+  'XGGGGGGXGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGgXcGGGGGgX',
+  'XGGGGGGXGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const WALL_AH = [ // mixed-height ashlar: three-stone small course alternates with wide accent stone
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGXcGGGXcGGGX',
+  'XGgGGXGgGGXGgGGX',
+  'XGGGgXGGGgXGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGcGGGGGX',
+  'XGGGGGGGGGGGGGgX',
+  'XgGGGGGGGgGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGXcGGGXcGGGX',
+  'XGgGGXGgGGXGgGGX',
+  'XGGGgXGGGgXGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGcGGGGGX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_AE = [ // rusticated courses — four shadow-inset bricks per course; deep d-shadow at each joint edge
   'XXXXXXXXXXXXXXXX',
   'XdGcXdGcXdGcXdGc',
@@ -1490,6 +1528,44 @@ const FLOOR_AF = [ // sunken oculus — a circular dark medallion inlaid at tile
   'GGGGGGGGGGGGGGGG',
 ];
 
+const FLOOR_AG = [ // diagonal stripe — 45° bands of width 4, alternating G/g across the tile
+  'GGGGggggGGGGgggg',
+  'GGGggggGGGGggggG',
+  'GGggggGGGGggggGG',
+  'GggggGGGGggggGGG',
+  'ggggGGGGggggGGGG',
+  'gggGGGGggggGGGGg',
+  'ggGGGGggggGGGGgg',
+  'gGGGGggggGGGGggg',
+  'GGGGggggGGGGgggg',
+  'GGGggggGGGGggggG',
+  'GGggggGGGGggggGG',
+  'GggggGGGGggggGGG',
+  'ggggGGGGggggGGGG',
+  'gggGGGGggggGGGGg',
+  'ggGGGGggggGGGGgg',
+  'gGGGGggggGGGGggg',
+];
+
+const FLOOR_AH = [ // cross/plus — four dark corner stones with a lighter cross arm bisecting both axes
+  'gggggGGGGGGggggg',
+  'gggggGGGGGGggggg',
+  'gggggGGGGGGggggg',
+  'gggggGGGGGGggggg',
+  'gggggGGGGGGggggg',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+  'gggggGGGGGGggggg',
+  'gggggGGGGGGggggg',
+  'gggggGGGGGGggggg',
+  'gggggGGGGGGggggg',
+  'gggggGGGGGGggggg',
+];
+
 export const TILES = {
   floorA: { grid: FLOOR_A, palette: TILE_PALETTE },
   floorB: { grid: FLOOR_B, palette: TILE_PALETTE },
@@ -1523,6 +1599,8 @@ export const TILES = {
   floorAD: { grid: FLOOR_AD, palette: TILE_PALETTE },
   floorAE: { grid: FLOOR_AE, palette: TILE_PALETTE },
   floorAF: { grid: FLOOR_AF, palette: TILE_PALETTE },
+  floorAG: { grid: FLOOR_AG, palette: TILE_PALETTE },
+  floorAH: { grid: FLOOR_AH, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
@@ -1556,6 +1634,8 @@ export const TILES = {
   wallAD: { grid: WALL_AD, palette: TILE_PALETTE },
   wallAE: { grid: WALL_AE, palette: TILE_PALETTE },
   wallAF: { grid: WALL_AF, palette: TILE_PALETTE },
+  wallAG: { grid: WALL_AG, palette: TILE_PALETTE },
+  wallAH: { grid: WALL_AH, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
