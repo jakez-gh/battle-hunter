@@ -1435,6 +1435,20 @@ export function createRenderer(canvas, opts = {}) {
               ctx.fillRect((cx0 + ci * cs) | 0, (cy0 + ci * cs) | 0, cs, cs);
             }
             ctx.restore();
+            // ~1% of floor tiles: crack glows with a faint section-tinted inner light
+            if (((ph >> 8) & 0xFF) < 3) {
+              const gcol = x < 10
+                ? (y < 10 ? 'rgba(220,110,40,' : 'rgba(40,200,80,')
+                : (y < 10 ? 'rgba(60,120,255,' : 'rgba(160,40,220,');
+              const gphase = 0.06 + 0.04 * Math.sin(clock / 3200 + (ph & 0xF) * 0.28);
+              const gcx = (cx0 + cs * (clen >> 1)) | 0;
+              const gcy = (cy0 + cs * (clen >> 1)) | 0;
+              const cgr = ctx.createRadialGradient(gcx, gcy, 0, gcx, gcy, cs * 3.5);
+              cgr.addColorStop(0, gcol + gphase.toFixed(3) + ')');
+              cgr.addColorStop(1, 'transparent');
+              ctx.fillStyle = cgr;
+              ctx.fillRect(gcx - cs * 3.5, gcy - cs * 3.5, cs * 7, cs * 7);
+            }
           }
           // Cobweb: floor tiles in concave wall corners get faint grey diagonal strands
           { const wallL = !b.floor[y]?.[x - 1], wallR = !b.floor[y]?.[x + 1];
@@ -2751,6 +2765,28 @@ export function createRenderer(canvas, opts = {}) {
     }
   }
 
+  function drawDungeonHeartbeat() {
+    if (!state?.board) return;
+    const vw = canvas.width, vh = canvas.height - HUD_H;
+    // Every ~8 s: a faint ring-pulse expands from center — the dungeon breathing
+    const period = 8300;
+    const phase = (clock % period) / period;
+    if (phase > 0.20) return;
+    const rp = phase / 0.20;
+    const alpha = Math.sin(rp * Math.PI) * 0.030;
+    if (alpha < 0.003) return;
+    const cx = vw * 0.5, cy = vh * 0.5;
+    const rMax = Math.hypot(vw, vh) * 0.5;
+    const rInner = rMax * (0.02 + rp * 0.92);
+    const rOuter = rInner + rMax * 0.07;
+    const sg = ctx.createRadialGradient(cx, cy, Math.max(0, rInner), cx, cy, rOuter);
+    sg.addColorStop(0, `rgba(180,165,210,0)`);
+    sg.addColorStop(0.4, `rgba(180,165,210,${alpha.toFixed(4)})`);
+    sg.addColorStop(1, `rgba(180,165,210,0)`);
+    ctx.fillStyle = sg;
+    ctx.fillRect(0, 0, vw, vh);
+  }
+
   function drawVignette() {
     const w = canvas.width;
     const h = canvas.height - HUD_H;
@@ -3329,6 +3365,7 @@ export function createRenderer(canvas, opts = {}) {
       drawCursor();
       ctx.restore();
       drawVignette();
+      drawDungeonHeartbeat();
       // Heartbeat edge glow when any hunter is at critical HP (â‰¤25%)
       if (state?.hunters) {
         for (const hh of state.hunters) {
