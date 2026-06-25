@@ -1414,6 +1414,38 @@ export function createRenderer(canvas, opts = {}) {
               ctx.fillRect(gmx, gmy, Math.max(1, gmc * 0.5), Math.max(1, gmc * 0.5));
               ctx.restore();
             } }
+          // Floor vent: ~1.5% of floor tiles show a dark iron grate with heat shimmer
+          { const vth = ((x * 5003 + y * 3691) ^ 4127) & 0xFFFF;
+            if ((vth & 0xFF) < 4) {
+              const vcs = cam.scale;
+              const vtx = (fp.x + (1 + (vth >> 4 & 5)) * vcs) | 0;
+              const vty = (fp.y + (2 + (vth >> 9 & 5)) * vcs) | 0;
+              const vtw = (7 + (vth >> 12 & 3)) * vcs;
+              // Dark grate background
+              ctx.save(); ctx.globalAlpha = 0.38; ctx.fillStyle = '#0a0a10';
+              ctx.fillRect(vtx, vty, vtw, vtw); ctx.restore();
+              // Grate bars: 3 horizontal + 3 vertical lines
+              ctx.save(); ctx.globalAlpha = 0.55; ctx.strokeStyle = '#1a1a28'; ctx.lineWidth = Math.max(0.5, vcs * 0.4);
+              for (let gi = 1; gi <= 2; gi++) {
+                ctx.beginPath();
+                ctx.moveTo(vtx, vty + vtw * gi / 3); ctx.lineTo(vtx + vtw, vty + vtw * gi / 3);
+                ctx.moveTo(vtx + vtw * gi / 3, vty); ctx.lineTo(vtx + vtw * gi / 3, vty + vtw);
+                ctx.stroke();
+              }
+              ctx.restore();
+              // Rising heat shimmer: 2 animated motes
+              for (let vi = 0; vi < 2; vi++) {
+                const vperiod = 2200 + vi * 340;
+                const vphase = ((clock + vth * 17 + vi * (vperiod >> 1)) % vperiod) / vperiod;
+                const vhx = vtx + vtw * (0.25 + vi * 0.5) + Math.sin(vphase * Math.PI * 4) * vcs;
+                const vhy = vty + vtw * (0.85 - vphase * 1.2);
+                const vha = Math.sin(vphase * Math.PI) * 0.28;
+                if (vha > 0.04 && vhy > fp.y) {
+                  ctx.save(); ctx.globalAlpha = vha; ctx.fillStyle = '#d09060';
+                  ctx.fillRect(vhx | 0, vhy | 0, vcs, vcs); ctx.restore();
+                }
+              }
+            } }
           // Bone fragment: ~2% of floor tiles bear a faint cross-shaped battle relic
           { const bfh = ((x * 3107 + y * 2477) ^ 1847) & 0xFFFF;
             if ((bfh & 0xFF) < 5) {
