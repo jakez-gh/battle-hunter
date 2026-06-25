@@ -901,6 +901,44 @@ const WALL_Z = [ // offset running bond — classic half-offset coursed masonry,
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_AA = [ // blind niche — shadow-filled recessed niche framed by dressed stone
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGXXXXXXXXGGgX',
+  'XGGGXddddddXGGGX',
+  'XGGGXddddddXGGGX',
+  'XGGGXddddddXGGGX',
+  'XGGGXddddddXGGGX',
+  'XGGGXXXXXXXXGGgX',
+  'XGGGGGGGGGGGGGGX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGGX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const WALL_AB = [ // banded ashlar — smooth dressed stone with a band of dense small brickwork
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGGX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGXcGXcGXcGXcGX',
+  'XGGXGGXGGXGGXGGX',
+  'XgGXgGXgGXgGXgGX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGGX',
+  'XGGGGGGGGGGGGGGX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_B = [ // stone-block face — three narrow sub-blocks in lower band
   'XXXXXXXXXXXXXXXX',  // ceiling cap
   'XcGGGGGGGGGGGGgX',  // upper block, lit corner
@@ -1356,6 +1394,8 @@ export const TILES = {
   wallX: { grid: WALL_X, palette: TILE_PALETTE },
   wallY: { grid: WALL_Y, palette: TILE_PALETTE },
   wallZ: { grid: WALL_Z, palette: TILE_PALETTE },
+  wallAA: { grid: WALL_AA, palette: TILE_PALETTE },
+  wallAB: { grid: WALL_AB, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
