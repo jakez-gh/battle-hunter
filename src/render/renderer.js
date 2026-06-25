@@ -3502,6 +3502,18 @@ export function createRenderer(canvas, opts = {}) {
           }
         }
       }
+      // Rescue NPC distress beacon: rising green motes above the survivor tile
+      if (state?.board?.rescue && !state.board.rescue.claimed && Math.random() > 0.88) {
+        const rx = state.board.rescue.x, ry = state.board.rescue.y;
+        sparkles.push({
+          wx: rx + 0.15 + Math.random() * 0.7,
+          wy: ry + Math.random() * 0.5,
+          vx: (Math.random() - 0.5) * 0.12,
+          vy: -0.22 - Math.random() * 0.18,
+          t: 0, ttl: 520 + Math.random() * 280,
+          color: Math.random() < 0.65 ? '#5ef090' : '#c0ffd8', round: true, alpha0: 0.55,
+        });
+      }
       // Die chip tumble: scatter small stone-dust flecks while the die is rolling
       if (anim?.ev.type === 'dieRolled' && anim.t / anim.dur < 0.6 && Math.random() > 0.82) {
         const k = evKey(anim.ev);
