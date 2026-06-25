@@ -1208,6 +1208,16 @@ export function makeHubScreen(app) {
             }
             text(ctx, label + (isDailyDisabled ? ' (played)' : ''), btn.x + btn.w / 2, btn.y + 13, { size: 13, align: 'center', color: col });
           }
+          // New-player callout: pulsing hint above DAILY HUNT for hunters with no missions yet
+          if ((rec.record?.missions ?? 0) === 0 && !dailyPlayed) {
+            const nhPulse = 0.55 + 0.45 * Math.abs(Math.sin(t * 2.4));
+            ctx.save();
+            ctx.globalAlpha = nhPulse;
+            ctx.shadowBlur = 10; ctx.shadowColor = '#3aacc8';
+            text(ctx, '→ TRY THIS FIRST ←', DAILY_BTN.x + DAILY_BTN.w / 2, DAILY_BTN.y - 14,
+              { size: 11, align: 'center', color: '#3aacc8', shadow: false });
+            ctx.restore();
+          }
           if (diveBest.best) {
             text(ctx, `Best: ${diveBest.best.score} pts  Depth ${diveBest.best.depths}  Streak ${diveBest.streak}`,
               120, 568, { size: 12, color: DIM });
@@ -1910,6 +1920,7 @@ export function makeGameScreen(app, g) {
   let finished = false;
   let lastHumanId = null;   // hotseat: track whose turn it was
   let pendingBattlers = null; // names captured on battleStarted for explainStrike
+  let wyrmCinState = null;    // { max, t, line2 } — full-screen cinematic overlay on WYRM spawn
   let handoff = null;       // { name } — waiting for new human to confirm before revealing hand
 
   const say = (s, dur = 2.2, color = GOLD) => { banner = { text: s, t: dur, color }; };
@@ -1983,8 +1994,8 @@ export function makeGameScreen(app, g) {
           say(`${cap(ev.color)} flag - rolled ${ev.roll}!`, 2.2, FC[ev.color] ?? GOLD);
           break; }
         case 'monsterSpawned': say(`A ${ev.kind} appears!`, 2.2, '#cc4a3a'); break;
-        case 'wyrmSpawned': say('THE WYRM RISES!', 3, BAD); break;
-        case 'wyrmRespawned': say('The WYRM returns...', 3, '#e06090'); break;
+        case 'wyrmSpawned': say('THE WYRM RISES!', 3, BAD); wyrmCinState = { max: 2.8, t: 2.8, line2: 'RISES' }; break;
+        case 'wyrmRespawned': say('The WYRM returns...', 3, '#e06090'); wyrmCinState = { max: 1.8, t: 1.8, line2: 'RETURNS' }; break;
         case 'missionWon':
           g.outcome.winnerRef = ev.winner ?? ev.unit ?? null;
           g.outcome.won = true;
@@ -2189,6 +2200,7 @@ export function makeGameScreen(app, g) {
       fadeIn += dt;
       hudT += dt;
       if (banner && (banner.t -= dt) <= 0) banner = null;
+      if (wyrmCinState) { wyrmCinState.t = Math.max(0, wyrmCinState.t - dt); if (!wyrmCinState.t) wyrmCinState = null; }
       if (broken || finished) return;
       const st = g.state;
 
@@ -2347,6 +2359,30 @@ export function makeGameScreen(app, g) {
       }
       if (steering) drawSteerHint(ctx, st);
       if (timing) drawTiming(ctx, timing);
+      // WYRM full-screen cinematic overlay: dramatic purple wash + large title text
+      if (wyrmCinState) {
+        const { max, t: ct, line2 } = wyrmCinState;
+        const cinAge = max - ct;
+        const cinIn = Math.min(1, cinAge / 0.22);
+        const cinOut = Math.min(1, ct / 0.85);
+        const cAlpha = cinIn * cinOut;
+        if (cAlpha > 0.01) {
+          ctx.save();
+          ctx.globalAlpha = cAlpha * 0.80;
+          const cg = ctx.createRadialGradient(app.W / 2, app.H / 2, 40, app.W / 2, app.H / 2, 470);
+          cg.addColorStop(0, '#300050'); cg.addColorStop(0.6, '#160028'); cg.addColorStop(1, '#040008');
+          ctx.fillStyle = cg; ctx.fillRect(0, 0, app.W, app.H);
+          ctx.restore();
+          const pulse = 0.93 + 0.07 * Math.sin(cinAge * 7.5);
+          const sz = Math.round(54 * pulse);
+          ctx.save();
+          ctx.globalAlpha = Math.min(1, cAlpha * 1.35);
+          ctx.shadowBlur = 52; ctx.shadowColor = '#b040ff';
+          text(ctx, 'THE WYRM', app.W / 2, app.H / 2 - 32, { size: sz, align: 'center', color: '#dda8ff', shadow: false });
+          text(ctx, line2, app.W / 2, app.H / 2 + sz - 4, { size: sz, align: 'center', color: '#ffffff', shadow: false });
+          ctx.restore();
+        }
+      }
       if (banner) {
         const w = Math.max(280, banner.text.length * 12 + 60);
         const bAlpha = Math.min(1, banner.t * 2.5);
