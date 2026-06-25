@@ -17,7 +17,7 @@ import { setVolumes } from '../audio/synth.js';
 import { sfx } from '../audio/sfx.js';
 import { makeHunterRecord, exportSave, importSave, loadRoster,
          loadRelicDiveBest, saveRelicDiveBest, todayDateKey, dateToSeed,
-         buildShareString, hashRunSeed } from '../save.js';
+         buildShareString, hashRunSeed, getLeaderboard } from '../save.js';
 import { makeRng } from '../engine/rng.js';
 import { rollPerkChoices, describePerk } from '../engine/perks.js';
 
@@ -1020,6 +1020,7 @@ export function makeHubScreen(app) {
     sfx.menuConfirm();
     app.stack.push(makeRelicDiveScreen(app, { daily }));
   };
+  const openLeaderboard = () => { sfx.menuConfirm(); app.stack.push(makeLeaderboardScreen(app)); };
   const iconRect = (i) => ({ x: 120 + i * 190, y: 160, w: 150, h: 130 });
   return {
     enter() { app.music('hub'); },
@@ -1032,6 +1033,7 @@ export function makeHubScreen(app) {
       else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); } // back to title
       else if (e?.code === 'KeyD') openRelicDive(false);
       else if (e?.code === 'KeyH') openRelicDive(true);
+      else if (e?.code === 'KeyL') openLeaderboard();
     },
     onClick(pos) {
       for (let i = 0; i < ICONS.length; i++) {
@@ -1043,6 +1045,7 @@ export function makeHubScreen(app) {
       }
       if (inRect(pos, DIVE_BTN)) { openRelicDive(false); return; }
       if (inRect(pos, DAILY_BTN)) { openRelicDive(true); return; }
+      if (inRect(pos, { x: 560, y: 520, w: 190, h: 36 })) { openLeaderboard(); return; }
     },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
@@ -1184,6 +1187,10 @@ export function makeHubScreen(app) {
             text(ctx, `Best: ${diveBest.best.score} pts  Depth ${diveBest.best.depths}  Streak ${diveBest.streak}`,
               120, 568, { size: 12, color: DIM });
           }
+          // Leaderboard button
+          { const LB = { x: 560, y: 520, w: 190, h: 36 };
+            box(ctx, LB.x, LB.y, LB.w, LB.h, { stroke: '#3c4364' });
+            text(ctx, '[ L ] LEADERBOARD', LB.x + LB.w / 2, LB.y + 13, { size: 12, align: 'center', color: DIM }); }
         }
         drawItemList(ctx, rec.items, 640, 412, t);
       } else {
@@ -1191,7 +1198,7 @@ export function makeHubScreen(app) {
         text(ctx, 'No active hunter - visit the OFFICE first.', 120, 430, { size: 16, color: BAD, shadow: false });
         ctx.restore();
       }
-      text(ctx, 'Esc: back to title', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
+      text(ctx, 'Esc: back to title   L: leaderboard', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
     },
   };
 }
@@ -3778,6 +3785,91 @@ export function makeManualScreen(app) {
         ctx.arc(dotsX + di * spacing, navY + 34, dpulse, 0, Math.PI * 2);
         ctx.fill();
       }
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// LEADERBOARD — top-10 per mode; accessible from Hub with [ L ].
+
+export function makeLeaderboardScreen(app) {
+  const MODES = [
+    { key: 'normal',      label: 'NORMAL',      col: '#7090d8' },
+    { key: 'story',       label: 'STORY',       col: GOLD },
+    { key: 'relic-dive',  label: 'RELIC DIVE',  col: '#c090ff' },
+  ];
+  let modeIdx = 0;
+  let t = 0;
+
+  return {
+    enter() { app.music('hub'); },
+    update(dt) { t += dt; },
+    onKey(k) {
+      if (k === 'left')  { modeIdx = (modeIdx + MODES.length - 1) % MODES.length; sfx.menuMove(); }
+      else if (k === 'right') { modeIdx = (modeIdx + 1) % MODES.length; sfx.menuMove(); }
+      else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); }
+    },
+    onClick(pos) {
+      for (let i = 0; i < MODES.length; i++) {
+        const tx = 120 + i * 240;
+        if (pos.x >= tx && pos.x < tx + 200 && pos.y >= 60 && pos.y < 106) {
+          if (modeIdx !== i) { modeIdx = i; sfx.menuMove(); }
+          return;
+        }
+      }
+      if (pos.y > 640) { sfx.menuCancel(); app.stack.pop(); }
+    },
+    draw(ctx) {
+      drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      const cx = app.W / 2;
+      ctx.save(); ctx.shadowBlur = 18; ctx.shadowColor = GOLD;
+      text(ctx, 'LEADERBOARD', cx, 36, { size: 32, align: 'center', color: GOLD, shadow: false });
+      ctx.restore();
+
+      // Mode tabs
+      for (let i = 0; i < MODES.length; i++) {
+        const m = MODES[i];
+        const sel = i === modeIdx;
+        const tx = 120 + i * 240;
+        box(ctx, tx, 60, 200, 46, { stroke: sel ? m.col : '#3c4364' });
+        if (sel) {
+          ctx.save(); ctx.globalAlpha = 0.16 + 0.06 * Math.sin(t * 2);
+          ctx.fillStyle = m.col; ctx.fillRect(tx + 1, 61, 199, 44); ctx.restore();
+        }
+        text(ctx, m.label, tx + 100, 78, { size: 15, align: 'center', color: sel ? m.col : DIM });
+      }
+
+      // Entries
+      const mode = MODES[modeIdx];
+      const entries = getLeaderboard(mode.key);
+      const listY = 128;
+      if (!entries.length) {
+        text(ctx, 'No entries yet.', cx, listY + 60, { size: 16, align: 'center', color: DIM });
+      } else {
+        for (let i = 0; i < entries.length; i++) {
+          const e = entries[i];
+          const ey = listY + i * 48;
+          const rowCol = i === 0 ? GOLD : i < 3 ? '#c0c8e0' : DIM;
+          // Rank badge
+          const rankStr = i === 0 ? '★ 1' : `  ${i + 1}`;
+          text(ctx, rankStr, 140, ey + 14, { size: i < 3 ? 18 : 15, color: rowCol });
+          // Name
+          text(ctx, e.name ?? '—', 200, ey + 14, { size: 16, color: i < 3 ? FG : DIM });
+          // Score
+          text(ctx, `${e.score} pts`, 580, ey + 14, { size: 16, color: rowCol, align: 'right' });
+          // Extras (depths for relic-dive, missionId for story)
+          if (e.extras?.depths != null)
+            text(ctx, `Depth ${e.extras.depths}`, 680, ey + 14, { size: 13, color: DIM });
+          else if (e.extras?.missionId != null)
+            text(ctx, `M${e.extras.missionId}`, 680, ey + 14, { size: 13, color: DIM });
+          // Separator
+          if (i < entries.length - 1) {
+            ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = '#a0a8c0';
+            ctx.fillRect(120, ey + 34, 720, 1); ctx.restore();
+          }
+        }
+      }
+      text(ctx, '← → switch mode   Esc: back', cx, 670, { size: 13, align: 'center', color: DIM });
     },
   };
 }
