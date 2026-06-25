@@ -1085,6 +1085,24 @@ const WALL_AN = [ // sunken panel — each course has g-marked inner border sugg
   'XXXXXXXXXXXXXXXX',
   'GGGGGGGGGGGGGGGG',
 ];
+const WALL_AO = [ // varied-course cyclopean — 1-full + 2-medium + 1-full + 3-narrow courses for monumental variety
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGXcGGGGgX',
+  'XGGGGGGGXGGGGGgX',
+  'XGGGGGGGXGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGXcGGGXcGGgX',
+  'XGGGGXGGGGXGGGgX',
+  'XGGGGXGGGGXGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
 const WALL_AE = [ // rusticated courses — four shadow-inset bricks per course; deep d-shadow at each joint edge
   'XXXXXXXXXXXXXXXX',
   'XdGcXdGcXdGcXdGc',
@@ -1781,6 +1799,24 @@ const FLOOR_AN = [ // tall-course brick — 3-row bricks with g bottom shadow, s
   'GdGgGGGGGdGgGGGG',
   'GGGGGGGGGGGGGGGG',
 ];
+const FLOOR_AO = [ // concentric diamond rings — Manhattan-distance rings of g alternating with G from tile center
+  'GGggGGggggGGggGG',
+  'GggGGggGGggGGggG',
+  'ggGGggGGGGggGGgg',
+  'gGGggGGggGGggGGg',
+  'GGggGGggggGGggGG',
+  'GggGGggGGggGGggG',
+  'ggGGggGGGGggGGgg',
+  'gGGggGGggGGggGGg',
+  'gGGggGGggGGggGGg',
+  'ggGGggGGGGggGGgg',
+  'GggGGggGGggGGggG',
+  'GGggGGggggGGggGG',
+  'gGGggGGggGGggGGg',
+  'ggGGggGGGGggGGgg',
+  'GggGGggGGggGGggG',
+  'GGGGGGGGGGGGGGGG',
+];
 
 export const TILES = {
   floorA: { grid: FLOOR_A, palette: TILE_PALETTE },
@@ -1823,6 +1859,7 @@ export const TILES = {
   floorAL: { grid: FLOOR_AL, palette: TILE_PALETTE },
   floorAM: { grid: FLOOR_AM, palette: TILE_PALETTE },
   floorAN: { grid: FLOOR_AN, palette: TILE_PALETTE },
+  floorAO: { grid: FLOOR_AO, palette: TILE_PALETTE },
   pit: { grid: PIT, palette: TILE_PALETTE },
   wall: { grid: WALL, palette: TILE_PALETTE },
   wallB: { grid: WALL_B, palette: TILE_PALETTE },
@@ -1864,6 +1901,7 @@ export const TILES = {
   wallAL: { grid: WALL_AL, palette: TILE_PALETTE },
   wallAM: { grid: WALL_AM, palette: TILE_PALETTE },
   wallAN: { grid: WALL_AN, palette: TILE_PALETTE },
+  wallAO: { grid: WALL_AO, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
