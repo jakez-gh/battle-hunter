@@ -166,6 +166,7 @@ export function createRenderer(canvas, opts = {}) {
   let floats = [];                     // {text,color,icon,wx,wy,t,ttl,big}
   let sparkles = [];                   // {wx,wy,vx,vy,t,ttl,color[,round,alpha0]}
   let smokeSeed = 0;                   // timer for torch-smoke emission
+  let _hudDotPat = null;               // lazily-baked 4×4 dot-grid canvas pattern for HUD texture
   let shake = null;                    // {t,dur,mag}
   let unitFlash = null;                // {key,t,dur,color}
   let turnFlash = null;                // {color,t,dur} â€” screen-edge glow on turn start
@@ -2960,6 +2961,20 @@ export function createRenderer(canvas, opts = {}) {
     hudGrad.addColorStop(0, '#141520'); hudGrad.addColorStop(1, '#09090f');
     ctx.fillStyle = hudGrad;
     ctx.fillRect(0, y0, canvas.width, HUD_H);
+    // Subtle dot-grid texture overlay (browser only — document not available in Node tests)
+    if (!_hudDotPat && typeof document !== 'undefined') {
+      const off = Object.assign(document.createElement('canvas'), { width: 4, height: 4 });
+      const oc = off.getContext('2d');
+      oc.fillStyle = 'rgba(255,255,255,0.06)';
+      oc.fillRect(0, 0, 1, 1);
+      oc.fillStyle = 'rgba(255,255,255,0.03)';
+      oc.fillRect(2, 2, 1, 1);
+      _hudDotPat = ctx.createPattern(off, 'repeat');
+    }
+    if (_hudDotPat) {
+      ctx.save(); ctx.globalAlpha = 0.55; ctx.fillStyle = _hudDotPat;
+      ctx.fillRect(0, y0, canvas.width, HUD_H); ctx.restore();
+    }
     const _ak = activeKey();
     const _ah = _ak?.[0] === 'h' ? findUnit(_ak) : null;
     const _sc = _ah ? (SLOT_COLORS[(_ah.slot ?? 0) % 4] ?? '#2a2c3a') : '#2a2c3a';
