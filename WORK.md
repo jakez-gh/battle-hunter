@@ -255,21 +255,20 @@ whoever holds the visual-polish claim first. Prerequisite: Phase 1 done at
 
 ### Engine lane
 
-- [~] **2A — Perk catalog + roll logic (`perks.js`)** — pure perk definitions
-  in the same effect-string format `items.js` already parses (`at+1`, `noSelfTrap`,
-  `restDraw+1`, `firstBoxIdentified`, etc.). `rollPerkChoices(rng, n=3)` samples
-  without replacement from the catalog. `applyPerk(perk, hunter)` reuses
-  `items.js` effect application path; no engine-core changes.
-  Tests: choices are non-duplicate; `applyPerk` round-trips same as item effects.
-  **Claimed by `opus-coord-3ba000`** (`src/engine/perks.js`, `tests/perks.test.mjs`).
+- [x] **2A — Perk catalog + roll logic (`perks.js`)** — 16 perks (4 stat, 12
+  utility), `rollPerkChoices(rng, owned, count=3)` rarity-weighted without
+  replacement, `perkStatBonuses` / `perkHasEffect` / `describePerk`. **Shipped
+  `9df339d`** by `opus-coord-3ba000`.
 
 ### UI lane
 
-- [ ] **2B — Perk-pick screen (`screens.js`)** — after each won depth, before
-  `makeDepthClearedScreen`, show `makePerkPickScreen`: three perk cards
-  (name + effect description), hunter clicks one, `applyPerk` runs on the runner.
-  Requires 2A done. **Coordinate with `render-agent-b7ca8a` on `screens.js` claim
-  before starting.**
+- [x] **2B — Perk-pick screen (`screens.js`)** — `makePerkPickScreen` shown
+  after each won depth, before DESCEND/BANK OUT. Three cards with name, desc,
+  rarity badge; ←/→ navigate, Enter/click select; perks accumulate in
+  `rs.perks[]`; deterministic seed so seeded/daily runs see identical offers.
+  **Shipped `9b661ae`** by `study-sonnet-1cd904`. Also done in same session:
+  distinct status SFX (`statusInflicted` → panic/stun/leg/empty dispatch) +
+  counter-item SFX on `battleStarted` — `0d611e6`.
 
 ---
 

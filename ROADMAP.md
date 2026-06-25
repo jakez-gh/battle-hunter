@@ -58,7 +58,7 @@ The minimum that makes "a run" exist and be shareable.
   `save.js` (run/daily persistence) = engine lane; hub/run/daily screens in
   `screens.js` = UI lane (coordinate with whoever owns screens.js).
 
-### Phase 2 — Horizontal perks (the build)
+### Phase 2 — Horizontal perks (the build) ✅ DONE (`9b661ae`, 353/353 tests)
 - Replace the +1HP/+1pt hospital purchase with a **"choose 1 of 3"** perk pick
   between depths, implemented in the *same* effect-string format `items.js`
   already parses (`at+1`, plus new keys like `noSelfTrap`, `restDraw+1`,
