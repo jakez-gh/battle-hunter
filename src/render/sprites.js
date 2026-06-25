@@ -939,6 +939,44 @@ const WALL_AB = [ // banded ashlar — smooth dressed stone with a band of dense
   'GGGGGGGGGGGGGGGG',
 ];
 
+const WALL_AE = [ // rusticated courses — four shadow-inset bricks per course; deep d-shadow at each joint edge
+  'XXXXXXXXXXXXXXXX',
+  'XdGcXdGcXdGcXdGc',
+  'XdGGXdGGXdGGXdGG',
+  'XXXXXXXXXXXXXXXX',
+  'XdGcXdGcXdGcXdGc',
+  'XdGGXdGGXdGGXdGG',
+  'XXXXXXXXXXXXXXXX',
+  'XdGcXdGcXdGcXdGc',
+  'XdGGXdGGXdGGXdGG',
+  'XXXXXXXXXXXXXXXX',
+  'XdGcXdGcXdGcXdGc',
+  'XdGGXdGGXdGGXdGG',
+  'XXXXXXXXXXXXXXXX',
+  'XGGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
+const WALL_AF = [ // fieldstone — three irregular-sized stone courses: one monolith, two-stone, three-stone
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGGGGGGgX',
+  'XGGGGGGGGGGGGGgX',
+  'XgGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGGGGGGXcGGGgX',
+  'XGGGGGGGGXGGGGgX',
+  'XgGGGGGGGXgGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XcGGXXcGGGGXcGgX',
+  'XGGGXXGGGGGXGGgX',
+  'XgGGXXgGGGGXgGgX',
+  'XXXXXXXXXXXXXXXX',
+  'XGGGGGGGGGGGGGgX',
+  'XXXXXXXXXXXXXXXX',
+  'GGGGGGGGGGGGGGGG',
+];
+
 const WALL_AC = [ // stacked grid bond — three courses of square-stacked bricks, no offset
   'XXXXXXXXXXXXXXXX',
   'XcGGgXcGGgXcGGgX',
@@ -1516,6 +1554,8 @@ export const TILES = {
   wallAB: { grid: WALL_AB, palette: TILE_PALETTE },
   wallAC: { grid: WALL_AC, palette: TILE_PALETTE },
   wallAD: { grid: WALL_AD, palette: TILE_PALETTE },
+  wallAE: { grid: WALL_AE, palette: TILE_PALETTE },
+  wallAF: { grid: WALL_AF, palette: TILE_PALETTE },
   exit: { grid: EXIT, palette: TILE_PALETTE },
   boxClosed: { grid: BOX_CLOSED, palette: TILE_PALETTE },
   boxOpen: { grid: BOX_OPEN, palette: TILE_PALETTE },
