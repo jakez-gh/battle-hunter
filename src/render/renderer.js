@@ -3059,6 +3059,22 @@ export function createRenderer(canvas, opts = {}) {
     // Background
     ctx.fillStyle = 'rgba(14, 15, 26, 0.96)';
     ctx.fillRect(bx, by, bw, bh);
+    // Arena stone-floor texture: small tile grid under fighters
+    { const ts = 6, mw = 1;
+      const tx0 = bx + 2, ty0 = by + 18, tx1 = bx + bw - 2, ty1 = by + bh - 2;
+      for (let ty = ty0; ty < ty1; ty += ts + mw) {
+        for (let tx = tx0; tx < tx1; tx += ts + mw) {
+          const th = (((tx * 317 + ty * 149) ^ 0x5f3) >>> 0) & 0xFF;
+          const shade = 40 + (th % 16);
+          const a = (0.35 + (th >> 6) * 0.06).toFixed(2);
+          const fw = Math.min(ts, tx1 - tx), fh = Math.min(ts, ty1 - ty);
+          if (fw > 0 && fh > 0) {
+            ctx.fillStyle = `rgba(${shade + 6},${shade + 4},${shade + 14},${a})`;
+            ctx.fillRect(tx, ty, fw, fh);
+          }
+        }
+      }
+    }
     // Inner vignette for depth
     { const vg = ctx.createRadialGradient(bx + bw / 2, by + bh / 2, 20, bx + bw / 2, by + bh / 2, bh * 0.85);
       vg.addColorStop(0, 'rgba(30,28,44,0.0)'); vg.addColorStop(1, 'rgba(0,0,0,0.45)');
@@ -3232,6 +3248,29 @@ export function createRenderer(canvas, opts = {}) {
             ctx.save(); ctx.shadowBlur = 22; ctx.shadowColor = '#ffe060';
             text('CRIT!', bx + bw / 2, by + bh / 2 - 10, '#ffe98a', 28, 'center');
             ctx.restore();
+          }
+        }
+        // Spark burst: pixel particles fly from the damage number on reveal
+        { const p2 = anim?.ev.type === 'strikeRolled' ? anim.t / anim.dur : 1;
+          if (p2 >= 0.5 && p2 < 0.92) {
+            const sp = (p2 - 0.5) / 0.42;
+            const dmgCx = (bx + bw / 2) | 0, dmgCy = (by + 150) | 0;
+            const dcol = st.crit ? '#ffe98a' : st.damage >= 6 ? '#ff9a40' : '#ff6060';
+            for (let i = 0; i < 20; i++) {
+              const sh = ((i * 1481 + 397) ^ 0x2b3f) & 0xFFFF;
+              const angle = (sh & 0xFF) / 255 * Math.PI * 2;
+              const spd = 14 + ((sh >> 8) & 0x1F);
+              const px = dmgCx + Math.cos(angle) * sp * spd;
+              const py = dmgCy + Math.sin(angle) * sp * spd + sp * sp * 10;
+              const sa = Math.sin(Math.min(1, sp * 2.5) * Math.PI) * (0.55 + (sh & 7) * 0.04);
+              if (sa < 0.04) continue;
+              ctx.save();
+              ctx.globalAlpha = sa;
+              ctx.fillStyle = (sh >> 12 & 1) ? '#fff8e0' : dcol;
+              const ss = Math.max(1, 3 - Math.round(sp * 2));
+              ctx.fillRect((px - 0.5) | 0, (py - 0.5) | 0, ss, ss);
+              ctx.restore();
+            }
           }
         }
       }
