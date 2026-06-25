@@ -10,7 +10,8 @@
 // in-mission screen goes through app.adapt (main.js's ADAPT layer) so the
 // parallel game.js/ai.js/renderer.js contracts are patched in one place.
 import { describeCard, cardColor } from '../engine/cards.js';
-import { ITEMS, sellPrice } from '../engine/items.js';
+import { ITEMS, sellPrice, effectiveStats } from '../engine/items.js';
+import { battleOdds, describeOdds, explainStrike } from '../engine/odds.js';
 import { STORY_MISSIONS, makeNormalMission, applyResults, displayStats, LEVEL_UP_FEES } from '../engine/missions.js';
 import { PALETTE_NAMES, HUNTERS as HUNTER_SPRITES } from '../render/sprites.js';
 import { setVolumes } from '../audio/synth.js';
@@ -1190,7 +1191,7 @@ export function makeHubScreen(app) {
           // Leaderboard button
           { const LB = { x: 560, y: 520, w: 190, h: 36 };
             box(ctx, LB.x, LB.y, LB.w, LB.h, { stroke: '#3c4364' });
-            text(ctx, '[ L ] LEADERBOARD', LB.x + LB.w / 2, LB.y + 13, { size: 12, align: 'center', color: DIM }); }
+            text(ctx, '[ L ] PERSONAL BEST', LB.x + LB.w / 2, LB.y + 13, { size: 12, align: 'center', color: DIM }); }
         }
         drawItemList(ctx, rec.items, 640, 412, t);
       } else {
@@ -1198,7 +1199,7 @@ export function makeHubScreen(app) {
         text(ctx, 'No active hunter - visit the OFFICE first.', 120, 430, { size: 16, color: BAD, shadow: false });
         ctx.restore();
       }
-      text(ctx, 'Esc: back to title   L: leaderboard', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
+      text(ctx, 'Esc: back to title   L: personal best', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
     },
   };
 }
@@ -1884,6 +1885,7 @@ export function makeGameScreen(app, g) {
   let broken = false;
   let finished = false;
   let lastHumanId = null;   // hotseat: track whose turn it was
+  let pendingBattlers = null; // names captured on battleStarted for explainStrike
   let handoff = null;       // { name } — waiting for new human to confirm before revealing hand
 
   const say = (s, dur = 2.2, color = GOLD) => { banner = { text: s, t: dur, color }; };
@@ -1935,6 +1937,10 @@ export function makeGameScreen(app, g) {
           if (_atk?.items && _def?.kind &&
               _atk.items.some(it => ITEMS[it.itemId]?.effect === 'counter-' + _def.kind))
             sfx.counterActivated();
+          pendingBattlers = {
+            atkName: _atk?.name ?? _atk?.kind ?? '?',
+            defName: _def?.name ?? _def?.kind ?? '?',
+          };
           break;
         }
         case 'turnStarted':
@@ -1977,11 +1983,22 @@ export function makeGameScreen(app, g) {
       case 'targetFound': sfx.targetFanfare(); break;
       case 'flagClaimed': sfx.flagClaim(); break;
       case 'escapeRolled': if (ev.escaped) sfx.escape(); break;
-      case 'strikeRolled':
+      case 'strikeRolled': {
         if (ev.crit) sfx.crit();
         else if ((ev.damage ?? 0) > 0) sfx.hit(ev.damage);
         else sfx.block();
+        if (pendingBattlers && ev.totals) {
+          const isAtk = ev.striker === 'attacker';
+          const note = explainStrike({
+            attacker: isAtk ? pendingBattlers.atkName : pendingBattlers.defName,
+            defender: isAtk ? pendingBattlers.defName : pendingBattlers.atkName,
+            atkTotal: ev.totals.atk, defTotal: ev.totals.def,
+            damage: ev.damage ?? 0, crit: ev.crit ?? false,
+          });
+          say(note, 2.4, ev.crit ? GOLD : (ev.damage ?? 0) > 0 ? '#cc4a3a' : DIM);
+        }
         break;
+      }
       case 'critNegated': sfx.block(); break;
       case 'statusInflicted': {
         const statusSfx = { panic: sfx.statusPanic, stun: sfx.statusStun, leg: sfx.statusLeg, empty: sfx.statusEmpty };
@@ -2070,7 +2087,22 @@ export function makeGameScreen(app, g) {
         rightColor: RESP_COL[a.response],
         value: () => act(a),
       }));
-      host.push(makeMenu(items, { title: 'BATTLE - respond!', onPick: (fn) => fn() }));
+      let oddsFooter = null;
+      try {
+        const _atk = A.resolveUnit(st, st.battle?.attacker);
+        const _def = A.resolveUnit(st, st.battle?.defender);
+        if (_atk && _def) {
+          const atkAT = _atk.internal
+            ? (_atk.internal.at + (effectiveStats(_atk).at ?? 0))
+            : (_atk.at ?? 1);
+          const defDF = _def.internal
+            ? (Math.floor(_def.internal.df / 2) + (effectiveStats(_def).df ?? 0))
+            : (_def.df ?? 0);
+          const defAT = _def.internal ? (_def.internal.at ?? 0) : (_def.at ?? 0);
+          oddsFooter = describeOdds(battleOdds({ at: atkAT, oppAt: defAT, df: defDF }));
+        }
+      } catch { /* odds are a bonus, never fatal */ }
+      host.push(makeMenu(items, { title: 'BATTLE - respond!', footer: oddsFooter, onPick: (fn) => fn() }));
       return;
     }
 
@@ -3823,7 +3855,7 @@ export function makeLeaderboardScreen(app) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
       const cx = app.W / 2;
       ctx.save(); ctx.shadowBlur = 18; ctx.shadowColor = GOLD;
-      text(ctx, 'LEADERBOARD', cx, 36, { size: 32, align: 'center', color: GOLD, shadow: false });
+      text(ctx, 'PERSONAL BEST', cx, 36, { size: 32, align: 'center', color: GOLD, shadow: false });
       ctx.restore();
 
       // Mode tabs
