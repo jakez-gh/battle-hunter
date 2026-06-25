@@ -1221,6 +1221,21 @@ export function createRenderer(canvas, opts = {}) {
               : (y < 10 ? 'rgba(60,130,255,' : 'rgba(140,60,200,');
             ctx.save(); ctx.globalAlpha = 0.035; ctx.fillStyle = secTint + '1)';
             ctx.fillRect(fp.x | 0, fp.y | 0, ts, ts); ctx.restore(); }
+          // Seam-blend: tiles at the section boundary (x=9..10, y=9..10) get a faint cross-section color bleed
+          if (x === 9 || x === 10) {
+            const fromRight = x === 9;
+            const blendCol = fromRight ? (y < 10 ? 'rgba(60,130,255,' : 'rgba(140,60,200,') : (y < 10 ? 'rgba(255,200,60,' : 'rgba(60,200,80,');
+            const sg = ctx.createLinearGradient(fromRight ? fp.x + ts : fp.x, fp.y, fromRight ? fp.x : fp.x + ts, fp.y);
+            sg.addColorStop(0, blendCol + '0.05)'); sg.addColorStop(1, blendCol + '0)');
+            ctx.fillStyle = sg; ctx.fillRect(fp.x | 0, fp.y | 0, ts, ts);
+          }
+          if (y === 9 || y === 10) {
+            const fromBottom = y === 9;
+            const blendCol = fromBottom ? (x < 10 ? 'rgba(60,200,80,' : 'rgba(140,60,200,') : (x < 10 ? 'rgba(255,200,60,' : 'rgba(60,130,255,');
+            const sg = ctx.createLinearGradient(fp.x, fromBottom ? fp.y + ts : fp.y, fp.x, fromBottom ? fp.y : fp.y + ts);
+            sg.addColorStop(0, blendCol + '0.05)'); sg.addColorStop(1, blendCol + '0)');
+            ctx.fillStyle = sg; ctx.fillRect(fp.x | 0, fp.y | 0, ts, ts);
+          }
           // Wall overhang shadow: floor tiles directly beneath a wall get a top-edge drop shadow
           if (!b.floor[y - 1]?.[x]) {
             const sg = ctx.createLinearGradient(fp.x, fp.y, fp.x, fp.y + cam.scale * 3.5);
