@@ -1331,6 +1331,41 @@ export function createRenderer(canvas, opts = {}) {
               ctx.fillRect((tcx - cs * 5.5) | 0, fp.y | 0, cs * 11, ts);
             }
           }
+          // Extended torch falloff: dim glow from torches 1-2 tiles away
+          { const cs = cam.scale;
+            // Two tiles above: torch at (x, y-2), light passes through floor at (x, y-1)
+            if (!b.floor[y - 2]?.[x] && b.floor[y - 1]?.[x]) {
+              const t2h = ((x * 1637 + (y - 2) * 3571) ^ 997) & 0xFFFF;
+              if ((t2h & 0xFF) >= 20 && ((t2h >> 8) & 0xFF) < 16) {
+                const tcx = fp.x + (((t2h >> 4) & 0xF) + 1.5) * cs;
+                const tcy = fp.y - ts * 0.5;
+                const tgp = (0.07 + 0.035 * Math.sin(clock / 850 + t2h * 0.031)).toFixed(3);
+                const tspill = x < 10
+                  ? ((y - 2) < 10 ? 'rgba(255,160,40,' : 'rgba(80,200,60,')
+                  : ((y - 2) < 10 ? 'rgba(80,150,255,' : 'rgba(160,60,220,');
+                const tgr = ctx.createRadialGradient(tcx, tcy, 0, tcx, tcy, cs * 7);
+                tgr.addColorStop(0, tspill + tgp + ')'); tgr.addColorStop(1, 'transparent');
+                ctx.fillStyle = tgr; ctx.fillRect((tcx - cs * 7) | 0, fp.y | 0, cs * 14, ts);
+              }
+            }
+            // Lateral: torch at (x-1, y-1) or (x+1, y-1) spills sideways onto this tile
+            for (const dx of [-1, 1]) {
+              if (!b.floor[y - 1]?.[x + dx]) {
+                const lth = (((x + dx) * 1637 + (y - 1) * 3571) ^ 997) & 0xFFFF;
+                if ((lth & 0xFF) >= 20 && ((lth >> 8) & 0xFF) < 16) {
+                  const ltx = fp.x + (dx < 0 ? 0 : ts);
+                  const lty = fp.y + ts * 0.1;
+                  const lgp = (0.06 + 0.03 * Math.sin(clock / 850 + lth * 0.031)).toFixed(3);
+                  const ltspill = (x + dx) < 10
+                    ? ((y - 1) < 10 ? 'rgba(255,160,40,' : 'rgba(80,200,60,')
+                    : ((y - 1) < 10 ? 'rgba(80,150,255,' : 'rgba(160,60,220,');
+                  const lgr = ctx.createRadialGradient(ltx, lty, 0, ltx, lty, cs * 6);
+                  lgr.addColorStop(0, ltspill + lgp + ')'); lgr.addColorStop(1, 'transparent');
+                  ctx.fillStyle = lgr; ctx.fillRect(fp.x | 0, fp.y | 0, ts, ts);
+                }
+              }
+            }
+          }
           // Puddle: ~12% of floor tiles get a reflective wet shimmer
           const ph = ((x * 1637 + y * 3571) ^ 997) & 0xFFFF;
           if ((ph & 0xFF) < 30) {
