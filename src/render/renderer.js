@@ -3326,6 +3326,30 @@ export function createRenderer(canvas, opts = {}) {
     ctx.save(); ctx.shadowBlur = 16; ctx.shadowColor = banner.color;
     text(banner.text, bw / 2, ty, banner.color, tsz, 'center');
     ctx.restore();
+    // Persistent particles: confetti drifting up on win, falling ash on loss
+    const isWin = banner.color === '#ffe98a';
+    const isLoss = banner.color === '#ff6a5a';
+    if (isWin || isLoss) {
+      const WIN_CONF = ['#ffe98a', '#ffffff', '#7ee8a0', '#f0b0ff', '#80d0ff', '#ffc040'];
+      const LOSS_ASH = ['#8a3020', '#602010', '#c05040', '#3a2010'];
+      const np = isWin ? 28 : 16;
+      for (let i = 0; i < np; i++) {
+        const period = 2100 + i * 140;
+        const phase = ((clock * 0.9 + i * 1733) % period) / period;
+        const pa = Math.sin(phase * Math.PI) * (isWin ? 0.75 : 0.55);
+        if (pa < 0.05) continue;
+        const px = ((bw * ((i * 0.0618 + phase * 0.32) % 1)) | 0);
+        const drift = Math.sin(phase * Math.PI * 2.8 + i * 1.9) * 5;
+        const py = isWin
+          ? ((by - 6 - phase * 34 + drift) | 0)
+          : ((by + 46 + phase * 30 + drift) | 0);
+        const pcol = isWin ? WIN_CONF[i % WIN_CONF.length] : LOSS_ASH[i % LOSS_ASH.length];
+        const psz = phase < 0.45 ? 2 : 1;
+        ctx.save(); ctx.globalAlpha = pa; ctx.fillStyle = pcol;
+        ctx.fillRect(px, py, psz, psz);
+        ctx.restore();
+      }
+    }
   }
 
   // --- public API --------------------------------------------------------------
