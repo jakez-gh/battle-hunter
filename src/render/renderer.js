@@ -903,6 +903,9 @@ export function createRenderer(canvas, opts = {}) {
               vy: Math.sin(a) * spd - 0.6, t: 0, ttl: 580,
               color: i % 4 === 0 ? '#fff' : i % 4 === 1 ? '#ffe98a' : aaCol });
           }
+          // Second-wind halo: fast gold inner ring + slower slot-colored outer ring
+          pulseRings.push({ wx: ap2.x + 0.5, wy: ap2.y + 0.5, t: 0, ttl: 280, maxR: 0.85, color: '#ffe98a', alpha0: 1.0 });
+          pulseRings.push({ wx: ap2.x + 0.5, wy: ap2.y + 0.5, t: 0, ttl: 560, maxR: 2.0, color: aaCol, alpha0: 0.65 });
         }
         break;
       }
@@ -1865,18 +1868,22 @@ export function createRenderer(canvas, opts = {}) {
       ctx.save(); ctx.globalAlpha = rpulse2 * 0.6; ctx.fillStyle = rg2;
       ctx.fillRect(rp.x - rs * 0.8, rp.y - rs * 0.8, rs * 2.6, rs * 2.6); ctx.restore();
       const s = cam.scale;
+      const npcBob = Math.round(Math.sin(clock / 700) * 0.5) * s;
       // Dark shadow block behind figure for readability on any floor tile
       ctx.save(); ctx.globalAlpha = 0.45; ctx.fillStyle = '#001806';
-      ctx.fillRect((rp.x + 1 * s) | 0, (rp.y + 0 * s) | 0, 5 * s, 12 * s); ctx.restore();
-      // Person silhouette: head (3Ã—3 at 2,1), body (3Ã—4 at 2,4), outstretched arms, legs
+      ctx.fillRect((rp.x + 1 * s) | 0, (rp.y + npcBob) | 0, 5 * s, 12 * s); ctx.restore();
+      // Waving arm: right arm rises/falls with sin wave (period ~760ms)
+      const armRow = 5 - Math.round((Math.sin(clock / 380) + 1) * 1.5);
+      // Person silhouette: head (3×3 at 2,1), body (3×4 at 2,4), arms, legs
       ctx.save();
       ctx.fillStyle = '#e8f8ec';
-      ctx.fillRect((rp.x + 2 * s) | 0, (rp.y + 1 * s) | 0, 3 * s, 3 * s); // head
-      ctx.fillRect((rp.x + 2 * s) | 0, (rp.y + 4 * s) | 0, 3 * s, 4 * s); // body
-      ctx.fillRect((rp.x + 0 * s) | 0, (rp.y + 5 * s) | 0, 2 * s, s);     // left arm
-      ctx.fillRect((rp.x + 5 * s) | 0, (rp.y + 5 * s) | 0, 2 * s, s);     // right arm
-      ctx.fillRect((rp.x + 2 * s) | 0, (rp.y + 8 * s) | 0, s, 3 * s);     // left leg
-      ctx.fillRect((rp.x + 4 * s) | 0, (rp.y + 8 * s) | 0, s, 3 * s);     // right leg
+      const ry = rp.y + npcBob;
+      ctx.fillRect((rp.x + 2 * s) | 0, (ry + 1 * s) | 0, 3 * s, 3 * s); // head
+      ctx.fillRect((rp.x + 2 * s) | 0, (ry + 4 * s) | 0, 3 * s, 4 * s); // body
+      ctx.fillRect((rp.x + 0 * s) | 0, (ry + 5 * s) | 0, 2 * s, s);     // left arm (static)
+      ctx.fillRect((rp.x + 5 * s) | 0, (ry + armRow * s) | 0, 2 * s, s); // right arm (waving)
+      ctx.fillRect((rp.x + 2 * s) | 0, (ry + 8 * s) | 0, s, 3 * s);     // left leg
+      ctx.fillRect((rp.x + 4 * s) | 0, (ry + 8 * s) | 0, s, 3 * s);     // right leg
       ctx.restore();
       // "!" urgency label above the figure â€” flashes with the pulse
       ctx.save();
