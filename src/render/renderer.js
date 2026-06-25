@@ -3073,6 +3073,16 @@ export function createRenderer(canvas, opts = {}) {
     const bh = Math.min(canvas.height - HUD_H - 24, 230);
     const bx = (canvas.width - bw) / 2 | 0;
     const by = (canvas.height - HUD_H - bh) / 2 | 0;
+    // Entry scale-in animation on battleStarted
+    const _isEntry = anim?.ev.type === 'battleStarted';
+    const _entryP = _isEntry ? 1 - Math.pow(1 - anim.t / anim.dur, 3) : 1;
+    const _bScale = 0.78 + 0.22 * _entryP;
+    const _bcx = (canvas.width / 2) | 0, _bcy = ((canvas.height - HUD_H) / 2) | 0;
+    ctx.save();
+    if (_isEntry) {
+      ctx.globalAlpha = Math.max(0.05, _entryP);
+      ctx.translate(_bcx, _bcy); ctx.scale(_bScale, _bScale); ctx.translate(-_bcx, -_bcy);
+    }
     // Background
     ctx.fillStyle = 'rgba(14, 15, 26, 0.96)';
     ctx.fillRect(bx, by, bw, bh);
@@ -3292,6 +3302,7 @@ export function createRenderer(canvas, opts = {}) {
         }
       }
     }
+    ctx.restore(); // entry scale-in
   }
 
   function drawBanner() {
