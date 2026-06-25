@@ -16,7 +16,10 @@ import { PALETTE_NAMES, HUNTERS as HUNTER_SPRITES } from '../render/sprites.js';
 import { setVolumes } from '../audio/synth.js';
 import { sfx } from '../audio/sfx.js';
 import { makeHunterRecord, exportSave, importSave, loadRoster,
-         loadRelicDiveBest, saveRelicDiveBest, todayDateKey, dateToSeed, buildShareString } from '../save.js';
+         loadRelicDiveBest, saveRelicDiveBest, todayDateKey, dateToSeed,
+         buildShareString, hashRunSeed } from '../save.js';
+import { makeRng } from '../engine/rng.js';
+import { rollPerkChoices, describePerk } from '../engine/perks.js';
 
 // ---------------------------------------------------------------------------
 // Screen stack
@@ -2892,7 +2895,7 @@ export function makeResultsScreen(app, g) {
         if (g.runState) {
           g.runState.depthResults.push({ won: win, score: depthScore });
           if (win) {
-            app.stack.replace(makeDepthTransitionScreen(app, g));
+            app.stack.replace(makePerkPickScreen(app, g));
           } else {
             app.stack.replace(makeRunSummaryScreen(app, g));
           }
@@ -3146,6 +3149,88 @@ export function makeResultsScreen(app, g) {
       return { id: h.id, name: h.name, moved, damage, flagPts, killPts, handicap, itemPts, total, credits };
     });
   }
+}
+
+// ---------------------------------------------------------------------------
+// PERK PICK — choose 1 of 3 perks between depths (Phase 2 horizontal perks).
+// Shown after a won depth, before the DESCEND / BANK OUT choice.
+
+export function makePerkPickScreen(app, g) {
+  const rs = g.runState;
+  const perkSeed = hashRunSeed(rs.rootSeed ^ 0x5e4b3a2c, rs.depth);
+  const rng = makeRng(perkSeed);
+  const choices = rollPerkChoices(rng, rs.perks ?? []).map(describePerk);
+  let idx = 0;
+  let t = 0;
+  const RARITY_COL = { common: '#60a860', uncommon: '#7090d8', rare: '#d08040' };
+
+  function pick(i) {
+    sfx.menuConfirm();
+    rs.perks = [...(rs.perks ?? []), choices[i].id];
+    app.stack.replace(makeDepthTransitionScreen(app, g));
+  }
+
+  return {
+    enter() { app.music('hub'); },
+    update(dt) { t += dt; },
+    onKey(k) {
+      if (k === 'left') { idx = (idx + 2) % 3; sfx.menuMove(); }
+      else if (k === 'right') { idx = (idx + 1) % 3; sfx.menuMove(); }
+      else if (k === 'confirm') pick(idx);
+    },
+    onClick(pos) {
+      const cx = app.W / 2;
+      const cardW = 200, cardH = 220, cardY = 230;
+      const xs = [cx - 300, cx - 100, cx + 100];
+      for (let i = 0; i < 3; i++) {
+        if (pos.x >= xs[i] && pos.x < xs[i] + cardW && pos.y >= cardY && pos.y < cardY + cardH) {
+          pick(i); return;
+        }
+      }
+    },
+    draw(ctx) {
+      drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
+      const cx = app.W / 2;
+      ctx.save(); ctx.shadowBlur = 22; ctx.shadowColor = '#9060d8';
+      text(ctx, 'CHOOSE A PERK', cx, 50, { size: 32, align: 'center', color: '#c090ff', shadow: false });
+      ctx.restore();
+      text(ctx, `After Depth ${rs.depth}  ·  Run perks: ${(rs.perks ?? []).length}`,
+        cx, 84, { size: 14, align: 'center', color: DIM });
+
+      const cardW = 200, cardH = 220, cardY = 230;
+      const xs = [cx - 300, cx - 100, cx + 100];
+      for (let i = 0; i < 3; i++) {
+        const p = choices[i];
+        const sel = idx === i;
+        const col = RARITY_COL[p.rarity] ?? FG;
+        box(ctx, xs[i], cardY, cardW, cardH, { stroke: sel ? col : '#3c3464' });
+        if (sel) {
+          ctx.save(); ctx.globalAlpha = 0.14 + 0.06 * Math.sin(t * 2.5);
+          ctx.fillStyle = col; ctx.fillRect(xs[i] + 1, cardY + 1, cardW - 2, cardH - 2);
+          ctx.restore();
+        }
+        text(ctx, p.rarity.toUpperCase(), xs[i] + cardW / 2, cardY + 22,
+          { size: 11, align: 'center', color: col });
+        text(ctx, p.name, xs[i] + cardW / 2, cardY + 60,
+          { size: 18, align: 'center', color: sel ? '#ffffff' : FG });
+        // word-wrap description into ~22-char lines
+        const words = p.desc.split(' ');
+        let line = '', lineY = cardY + 104;
+        for (const w of words) {
+          const test = line ? line + ' ' + w : w;
+          if (test.length > 22 && line) {
+            text(ctx, line, xs[i] + cardW / 2, lineY, { size: 13, align: 'center', color: DIM });
+            lineY += 18; line = w;
+          } else line = test;
+        }
+        if (line) text(ctx, line, xs[i] + cardW / 2, lineY, { size: 13, align: 'center', color: DIM });
+        if (sel) text(ctx, '▼ SELECT', xs[i] + cardW / 2, cardY + cardH - 22,
+          { size: 12, align: 'center', color: col });
+      }
+      text(ctx, '← → navigate   Enter: select perk', cx, 484,
+        { size: 13, align: 'center', color: DIM });
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
