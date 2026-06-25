@@ -513,13 +513,36 @@ function drawHunterCard(app, rec, x, y, w) {
 
 export function makeTitleScreen(app) {
   let t = 0;
+
+  function quickStart() {
+    sfx.menuConfirm();
+    // Ensure there's an active hunter — create a balanced starter if none.
+    if (!currentHunter(app)) {
+      const QUICK_NAMES = ['Vex', 'Arlo', 'Sable', 'Kira', 'Finn', 'Nova'];
+      const name = QUICK_NAMES[Math.floor(Date.now() / 1000) % QUICK_NAMES.length];
+      const rec = makeHunterRecord({
+        name,
+        spriteId: Math.floor(Math.random() * 8),
+        palette: PALETTE_NAMES[Math.floor(Math.random() * PALETTE_NAMES.length)],
+        internal: { mv: 3, at: 4, df: 4, hp: 4 }, // balanced L1 starter
+      });
+      app.roster.hunters.push(rec);
+      app.session.hunterId = rec.id;
+      app.save();
+    }
+    app.session.mode = 'normal';
+    app.stack.push(makeHubScreen(app));
+  }
+
   const menu = makeMenu([
+    { label: 'QUICK START', value: 'quick', color: OK },
     { label: 'STORY', value: 'story', color: GOLD },
     { label: 'NORMAL', value: 'normal', color: '#4a7dff' },
     { label: 'HOW TO PLAY', value: 'manual', color: '#3aacc8' },
     { label: 'OPTIONS', value: 'options', color: DIM },
   ], {
     onPick(v) {
+      if (v === 'quick') { quickStart(); return; }
       if (v === 'options') { app.stack.push(makeOptionsScreen(app)); return; }
       if (v === 'manual') { app.stack.push(makeManualScreen(app)); return; }
       app.session.mode = v;
@@ -627,8 +650,8 @@ export function makeTitleScreen(app) {
         }
         sprite(app, `hunter${i}.${pal}.${step}`, hx, 354, 5);
       });
-      drawMenu(ctx, menu, cx - 130, 480, 260, { lineH: 34, size: 22 });
-      text(ctx, 'arrows/WASD move - Enter confirm - Esc back - Tab info', cx, 660, { size: 13, align: 'center', color: DIM });
+      drawMenu(ctx, menu, cx - 130, 464, 260, { lineH: 30, size: 20 });
+      text(ctx, 'arrows/WASD move - Enter confirm - Esc back', cx, 660, { size: 13, align: 'center', color: DIM });
       text(ctx, 'an original clone - all art, music and names are ours', cx, 685, { size: 12, align: 'center', color: '#565d75' });
     },
   };
