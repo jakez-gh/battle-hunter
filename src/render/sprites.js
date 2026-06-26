@@ -2417,6 +2417,27 @@ const WALL_DK = [ // ashlar with shadow reveal — deep d reveal between blocks 
   'XXXXXXXXXXXXXXXX',
   'GGGGGGGGGGGGGGGG',
 ];
+const WALL_FQ = [ // sunburst — d lines radiate from a single point at (7,3) outward along two diagonals and a vertical
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX',
+  'XcGGGGGdGGGGGGgX', 'XcGGGGdddGGGGGgX', 'XcGGGdGdGdGGGGgX',
+  'XcGGdGGdGGdGGGgX', 'XcGdGGGdGGGdGGgX', 'XcdGGGGdGGGGdGgX',
+  'XcGGGGGdGGGGGdgX', 'XcGGGGGdGGGGGGgX', 'XcGGGGGdGGGGGGgX',
+  'XcGGGGGdGGGGGGgX', 'XcGGGGGdGGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_FR = [ // broken pediment — two raking d lines meet toward (but don't touch) the center; double entablature base
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX',
+  'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX',
+  'XcGGGGGGGGGGGGgX', 'XcGGGGdGGdGGGGgX', 'XcGGGdGGGGdGGGgX',
+  'XcGGdGGGGGGdGGgX', 'XcGdGGGGGGGGdGgX', 'XcdGGGGGGGGGGdgX',
+  'XcddddddddddddgX', 'XcddddddddddddgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_FS = [ // triglyph frieze — framed panel with three evenly-spaced d vertical grooves
+  'XXXXXXXXXXXXXXXX', 'XcddddddddddddgX', 'XcGdGGGdGGGdGGgX',
+  'XcGdGGGdGGGdGGgX', 'XcGdGGGdGGGdGGgX', 'XcGdGGGdGGGdGGgX',
+  'XcGdGGGdGGGdGGgX', 'XcGdGGGdGGGdGGgX', 'XcGdGGGdGGGdGGgX',
+  'XcGdGGGdGGGdGGgX', 'XcGdGGGdGGGdGGgX', 'XcGdGGGdGGGdGGgX',
+  'XcGdGGGdGGGdGGgX', 'XcddddddddddddgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
 const WALL_FN = [ // ashlar quoins — alternating wide (3px) and narrow (1px) d quoin blocks on both sides of the wall
   'XXXXXXXXXXXXXXXX',
   'XcdddGGGGGGdddgX',
@@ -5226,6 +5247,30 @@ const FLOOR_DM = [ // half-brick — g headers and stretchers alternating within
   'GGGGGGGGGGGGGGGg',
   'GGGGGGGGGGGGGGGG',
 ];
+const FLOOR_FP = [ // sparse diagonal — 1px g pixels on a ↘ diagonal at 6px period
+  'gGGGGGgGGGGGgGGG', 'GgGGGGGgGGGGGgGG', 'GGgGGGGGgGGGGGgG',
+  'GGGgGGGGGgGGGGGg', 'GGGGgGGGGGgGGGGG', 'GGGGGgGGGGGgGGGG',
+  'gGGGGGgGGGGGgGGG', 'GgGGGGGgGGGGGgGG', 'GGgGGGGGgGGGGGgG',
+  'GGGgGGGGGgGGGGGg', 'GGGGgGGGGGgGGGGG', 'GGGGGgGGGGGgGGGG',
+  'gGGGGGgGGGGGgGGG', 'GgGGGGGgGGGGGgGG', 'GGgGGGGGgGGGGGgG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_FQ = [ // twin diagonals — two parallel ↘ g lines 2px apart at 8px period
+  'gGgGGGGGgGgGGGGG', 'GgGgGGGGGgGgGGGG', 'GGgGgGGGGGgGgGGG',
+  'GGGgGgGGGGGgGgGG', 'GGGGgGgGGGGGgGgG', 'GGGGGgGgGGGGGgGg',
+  'gGGGGGgGgGGGGGgG', 'GgGGGGGgGgGGGGGg', 'gGgGGGGGgGgGGGGG',
+  'GgGgGGGGGgGgGGGG', 'GGgGgGGGGGgGgGGG', 'GGGgGgGGGGGgGgGG',
+  'GGGGgGgGGGGGgGgG', 'GGGGGgGgGGGGGgGg', 'gGGGGGgGgGGGGGgG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_FR = [ // staircase — 4px g bars descend one step (4px) every 2 rows, wrapping right-to-left
+  'GGGGGGGGGGGGgggg', 'GGGGGGGGGGGGgggg', 'GGGGGGGGggggGGGG',
+  'GGGGGGGGggggGGGG', 'GGGGggggGGGGGGGG', 'GGGGggggGGGGGGGG',
+  'ggggGGGGGGGGGGGG', 'ggggGGGGGGGGGGGG', 'GGGGGGGGGGGGgggg',
+  'GGGGGGGGGGGGgggg', 'GGGGGGGGggggGGGG', 'GGGGGGGGggggGGGG',
+  'GGGGggggGGGGGGGG', 'GGGGggggGGGGGGGG', 'ggggGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
 const FLOOR_FM = [ // staggered squares — 2×2 g squares alternating between two horizontal row offsets every 4 rows
   'GGGGGGGGGGGGGGGG',
   'GGGggGGGggGGGggG',
@@ -6631,6 +6676,9 @@ export const TILES = {
   floorDK: { grid: FLOOR_DK, palette: TILE_PALETTE },
   floorDL: { grid: FLOOR_DL, palette: TILE_PALETTE },
   floorDM: { grid: FLOOR_DM, palette: TILE_PALETTE },
+  floorFP: { grid: FLOOR_FP, palette: TILE_PALETTE },
+  floorFQ: { grid: FLOOR_FQ, palette: TILE_PALETTE },
+  floorFR: { grid: FLOOR_FR, palette: TILE_PALETTE },
   floorFM: { grid: FLOOR_FM, palette: TILE_PALETTE },
   floorFN: { grid: FLOOR_FN, palette: TILE_PALETTE },
   floorFO: { grid: FLOOR_FO, palette: TILE_PALETTE },
@@ -6810,6 +6858,9 @@ export const TILES = {
   wallDI: { grid: WALL_DI, palette: TILE_PALETTE },
   wallDJ: { grid: WALL_DJ, palette: TILE_PALETTE },
   wallDK: { grid: WALL_DK, palette: TILE_PALETTE },
+  wallFQ: { grid: WALL_FQ, palette: TILE_PALETTE },
+  wallFR: { grid: WALL_FR, palette: TILE_PALETTE },
+  wallFS: { grid: WALL_FS, palette: TILE_PALETTE },
   wallFN: { grid: WALL_FN, palette: TILE_PALETTE },
   wallFO: { grid: WALL_FO, palette: TILE_PALETTE },
   wallFP: { grid: WALL_FP, palette: TILE_PALETTE },
