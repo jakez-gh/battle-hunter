@@ -71,13 +71,13 @@ const ARCHETYPES = [
   'Attack spec.', 'Defense spec.', 'HP spec.',
 ];
 
-test('story missions: 15 entries, valid lineups of 3', () => {
+test('story missions: 15 entries, valid lineups', () => {
   assert.equal(STORY_MISSIONS.length, 15);
   STORY_MISSIONS.forEach((m, i) => {
     assert.equal(m.id, i + 1);
     assert.equal(m.level, i + 1);
     assert.ok(m.title.length > 0);
-    assert.equal(m.opponents.length, 3, `M${m.id} lineup`);
+    assert.ok(m.opponents.length >= 1 && m.opponents.length <= 3, `M${m.id} lineup`);
     for (const o of m.opponents) {
       assert.ok(
         ARCHETYPES.includes(o) || o === 'RAVEN' || o === 'keld' || o === 'mira',
@@ -100,7 +100,7 @@ test('story missions: types, carriers, rivals, target overrides per DESIGN', () 
   for (const id of [2, 8, 9, 10, 11, 12, 14, 15]) {
     assert.deepEqual(byId.get(id).opponents, ['RAVEN', 'RAVEN', 'RAVEN'], `M${id}`);
   }
-  assert.deepEqual(byId.get(1).opponents, ['Normal', 'Normal', 'Normal']);
+  assert.deepEqual(byId.get(1).opponents, ['Normal', 'Normal']);
   for (const id of [4, 6]) {
     assert.ok(byId.get(id).opponents.includes('keld') && byId.get(id).opponents.includes('mira'), `M${id} rivals`);
   }

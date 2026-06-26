@@ -6,8 +6,8 @@
 
 export const STORY_MISSIONS = [
   { id: 1, title: 'First Descent', type: 'fetch', level: 1,
-    opponents: ['Normal', 'Normal', 'Normal'], targetItemId: null, carrierIndex: null,
-    briefing: 'Your first contract from the Meridian Salvage Guild. The Coordinator wants proof you can handle yourself before assigning harder jobs — head into the Relics and bring back a relic fragment.' },
+    opponents: ['Normal', 'Normal'], targetItemId: null, carrierIndex: null,
+    briefing: 'Your first contract from the Meridian Salvage Guild. The Coordinator assigned two other field agents to the same ruins — bring back the relic fragment first and you\'ll have proved your worth.' },
   { id: 2, title: 'The Stranded Surveyor', type: 'rescue', level: 2,
     opponents: ['RAVEN', 'RAVEN', 'RAVEN'], targetItemId: null, carrierIndex: null,
     briefing: 'A Guild surveyor went into the Relics on a mapping run and never checked back in. Find him before the RAVEN Syndicate does — three of their agents are already inside.' },
