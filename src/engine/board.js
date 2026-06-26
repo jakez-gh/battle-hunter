@@ -328,7 +328,7 @@ export function assembleFloor(sectionIdx) {
 // on distinct floor tiles, none on the exit. If rollItem(rng, relicLevel) is
 // supplied, non-target boxes are filled; otherwise contents stay null for the
 // game layer to assign.
-export function generateBoard(rng, relicLevel, rollItem = null) {
+export function generateBoard(rng, relicLevel, rollItem = null, opts = {}) {
   const idx = Array.from({ length: 4 }, () => rng.int(SECTIONS.length));
   const floor = assembleFloor(idx);
   const w = SEC * 2, h = SEC * 2;
@@ -346,7 +346,8 @@ export function generateBoard(rng, relicLevel, rollItem = null) {
   const flags = tiles.slice(9, 13).map((t, i) => ({
     x: t.x, y: t.y, color: FLAG_COLORS[i], taken: false,
   }));
-  const traps = tiles.slice(13, 13 + Math.floor(relicLevel * 1.5)).map((t) => ({
+  const trapCount = Math.floor(relicLevel * 1.5 * (opts.trapMultiplier ?? 1));
+  const traps = tiles.slice(13, 13 + trapCount).map((t) => ({
     x: t.x, y: t.y, kind: rng.pick(TRAP_KINDS), byHunter: null,
   }));
   return { w, h, floor, exit, boxes, flags, traps };

@@ -335,7 +335,7 @@ function maybeSpawnMonster(state, rng) {
   }
 
   const regular = (state.monsters || []).filter((m) => m.kind !== 'WYRM' && m.hp > 0);
-  if (regular.length >= MAX_REGULAR_MONSTERS) return;
+  if (regular.length >= (state.maxMonsters ?? MAX_REGULAR_MONSTERS)) return;
   // Wardstone: any hunter holding an identified Wardstone blocks the spawn check (§2.10).
   if (state.hunters.some((h) => h.pos && hunterHasEffect(h, 'wardstone'))) return;
   const chance = state.turn?.cardPlayed && cardColor(state.turn.cardPlayed) === 'yellow' ? SPAWN_CHANCE / 2 : SPAWN_CHANCE;
@@ -686,8 +686,9 @@ export function createGame(config) {
   const players = (config.hunters || []).map((h) => ({ ...h }));
   const levels = players.map((h) => Math.max(1, Math.min(15, h.level ?? 1)));
   const relicLevel = config.mode === 'story' ? Math.max(1, Math.min(15, config.mission?.level || 1)) : Math.max(1, Math.min(15, Math.ceil(levels.reduce((a, b) => a + b, 0) / Math.max(1, levels.length))));
-  const board = generateBoard(rng, relicLevel, rollBoxItem);
+  const board = generateBoard(rng, relicLevel, rollBoxItem, { trapMultiplier: config.trapMultiplier });
   const deck = buildDeck(rng);
+  if (config.deckSize != null && config.deckSize < deck.length) deck.splice(config.deckSize);
   const tiles = [];
   for (let y = 0; y < board.h; y++) {
     for (let x = 0; x < board.w; x++) {
@@ -782,6 +783,8 @@ export function createGame(config) {
     events: [],
     turn: { moved: false, rested: false, actAgain: false },
     fortune: config.fortune ?? 1, // reroll tokens (1 base per mission; Lucky perk adds more)
+    maxMonsters: config.maxMonsters ?? MAX_REGULAR_MONSTERS,
+    restDisabled: !!config.restDisabled,
   };
   addEvent(state, { type: 'turnStarted', unit: state.current });
   return state;
@@ -814,7 +817,7 @@ function legalActions(state) {
       for (const card of moveCardIds) actions.push({ type: 'move', card });
     }
     for (const card of beCards) actions.push({ type: 'move', card });
-    if (state.current?.kind === 'hunter') {
+    if (state.current?.kind === 'hunter' && !state.restDisabled) {
       actions.push({ type: 'rest' });
     }
     const enemies = getAdjacentEnemies(state, { kind: state.current.kind, pos: chooser.pos });
