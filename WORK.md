@@ -281,8 +281,9 @@ whoever holds the visual-polish claim first. Prerequisite: Phase 1 done at
 
 - Network play (WebRTC or WebSocket) for remote multiplayer
 - Replay/spectate mode (engine is deterministic; save action log + seed)
-- Additional board sections (now 20; six added 2026-06-24 — d82d1f2)
+- Additional board sections (now 26; six added 2026-06-24 — d82d1f2)
 - [x] **Sound effects per item use type** — distinct SFX for each item kind + counter-item activation. `4ac3571` + `0d611e6`
 - [x] **High-score leaderboard** — `addLeaderboardEntry` / `getLeaderboard` / `clearLeaderboard`, top-10 per mode, `LEADERBOARD_KEY v1`. `61055ac`
 - [x] **Leaderboard screen** — `makeLeaderboardScreen`: 3-tab (Normal/Story/Relic Dive), top-10 per mode, rank badges, extras column; Hub `[ L ]` entry. `b30b8d2`
-- Accessibility: keyboard nav on all menus, colour-blind palette option
+- [x] **Accessibility** — colour-blind mode (Options: saturate+contrast canvas filter, `2fb5e18`); `[Q]` Quick Start keyboard shortcut in creation; WYRM first-play tip on spawn (`de79981`); keyboard nav audited — all screens already covered.
+- [x] **Score consistency** — personal best + share string now use modifier-multiplied score, matching leaderboard display. `8cde9d8` + `d2697a7`
