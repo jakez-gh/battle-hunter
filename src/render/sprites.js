@@ -2417,6 +2417,27 @@ const WALL_DK = [ // ashlar with shadow reveal — deep d reveal between blocks 
   'XXXXXXXXXXXXXXXX',
   'GGGGGGGGGGGGGGGG',
 ];
+const WALL_FZ = [ // Tudor depressed arch — flat 6px crown with quickly spreading legs; characteristic late-Gothic form
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGddddddGGGgX',
+  'XcGGdGGGGGGdGGgX', 'XcGdGGGGGGGGdGgX', 'XcdGGGGGGGGGGdgX',
+  'XcdGGGGGGGGGGdgX', 'XcdGGGGGGGGGGdgX', 'XcdGGGGGGGGGGdgX',
+  'XcdGGGGGGGGGGdgX', 'XcdGGGGGGGGGGdgX', 'XcdGGGGGGGGGGdgX',
+  'XcdGGGGGGGGGGdgX', 'XcdGGGGGGGGGGdgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_GA = [ // framed panel with diamond — d double border frames a centred Manhattan-radius-3 lozenge outline
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcddddddddddddgX',
+  'XcdGGGGGGGGGGdgX', 'XcdGGGGdGGGGGdgX', 'XcdGGGdGdGGGGdgX',
+  'XcdGGdGGGdGGGdgX', 'XcdGdGGGGGdGGdgX', 'XcdGGdGGGdGGGdgX',
+  'XcdGGGdGdGGGGdgX', 'XcdGGGGdGGGGGdgX', 'XcdGGGGGGGGGGdgX',
+  'XcdGGGGGGGGGGdgX', 'XcddddddddddddgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_GB = [ // basket bond — horizontal-stone and vertical-stone courses alternate behind d mortar channels
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGdGGGdGGGdGgX',
+  'XcGGdGGGdGGGdGgX', 'XcddddddddddddgX', 'XcGdGGGdGGGdGGgX',
+  'XcGdGGGdGGGdGGgX', 'XcGdGGGdGGGdGGgX', 'XcddddddddddddgX',
+  'XcGGdGGGdGGGdGgX', 'XcGGdGGGdGGGdGgX', 'XcddddddddddddgX',
+  'XcGdGGGdGGGdGGgX', 'XcGdGGGdGGGdGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
 const WALL_FW = [ // diamond pair — two d-outlined size-2 diamonds on the stone face, one upper-left, one lower-right
   'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGdGGGGGGGGGgX',
   'XcGdGdGGGGGGGGgX', 'XcdGGGdGGGGGGGgX', 'XcGdGdGGGGGGGGgX',
@@ -5289,6 +5310,30 @@ const FLOOR_DM = [ // half-brick — g headers and stretchers alternating within
   'GGGGGGGGGGGGGGGg',
   'GGGGGGGGGGGGGGGG',
 ];
+const FLOOR_FY = [ // cross stitch — four g plus-sign marks at (4,4), (12,4), (4,11), (12,11)
+  'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'GGGGgGGGGGGGgGGG', 'GGGgggGGGGGgggGG', 'GGGGgGGGGGGGgGGG',
+  'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG', 'GGGGgGGGGGGGgGGG', 'GGGgggGGGGGgggGG',
+  'GGGGgGGGGGGGgGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_FZ = [ // railroad tracks — twin g rails at x=5,10 with 6-wide ties every four rows
+  'GGGGGggggggGGGGG', 'GGGGGgGGGGgGGGGG', 'GGGGGgGGGGgGGGGG',
+  'GGGGGgGGGGgGGGGG', 'GGGGGggggggGGGGG', 'GGGGGgGGGGgGGGGG',
+  'GGGGGgGGGGgGGGGG', 'GGGGGgGGGGgGGGGG', 'GGGGGggggggGGGGG',
+  'GGGGGgGGGGgGGGGG', 'GGGGGgGGGGgGGGGG', 'GGGGGgGGGGgGGGGG',
+  'GGGGGggggggGGGGG', 'GGGGGgGGGGgGGGGG', 'GGGGGgGGGGgGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_GA = [ // alternating bars — 2px g micro-bars at rows 0 and 8, offset 2px at rows 4 and 12
+  'GGggGGggGGggGGgg', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG', 'ggGGggGGggGGggGG', 'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGggGGggGGggGGgg',
+  'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'ggGGggGGggGGggGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
 const FLOOR_FV = [ // centered cross — 2px-wide g plus-sign arms span the full tile from edge to edge
   'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG',
   'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG',
@@ -6766,6 +6811,9 @@ export const TILES = {
   floorDK: { grid: FLOOR_DK, palette: TILE_PALETTE },
   floorDL: { grid: FLOOR_DL, palette: TILE_PALETTE },
   floorDM: { grid: FLOOR_DM, palette: TILE_PALETTE },
+  floorFY: { grid: FLOOR_FY, palette: TILE_PALETTE },
+  floorFZ: { grid: FLOOR_FZ, palette: TILE_PALETTE },
+  floorGA: { grid: FLOOR_GA, palette: TILE_PALETTE },
   floorFV: { grid: FLOOR_FV, palette: TILE_PALETTE },
   floorFW: { grid: FLOOR_FW, palette: TILE_PALETTE },
   floorFX: { grid: FLOOR_FX, palette: TILE_PALETTE },
@@ -6954,6 +7002,9 @@ export const TILES = {
   wallDI: { grid: WALL_DI, palette: TILE_PALETTE },
   wallDJ: { grid: WALL_DJ, palette: TILE_PALETTE },
   wallDK: { grid: WALL_DK, palette: TILE_PALETTE },
+  wallFZ: { grid: WALL_FZ, palette: TILE_PALETTE },
+  wallGA: { grid: WALL_GA, palette: TILE_PALETTE },
+  wallGB: { grid: WALL_GB, palette: TILE_PALETTE },
   wallFW: { grid: WALL_FW, palette: TILE_PALETTE },
   wallFX: { grid: WALL_FX, palette: TILE_PALETTE },
   wallFY: { grid: WALL_FY, palette: TILE_PALETTE },
