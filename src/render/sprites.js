@@ -2417,6 +2417,27 @@ const WALL_DK = [ // ashlar with shadow reveal — deep d reveal between blocks 
   'XXXXXXXXXXXXXXXX',
   'GGGGGGGGGGGGGGGG',
 ];
+const WALL_FT = [ // crenellated parapet — two d-outlined merlons with open crenels between; smooth stone below
+  'XXXXXXXXXXXXXXXX', 'XcddddGGGGddddgX', 'XcdGGdGGGGdGGdgX',
+  'XcdGGdGGGGdGGdgX', 'XcdGGdGGGGdGGdgX', 'XcdGGdGGGGdGGdgX',
+  'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX',
+  'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX',
+  'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_FU = [ // herringbone split — ↗ diagonal d lines in top panel, ↘ in bottom; horizontal borders divide the two
+  'XXXXXXXXXXXXXXXX', 'XcddddddddddddgX', 'XcdGGGdGGGdGGGgX',
+  'XcGGGdGGGdGGGdgX', 'XcGGdGGGdGGGdGgX', 'XcGdGGGdGGGdGGgX',
+  'XcdGGGdGGGdGGGgX', 'XcddddddddddddgX', 'XcGGdGGGdGGGdGgX',
+  'XcGGGdGGGdGGGdgX', 'XcdGGGdGGGdGGGgX', 'XcGdGGGdGGGdGGgX',
+  'XcGGdGGGdGGGdGgX', 'XcddddddddddddgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_FV = [ // coffered grid — 3×3 d-outlined rectangular panels; evenly-spaced horizontal and vertical grid lines
+  'XXXXXXXXXXXXXXXX', 'XcddddddddddddgX', 'XcdGGdGGGGdGGdgX',
+  'XcdGGdGGGGdGGdgX', 'XcdGGdGGGGdGGdgX', 'XcddddddddddddgX',
+  'XcdGGdGGGGdGGdgX', 'XcdGGdGGGGdGGdgX', 'XcdGGdGGGGdGGdgX',
+  'XcddddddddddddgX', 'XcdGGdGGGGdGGdgX', 'XcdGGdGGGGdGGdgX',
+  'XcdGGdGGGGdGGdgX', 'XcddddddddddddgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
 const WALL_FQ = [ // sunburst — d lines radiate from a single point at (7,3) outward along two diagonals and a vertical
   'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX',
   'XcGGGGGdGGGGGGgX', 'XcGGGGdddGGGGGgX', 'XcGGGdGdGdGGGGgX',
@@ -6700,6 +6721,9 @@ export const TILES = {
   floorDK: { grid: FLOOR_DK, palette: TILE_PALETTE },
   floorDL: { grid: FLOOR_DL, palette: TILE_PALETTE },
   floorDM: { grid: FLOOR_DM, palette: TILE_PALETTE },
+  floorFS: { grid: FLOOR_FS, palette: TILE_PALETTE },
+  floorFT: { grid: FLOOR_FT, palette: TILE_PALETTE },
+  floorFU: { grid: FLOOR_FU, palette: TILE_PALETTE },
   floorFP: { grid: FLOOR_FP, palette: TILE_PALETTE },
   floorFQ: { grid: FLOOR_FQ, palette: TILE_PALETTE },
   floorFR: { grid: FLOOR_FR, palette: TILE_PALETTE },
@@ -6882,6 +6906,9 @@ export const TILES = {
   wallDI: { grid: WALL_DI, palette: TILE_PALETTE },
   wallDJ: { grid: WALL_DJ, palette: TILE_PALETTE },
   wallDK: { grid: WALL_DK, palette: TILE_PALETTE },
+  wallFT: { grid: WALL_FT, palette: TILE_PALETTE },
+  wallFU: { grid: WALL_FU, palette: TILE_PALETTE },
+  wallFV: { grid: WALL_FV, palette: TILE_PALETTE },
   wallFQ: { grid: WALL_FQ, palette: TILE_PALETTE },
   wallFR: { grid: WALL_FR, palette: TILE_PALETTE },
   wallFS: { grid: WALL_FS, palette: TILE_PALETTE },
