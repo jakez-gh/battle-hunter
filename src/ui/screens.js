@@ -3683,19 +3683,20 @@ export function makeRunSummaryScreen(app, g) {
     saved = true;
     const record = loadRelicDiveBest();
     shareStr = buildShareString({ daily: rs.daily, dateKey: rs.dateKey, startLevel: rs.startRelicLevel, depthResults: rs.depthResults });
-    if (!record.best || totalScore > record.best.score) {
-      record.best = { score: totalScore, depths: depthsCleared, shareStr };
+    const mult = scoreMultiplier(rs.modifiers ?? []);
+    const finalScore = Math.round(totalScore * mult);
+    // Personal best and leaderboard both use the multiplied score so the hub
+    // and leaderboard display the same number for the same run.
+    if (!record.best || finalScore > record.best.score) {
+      record.best = { score: finalScore, depths: depthsCleared, shareStr };
       newBest = true;
     }
     if (rs.daily) {
-      if (!record.daily || record.daily.dateKey !== rs.dateKey || totalScore > record.daily.score) {
-        record.daily = { dateKey: rs.dateKey, score: totalScore, depths: depthsCleared, shareStr };
+      if (!record.daily || record.daily.dateKey !== rs.dateKey || finalScore > record.daily.score) {
+        record.daily = { dateKey: rs.dateKey, score: finalScore, depths: depthsCleared, shareStr };
       }
     }
     saveRelicDiveBest(record);
-    // Leaderboard: total score with modifier multiplier applied
-    const mult = scoreMultiplier(rs.modifiers ?? []);
-    const finalScore = Math.round(totalScore * mult);
     const hunterName = app.roster?.hunters?.find((r) => r.id === rs.hunterId)?.name ?? 'Hunter';
     addLeaderboardEntry('relic-dive', {
       name: hunterName,
