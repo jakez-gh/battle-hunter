@@ -2417,6 +2417,27 @@ const WALL_DK = [ // ashlar with shadow reveal — deep d reveal between blocks 
   'XXXXXXXXXXXXXXXX',
   'GGGGGGGGGGGGGGGG',
 ];
+const WALL_FW = [ // diamond pair — two d-outlined size-2 diamonds on the stone face, one upper-left, one lower-right
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGdGGGGGGGGGgX',
+  'XcGdGdGGGGGGGGgX', 'XcdGGGdGGGGGGGgX', 'XcGdGdGGGGGGGGgX',
+  'XcGGdGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGGGdGGGGgX',
+  'XcGGGGGGdGdGGGgX', 'XcGGGGGdGGGdGGgX', 'XcGGGGGGdGdGGGgX',
+  'XcGGGGGGGdGGGGgX', 'XcGGGGGGGGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_FX = [ // saltire — full-width d Saint Andrew's cross (X) spans the stone face diagonally corner to corner
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcdGGGGGGGGGGdgX',
+  'XcGdGGGGGGGGdGgX', 'XcGGdGGGGGGdGGgX', 'XcGGGdGGGGdGGGgX',
+  'XcGGGGdGGdGGGGgX', 'XcGGGGGddGGGGGgX', 'XcGGGGGddGGGGGgX',
+  'XcGGGGdGGdGGGGgX', 'XcGGGdGGGGdGGGgX', 'XcGGdGGGGGGdGGgX',
+  'XcGdGGGGGGGGdGgX', 'XcdGGGGGGGGGGdgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_FY = [ // fish-scale rows — staggered semicircular d scale arcs in two offset rows, overlapping like roof tiles
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcdddddGGdddddgX',
+  'XcdGGGdGGdGGGdgX', 'XcdGGGdGGdGGGdgX', 'XcGGGdddddGGGGgX',
+  'XcGGGdGGGdGGGGgX', 'XcGGGdGGGdGGGGgX', 'XcdddddGGdddddgX',
+  'XcdGGGdGGdGGGdgX', 'XcdGGGdGGdGGGdgX', 'XcGGGdddddGGGGgX',
+  'XcGGGdGGGdGGGGgX', 'XcGGGdGGGdGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
 const WALL_FT = [ // crenellated parapet — two d-outlined merlons with open crenels between; smooth stone below
   'XXXXXXXXXXXXXXXX', 'XcddddGGGGddddgX', 'XcdGGdGGGGdGGdgX',
   'XcdGGdGGGGdGGdgX', 'XcdGGdGGGGdGGdgX', 'XcdGGdGGGGdGGdgX',
@@ -5268,6 +5289,30 @@ const FLOOR_DM = [ // half-brick — g headers and stretchers alternating within
   'GGGGGGGGGGGGGGGg',
   'GGGGGGGGGGGGGGGG',
 ];
+const FLOOR_FV = [ // centered cross — 2px-wide g plus-sign arms span the full tile from edge to edge
+  'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG',
+  'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG',
+  'GGGGGGGggGGGGGGG', 'gggggggggggggggg', 'gggggggggggggggg',
+  'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG',
+  'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG', 'GGGGGGGggGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_FW = [ // dash columns — 1×3 g dashes at x=2,10 (rows 1-3 and 9-11), x=6,14 offset (rows 5-7 and 13-14)
+  'GGGGGGGGGGGGGGGG', 'GGgGGGGGGGgGGGGG', 'GGgGGGGGGGgGGGGG',
+  'GGgGGGGGGGgGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGgGGGGGGGgG',
+  'GGGGGGgGGGGGGGgG', 'GGGGGGgGGGGGGGgG', 'GGGGGGGGGGGGGGGG',
+  'GGgGGGGGGGgGGGGG', 'GGgGGGGGGGgGGGGG', 'GGgGGGGGGGgGGGGG',
+  'GGGGGGGGGGGGGGGG', 'GGGGGGgGGGGGGGgG', 'GGGGGGgGGGGGGGgG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_FX = [ // diagonal dashes — 3px-long ↘ g dashes at 6px period; 3 active rows then 3 gap rows repeat
+  'gggGGGgggGGGgggG', 'GgggGGGgggGGGggg', 'GGgggGGGgggGGGgg',
+  'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'gggGGGgggGGGgggG', 'GgggGGGgggGGGggg', 'GGgggGGGgggGGGgg',
+  'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'gggGGGgggGGGgggG', 'GgggGGGgggGGGggg', 'GGgggGGGgggGGGgg',
+  'GGGGGGGGGGGGGGGG',
+];
 const FLOOR_FS = [ // square spiral — g pixels trace a single inward-tightening square spiral from the border
   'gggggggggggggggg', 'gGGGGGGGGGGGGGGg', 'gGggggggggggggGg',
   'gGgGGGGGGGGGGgGg', 'gGgGggggggggGgGg', 'gGgGgGGGGGGgGgGg',
@@ -6721,6 +6766,9 @@ export const TILES = {
   floorDK: { grid: FLOOR_DK, palette: TILE_PALETTE },
   floorDL: { grid: FLOOR_DL, palette: TILE_PALETTE },
   floorDM: { grid: FLOOR_DM, palette: TILE_PALETTE },
+  floorFV: { grid: FLOOR_FV, palette: TILE_PALETTE },
+  floorFW: { grid: FLOOR_FW, palette: TILE_PALETTE },
+  floorFX: { grid: FLOOR_FX, palette: TILE_PALETTE },
   floorFS: { grid: FLOOR_FS, palette: TILE_PALETTE },
   floorFT: { grid: FLOOR_FT, palette: TILE_PALETTE },
   floorFU: { grid: FLOOR_FU, palette: TILE_PALETTE },
@@ -6906,6 +6954,9 @@ export const TILES = {
   wallDI: { grid: WALL_DI, palette: TILE_PALETTE },
   wallDJ: { grid: WALL_DJ, palette: TILE_PALETTE },
   wallDK: { grid: WALL_DK, palette: TILE_PALETTE },
+  wallFW: { grid: WALL_FW, palette: TILE_PALETTE },
+  wallFX: { grid: WALL_FX, palette: TILE_PALETTE },
+  wallFY: { grid: WALL_FY, palette: TILE_PALETTE },
   wallFT: { grid: WALL_FT, palette: TILE_PALETTE },
   wallFU: { grid: WALL_FU, palette: TILE_PALETTE },
   wallFV: { grid: WALL_FV, palette: TILE_PALETTE },
