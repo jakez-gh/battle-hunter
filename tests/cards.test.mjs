@@ -54,6 +54,30 @@ test('buildDeck is deterministic per seed and varies across seeds', () => {
   assert.notDeepEqual(buildDeck(makeRng(42)), buildDeck(makeRng(43)));
 });
 
+test('buildDeck(rng, 25): Sprint deck has 25 cards, E-cards in bottom third', () => {
+  for (let seed = 0; seed < 50; seed++) {
+    const deck = buildDeck(makeRng(seed), 25);
+    assert.equal(deck.length, 25, `seed ${seed}`);
+    // E-cards must appear somewhere in the deck (WYRM can trigger)
+    const eidx = deck.flatMap((id, i) => (id === 'BE' ? [i] : []));
+    assert.equal(eidx.length, 2, `seed ${seed}: sprint deck must keep both E-cards`);
+    // E-cards must be at index >= topN = floor((size-2)*2/3) — the non-E top portion
+    const topN = Math.floor((25 - 2) * 2 / 3); // = 15
+    for (const i of eidx) {
+      assert.ok(i >= topN,
+        `seed ${seed}: E at index ${i} must be in bottom section (≥${topN})`);
+    }
+    // Top portion has only non-E cards
+    const topE = deck.slice(0, topN).filter((id) => id === 'BE');
+    assert.equal(topE.length, 0, `seed ${seed}: no E-cards in top two-thirds`);
+  }
+});
+
+test('buildDeck(rng, size): sized deck is same-seed-deterministic', () => {
+  assert.deepEqual(buildDeck(makeRng(7), 25), buildDeck(makeRng(7), 25));
+  assert.deepEqual(buildDeck(makeRng(7), 50), buildDeck(makeRng(7), 50));
+});
+
 test('cardColor / cardValue', () => {
   assert.equal(cardColor('R5'), 'red');
   assert.equal(cardColor('Y9'), 'yellow');
