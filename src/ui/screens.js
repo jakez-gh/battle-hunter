@@ -924,6 +924,7 @@ export function makeCreationScreen(app) {
         if (ROWS[state.row] === 'done') done();
         else { state.row = (state.row + 1) % ROWS.length; sfx.menuMove(); }
       } else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); }
+      else if (e?.code === 'KeyQ' && ROWS[state.row] !== 'name') quickStart();
     },
     onClick(pos) {
       if (inRect(pos, { x: 600, y: 460, w: 280, h: 36 })) { quickStart(); return; }
@@ -1064,7 +1065,7 @@ export function makeCreationScreen(app) {
         ctx.save(); ctx.globalAlpha = qpulse * 3; ctx.fillStyle = '#3a6ee0';
         ctx.fillRect(qbx, qby, qbw, qbh); ctx.restore();
         box(ctx, qbx, qby, qbw, qbh, { stroke: '#3a6ee0' });
-        text(ctx, 'QUICK START (balanced build)', qbx + qbw / 2, qby + 12, { size: 12, align: 'center', color: '#7eaaff' }); }
+        text(ctx, '[ Q ] QUICK START (balanced build)', qbx + qbw / 2, qby + 12, { size: 12, align: 'center', color: '#7eaaff' }); }
       text(ctx, 'type to name - arrows to adjust - Enter on BEGIN', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
     },
   };
@@ -1885,7 +1886,7 @@ export function makeHospitalScreen(app) {
 // OPTIONS — volumes (synth.setVolumes) + wallpaper picker (§2.13).
 
 export function makeOptionsScreen(app) {
-  const rows = ['master', 'music', 'sfx', 'aiSpeed', 'wallpaper', 'export', 'import', 'back'];
+  const rows = ['master', 'music', 'sfx', 'aiSpeed', 'wallpaper', 'colorblind', 'export', 'import', 'back'];
   let idx = 0;
   let note = '';
   const opts = app.options();
@@ -1902,6 +1903,9 @@ export function makeOptionsScreen(app) {
       sfx.menuMove();
     } else if (row === 'aiSpeed') {
       opts.aiSpeed = Math.max(1, Math.min(64, (opts.aiSpeed ?? 8) + dir));
+      sfx.menuMove();
+    } else if (row === 'colorblind') {
+      opts.colorblind = !opts.colorblind;
       sfx.menuMove();
     } else if (row !== 'back' && row !== 'export' && row !== 'import') {
       opts.volumes[row] = Math.round(Math.max(0, Math.min(1, opts.volumes[row] + dir * 0.05)) * 100) / 100;
@@ -1943,6 +1947,7 @@ export function makeOptionsScreen(app) {
         if (rows[idx] === 'back') leave();
         else if (rows[idx] === 'export') doExport();
         else if (rows[idx] === 'import') doImport();
+        else if (rows[idx] === 'colorblind') { opts.colorblind = !opts.colorblind; sfx.menuMove(); }
       }
       else if (k === 'cancel') leave();
     },
@@ -2005,6 +2010,12 @@ export function makeOptionsScreen(app) {
           const spd = opts.aiSpeed ?? 8;
           drawSlider((spd - 1) / 63, 500, y + 4, 200, sel ? '#d8b83a' : '#7e9fee');
           text(ctx, `${spd}x`, 712, y, { size: 14, color: DIM }); return;
+        }
+        if (row === 'colorblind') {
+          text(ctx, 'Colour Blind', 260, y, { size: 18, color: sel ? '#fff' : FG });
+          const cb = opts.colorblind;
+          text(ctx, cb ? 'ON  (high contrast)' : 'OFF', 500, y, { size: 16, color: cb ? '#4ee8d0' : DIM });
+          text(ctx, 'boosts saturation for red-green CVD', 500, y + 22, { size: 11, color: DIM }); return;
         }
         if (row === 'wallpaper') {
           text(ctx, 'Wallpaper', 260, y, { size: 18, color: sel ? '#fff' : FG });

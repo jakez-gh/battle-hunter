@@ -56,6 +56,7 @@ export function defaultOptions() {
     wallpaper: 0,
     wallpapersUnlocked: [],
     aiSpeed: 8,
+    colorblind: false,
   };
 }
 

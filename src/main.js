@@ -451,6 +451,7 @@ function frame(now) {
     acc -= STEP;
   }
   ctx.imageSmoothingEnabled = false;
+  ctx.filter = app.options().colorblind ? 'saturate(2.2) contrast(1.1)' : 'none';
   ctx.fillStyle = '#06060c';
   ctx.fillRect(0, 0, app.W, app.H);
   stack.draw(ctx);
