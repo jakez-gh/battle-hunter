@@ -2070,6 +2070,22 @@ export function makeGameScreen(app, g) {
     return JSON.stringify(option);
   }
 
+  const ODDS_COL = { strong: '#3aa84a', even: '#9aa0b4', weak: '#cc6040' };
+  function attackOddsHint(me, target) {
+    try {
+      const atkAT = me.internal
+        ? (me.internal.at + (effectiveStats(me).at ?? 0))
+        : (me.at ?? 1);
+      const defDF = target.internal
+        ? (Math.floor(target.internal.df / 2) + (effectiveStats(target).df ?? 0))
+        : (target.df ?? 0);
+      const defAT = target.internal ? (target.internal.at ?? 0) : (target.at ?? 0);
+      const o = battleOdds({ at: atkAT, oppAt: defAT, df: defDF });
+      const label = { strong: 'Strong', even: 'Even', weak: 'Weak' }[o.advantage] ?? 'Even';
+      return { text: `${label} · ~${o.expectedDamage.toFixed(1)} dmg`, color: ODDS_COL[o.advantage] };
+    } catch { return null; }
+  }
+
   function actionLabel(st, a) {
     switch (a.type) {
       case 'move': return a.card ? `Move + ${describeCard(a.card)}` : 'Move (roll only)';
@@ -2108,7 +2124,18 @@ export function makeGameScreen(app, g) {
       const rest = acts.find((a) => a.type === 'rest');
       const items = [];
       if (moves.length) items.push({ label: 'Move', color: '#3a6ee0', value: () => host.push(subMenu('MOVE - play a card?', moves)) });
-      if (attacks.length) items.push({ label: 'Attack', color: '#cc4a3a', value: () => (attacks.length === 1 ? act(attacks[0]) : host.push(subMenu('ATTACK - target', attacks))) });
+      if (attacks.length) {
+        const me = A.resolveUnit(st, A.currentChooser(st));
+        const singleTgt = attacks.length === 1 ? A.resolveUnit(st, attacks[0].target) : null;
+        const hint = me && singleTgt ? attackOddsHint(me, singleTgt) : null;
+        const atkSubMenu = () => makeMenu(attacks.map((a) => {
+          const tgt = A.resolveUnit(st, a.target);
+          const h = me && tgt ? attackOddsHint(me, tgt) : null;
+          return { label: actionLabel(st, a), right: h?.text, rightColor: h?.color, value: a };
+        }), { title: 'ATTACK - target', onPick: (a) => act(a), onCancel: () => host.pop() });
+        items.push({ label: 'Attack', right: hint?.text, rightColor: hint?.color, color: '#cc4a3a',
+          value: () => (attacks.length === 1 ? act(attacks[0]) : host.push(atkSubMenu())) });
+      }
       if (rest) items.push({ label: actionLabel(st, rest), color: '#3aa84a', value: () => act(rest) });
       for (const a of acts) {
         if (!['move', 'attack', 'rest'].includes(a.type)) items.push({ label: actionLabel(st, a), color: '#9aa0b4', value: () => act(a) });
