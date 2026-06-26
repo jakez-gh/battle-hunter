@@ -18,10 +18,34 @@ import { setVolumes } from '../audio/synth.js';
 import { sfx } from '../audio/sfx.js';
 import { makeHunterRecord, exportSave, importSave, loadRoster,
          loadRelicDiveBest, saveRelicDiveBest, todayDateKey, dateToSeed,
-         buildShareString, hashRunSeed, getLeaderboard, addLeaderboardEntry } from '../save.js';
+         buildShareString, hashRunSeed, getLeaderboard, addLeaderboardEntry,
+         storageArea } from '../save.js';
 import { makeRng } from '../engine/rng.js';
 import { rollPerkChoices, describePerk } from '../engine/perks.js';
 import { allModifiers, scoreMultiplier, rollDailyModifier } from '../engine/modifiers.js';
+
+// ---------------------------------------------------------------------------
+// First-play tutorial tips (F6 demo-path: teach by doing, not by reading the manual)
+
+const TIPS_KEY = 'bh-tips-v1';
+const TIP_DEFS = {
+  card:     ['Cards fuel every turn!', 'Red=attack  Yellow=defend  Blue=move  Green=trap'],
+  steer:    ['MOVEMENT — pick your route before committing', 'Arrow keys or click  ·  Z to undo the last step'],
+  response: ['BATTLE — choose your response carefully', 'Counter=fight  Guard=absorb  Escape=flee  Surrender=give'],
+  win:      ['Mission complete, Hunter!', 'Play DAILY HUNT every day to track your personal best.'],
+};
+
+function loadSeenTips() {
+  try {
+    const raw = storageArea().getItem(TIPS_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch { return new Set(); }
+}
+
+function markTipSeen(key, set) {
+  set.add(key);
+  try { storageArea().setItem(TIPS_KEY, JSON.stringify([...set])); } catch {}
+}
 
 // ---------------------------------------------------------------------------
 // Screen stack
@@ -2031,8 +2055,16 @@ export function makeGameScreen(app, g) {
   let pendingBattlers = null; // names captured on battleStarted for explainStrike
   let wyrmCinState = null;    // { max, t, line2 } — full-screen cinematic overlay on WYRM spawn
   let handoff = null;       // { name } — waiting for new human to confirm before revealing hand
+  let seenTips = loadSeenTips();  // first-play tips seen this device (persisted)
+  let tipOverlay = null;          // { lines, t, key } — contextual hint card
 
   const say = (s, dur = 2.2, color = GOLD) => { banner = { text: s, t: dur, color }; };
+  const showTip = (key) => {
+    if (seenTips.has(key) || (tipOverlay?.key === key)) return;
+    markTipSeen(key, seenTips);
+    tipOverlay = { lines: TIP_DEFS[key], t: 6, key };
+  };
+  const dismissTip = () => { tipOverlay = null; };
   const snapshot = (s) => { try { return structuredClone(s); } catch { return JSON.parse(JSON.stringify(s)); } };
 
   function act(action) {
@@ -2087,6 +2119,7 @@ export function makeGameScreen(app, g) {
           };
           break;
         }
+        case 'cardDrawn': showTip('card'); break;
         case 'fortuneUsed':
           sfx.menuConfirm();
           say(`Fortune used! ${ev.remaining > 0 ? `${ev.remaining} left` : 'none left'}`, 2.0, GOLD);
@@ -2108,6 +2141,7 @@ export function makeGameScreen(app, g) {
         case 'missionWon':
           g.outcome.winnerRef = ev.winner ?? ev.unit ?? null;
           g.outcome.won = true;
+          showTip('win');
           break;
         case 'missionLost':
           g.outcome.reason = ev.reason ?? 'lost';
@@ -2224,7 +2258,7 @@ export function makeGameScreen(app, g) {
     }
     const phase = String(st.phase ?? '');
 
-    if (phase === 'turn.steer') { steering = true; return; }
+    if (phase === 'turn.steer') { steering = true; showTip('steer'); return; }
     if (phase === 'react.dodge' || phase === 'react.crit') { timing = { t: 0, kind: phase }; return; }
 
     if (phase === 'turn.action') {
@@ -2280,6 +2314,7 @@ export function makeGameScreen(app, g) {
           oddsFooter = describeOdds(battleOdds({ at: atkAT, oppAt: defAT, df: defDF }));
         }
       } catch { /* odds are a bonus, never fatal */ }
+      showTip('response');
       host.push(makeMenu(items, { title: 'BATTLE - respond!', footer: oddsFooter, onPick: (fn) => fn() }));
       return;
     }
@@ -2337,6 +2372,7 @@ export function makeGameScreen(app, g) {
       hudT += dt;
       if (banner && (banner.t -= dt) <= 0) banner = null;
       if (wyrmCinState) { wyrmCinState.t = Math.max(0, wyrmCinState.t - dt); if (!wyrmCinState.t) wyrmCinState = null; }
+      if (tipOverlay) { tipOverlay.t -= dt; if (tipOverlay.t <= 0) tipOverlay = null; }
       if (broken || finished) return;
       const st = g.state;
 
@@ -2389,6 +2425,7 @@ export function makeGameScreen(app, g) {
     onKey(k, e) {
       if (broken) { if (k === 'cancel') { app.music('hub'); app.stack.pop(); } return; }
       if (handoff) { handoff = null; return; }
+      if (tipOverlay) dismissTip();
       if (k === 'cancel' && !host.top()) {
         host.push(makeMenu(
           [
@@ -2438,6 +2475,7 @@ export function makeGameScreen(app, g) {
     onClick(pos) {
       if (broken) return;
       if (handoff) { handoff = null; return; }
+      if (tipOverlay) { dismissTip(); return; }
       if (A.rendererBusy(g.renderer)) { A.rendererSkip(g.renderer); return; }
       if (timing) {
         const p = markerPos(timing.t);
@@ -2539,6 +2577,28 @@ export function makeGameScreen(app, g) {
         ctx.save(); ctx.shadowBlur = 12; ctx.shadowColor = bc;
         text(ctx, banner.text, 380, 42, { size: 17, align: 'center', color: bc, shadow: false });
         ctx.restore();
+        ctx.restore();
+      }
+      if (tipOverlay) {
+        const TH = 68, TX = 20, TW = 680, TY = app.H - TH - 10;
+        const ta = Math.min(1, tipOverlay.t * 4, (6 - tipOverlay.t) * 4);
+        ctx.save();
+        ctx.globalAlpha = ta * 0.93;
+        ctx.fillStyle = '#08080f';
+        ctx.fillRect(TX, TY, TW, TH);
+        ctx.strokeStyle = '#7e4aaa';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(TX + 0.5, TY + 0.5, TW - 1, TH - 1);
+        ctx.globalAlpha = ta;
+        text(ctx, 'HINT', TX + 8, TY + 5, { size: 9, color: '#9060cc', shadow: false, bold: false });
+        text(ctx, tipOverlay.lines[0], TX + TW / 2, TY + 13, { size: 14, align: 'center', color: '#ffffff', shadow: false });
+        text(ctx, tipOverlay.lines[1], TX + TW / 2, TY + 34, { size: 11, align: 'center', color: '#b0a0c0', shadow: false, bold: false });
+        ctx.fillStyle = '#1a1030';
+        ctx.fillRect(TX + 8, TY + TH - 9, TW - 16, 3);
+        ctx.fillStyle = '#7e4aaa';
+        ctx.fillRect(TX + 8, TY + TH - 9, (TW - 16) * (tipOverlay.t / 6), 3);
+        ctx.globalAlpha = ta * 0.5;
+        text(ctx, 'any key or click to dismiss', TX + TW / 2, TY + TH - 18, { size: 8, align: 'center', color: DIM, shadow: false, bold: false });
         ctx.restore();
       }
       if (A.rendererBusy(g.renderer)) text(ctx, 'any key: skip', 712, 700, { size: 11, align: 'right', color: DIM });
