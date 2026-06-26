@@ -196,19 +196,21 @@ export function todayDateKey() {
 // Share string generation
 // ---------------------------------------------------------------------------
 
-// runResult: { daily, dateKey?, startLevel, depthResults: [{won, score}] }
-// Returns a compact multi-line string for clipboard sharing.
+// runResult: { daily, dateKey?, startLevel, depthResults: [{won, score}], finalScore? }
+// finalScore, if provided, is the modifier-multiplied total (shown in share string and
+// personal-best comparisons); falls back to raw sum if omitted.
 export function buildShareString(runResult) {
-  const { daily, dateKey, startLevel, depthResults } = runResult;
+  const { daily, dateKey, startLevel, depthResults, finalScore } = runResult;
   const depthsReached = depthResults.length;
-  const totalScore = depthResults.reduce((s, d) => s + (d.score ?? 0), 0);
+  const rawScore = depthResults.reduce((s, d) => s + (d.score ?? 0), 0);
+  const displayScore = finalScore ?? rawScore;
   const header = daily
     ? `Battle Hunter — Daily Hunt ${dateKey}`
     : 'Battle Hunter — Relic Dive';
   const depthRow = depthResults
     .map((d) => (d.won ? '🟩' : '🟥'))
     .join('');
-  const footer = `Depth ${depthsReached} | Score ${totalScore} | L${startLevel}`;
+  const footer = `Depth ${depthsReached} | Score ${displayScore} | L${startLevel}`;
   return `${header}\n${depthRow}\n${footer}`;
 }
 

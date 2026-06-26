@@ -3682,9 +3682,9 @@ export function makeRunSummaryScreen(app, g) {
     if (saved) return;
     saved = true;
     const record = loadRelicDiveBest();
-    shareStr = buildShareString({ daily: rs.daily, dateKey: rs.dateKey, startLevel: rs.startRelicLevel, depthResults: rs.depthResults });
     const mult = scoreMultiplier(rs.modifiers ?? []);
     const finalScore = Math.round(totalScore * mult);
+    shareStr = buildShareString({ daily: rs.daily, dateKey: rs.dateKey, startLevel: rs.startRelicLevel, depthResults: rs.depthResults, finalScore });
     // Personal best and leaderboard both use the multiplied score so the hub
     // and leaderboard display the same number for the same run.
     if (!record.best || finalScore > record.best.score) {

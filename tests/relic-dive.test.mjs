@@ -112,6 +112,17 @@ test('buildShareString: banked out all green', () => {
   assert.ok(result.includes('Score 330'));
 });
 
+test('buildShareString: finalScore overrides raw total (modifier run)', () => {
+  const result = buildShareString({
+    daily: false,
+    startLevel: 3,
+    depthResults: [{ won: true, score: 100 }, { won: true, score: 100 }],
+    finalScore: 300, // 2× modifier applied externally
+  });
+  assert.ok(result.includes('Score 300'), `expected Score 300 in: ${result}`);
+  assert.ok(!result.includes('Score 200'), 'should not show raw score when finalScore provided');
+});
+
 // Persistence ----------------------------------------------------------------
 
 test('freshRelicDiveBest: returns default shape', () => {
