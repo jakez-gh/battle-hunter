@@ -687,8 +687,7 @@ export function createGame(config) {
   const levels = players.map((h) => Math.max(1, Math.min(15, h.level ?? 1)));
   const relicLevel = config.mode === 'story' ? Math.max(1, Math.min(15, config.mission?.level || 1)) : Math.max(1, Math.min(15, Math.ceil(levels.reduce((a, b) => a + b, 0) / Math.max(1, levels.length))));
   const board = generateBoard(rng, relicLevel, rollBoxItem, { trapMultiplier: config.trapMultiplier });
-  const deck = buildDeck(rng);
-  if (config.deckSize != null && config.deckSize < deck.length) deck.splice(config.deckSize);
+  const deck = buildDeck(rng, config.deckSize ?? 100);
   const tiles = [];
   for (let y = 0; y < board.h; y++) {
     for (let x = 0; x < board.w; x++) {

@@ -54,12 +54,21 @@ export const describeCard = (id) => card(id).label;
 // blue E cards are shuffled into the bottom 49 positions (indices 51..99), so
 // when an E becomes the next draw at most 49 cards remain — it can never show
 // up while the deck count is still 50+.
-export function buildDeck(rng) {
+// size < 100 shrinks the deck but keeps E-cards (WYRM triggers) in the bottom third.
+// Sprint modifier uses size=25: 23 normal cards + 2 E-cards → WYRM arrives fast.
+export function buildDeck(rng, size = 100) {
   const rest = [];
   const es = [];
   for (const c of Object.values(CARDS))
     for (let i = 0; i < c.count; i++) (c.special === 'E' ? es : rest).push(c.id);
   rng.shuffle(rest); // 98 non-E cards
+  if (size < 100) {
+    const nonE = Math.max(0, size - es.length);
+    const topN = Math.floor(nonE * 2 / 3);
+    const top = rest.slice(0, topN);
+    const bot = rng.shuffle(rest.slice(topN, nonE).concat(es));
+    return top.concat(bot);
+  }
   const bottom = rng.shuffle(rest.splice(51).concat(es)); // bottom 47 + 2 E = 49
   return rest.concat(bottom);
 }

@@ -21,6 +21,7 @@ import { makeHunterRecord, exportSave, importSave, loadRoster,
          buildShareString, hashRunSeed, getLeaderboard, addLeaderboardEntry } from '../save.js';
 import { makeRng } from '../engine/rng.js';
 import { rollPerkChoices, describePerk } from '../engine/perks.js';
+import { allModifiers, scoreMultiplier, rollDailyModifier } from '../engine/modifiers.js';
 
 // ---------------------------------------------------------------------------
 // Screen stack
@@ -1250,6 +1251,11 @@ export function makeRelicDiveScreen(app, opts = {}) {
   // If requested daily but already played today, fall back to normal dive
   const mode = (daily && dailyAlreadyPlayed) ? 'dive' : (daily ? 'daily' : 'dive');
   let t = 0;
+  const MODS = allModifiers();
+  let modIdx = 0; // focused modifier row
+  const selected = new Set(); // ids of active modifiers (normal dive only)
+  // Daily: deterministic modifier rolled from the date seed
+  const dailyModId = mode === 'daily' ? rollDailyModifier(makeRng(dateToSeed(todayKey))) : null;
 
   function startRun() {
     const rec = currentHunter(app);
@@ -1258,6 +1264,9 @@ export function makeRelicDiveScreen(app, opts = {}) {
     const rootSeed = mode === 'daily'
       ? dateToSeed(todayKey)
       : ((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
+    const activeModIds = mode === 'daily'
+      ? (dailyModId ? [dailyModId] : [])
+      : [...selected];
     const runState = {
       rootSeed,
       depth: 1,
@@ -1265,6 +1274,7 @@ export function makeRelicDiveScreen(app, opts = {}) {
       daily: mode === 'daily',
       dateKey: mode === 'daily' ? todayKey : null,
       depthResults: [],
+      modifiers: activeModIds,
     };
     // Track daily streak: increment only when starting a new daily
     if (mode === 'daily') {
@@ -1285,12 +1295,27 @@ export function makeRelicDiveScreen(app, opts = {}) {
     enter() { app.music('hub'); },
     update(dt) { t += dt; },
     onKey(k) {
-      if (k === 'confirm') startRun();
-      else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); }
+      // modIdx 0..MODS.length-1 = modifier rows; MODS.length = START button
+      const NAV_LEN = mode === 'dive' ? MODS.length + 1 : 1;
+      if (k === 'up') { modIdx = (modIdx + NAV_LEN - 1) % NAV_LEN; sfx.menuMove(); }
+      else if (k === 'down') { modIdx = (modIdx + 1) % NAV_LEN; sfx.menuMove(); }
+      else if (k === 'confirm') {
+        if (mode !== 'dive' || modIdx === MODS.length) startRun();
+        else {
+          const id = MODS[modIdx]?.id;
+          if (id) { selected.has(id) ? selected.delete(id) : selected.add(id); sfx.menuConfirm(); }
+        }
+      } else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); }
     },
     onClick(pos) {
-      if (pos.y > 580 && pos.y < 620) startRun();
-      else if (pos.y > 640) { sfx.menuCancel(); app.stack.pop(); }
+      const MOD_TOP = 312, MOD_H = 44;
+      const rowIdx = Math.floor((pos.y - MOD_TOP) / MOD_H);
+      if (rowIdx >= 0 && rowIdx < MODS.length && mode === 'dive') {
+        modIdx = rowIdx;
+        const id = MODS[rowIdx]?.id;
+        if (id) { selected.has(id) ? selected.delete(id) : selected.add(id); sfx.menuConfirm(); }
+      } else if (pos.y > 610 && pos.y < 655) startRun();
+      else if (pos.y > 675) { sfx.menuCancel(); app.stack.pop(); }
     },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);
@@ -1351,21 +1376,69 @@ export function makeRelicDiveScreen(app, opts = {}) {
         text(ctx, `Hunter: ${rec.name}  (Lv${rec.level})`, cx, 258, { size: 15, align: 'center', color: FG });
         const startLv = Math.max(1, Math.min(15, rec.level));
         text(ctx, `Starting Relic Level ${startLv}  →  rises each depth  →  cap Lv15`,
-          cx, 282, { size: 12, align: 'center', color: DIM });
-        text(ctx, 'Clear a depth, then DESCEND for harder loot or BANK OUT to keep your score.',
-          cx, 302, { size: 12, align: 'center', color: DIM });
+          cx, 278, { size: 12, align: 'center', color: DIM });
+      }
+
+      // Modifiers
+      const MOD_TOP = 300, MOD_H = 44, MOD_L = 100, MOD_W = app.W - 200;
+      if (mode === 'dive') {
+        text(ctx, 'CHALLENGE MODIFIERS  (score ×)', MOD_L, MOD_TOP - 2, { size: 11, color: DIM });
+        for (let i = 0; i < MODS.length; i++) {
+          const m = MODS[i];
+          const ry = MOD_TOP + 12 + i * MOD_H;
+          const isOn = selected.has(m.id);
+          const focused = i === modIdx;
+          if (focused) {
+            ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = '#9060d8';
+            ctx.fillRect(MOD_L - 2, ry - 2, MOD_W + 4, MOD_H - 4); ctx.restore();
+          }
+          ctx.save(); ctx.globalAlpha = 0.6;
+          ctx.strokeStyle = isOn ? '#3aa84a' : (focused ? '#9060d8' : '#3c3464');
+          ctx.lineWidth = 1; ctx.strokeRect(MOD_L, ry, MOD_W, MOD_H - 6); ctx.restore();
+          if (isOn) {
+            ctx.save(); ctx.fillStyle = '#3aa84a'; ctx.globalAlpha = 0.15;
+            ctx.fillRect(MOD_L + 1, ry + 1, MOD_W - 2, MOD_H - 8); ctx.restore();
+          }
+          const dot = isOn ? '●' : '○';
+          text(ctx, dot, MOD_L + 14, ry + 14, { size: 14, color: isOn ? '#3aa84a' : DIM });
+          text(ctx, m.name, MOD_L + 28, ry + 14, { size: 13, color: isOn ? '#7ee8a0' : FG });
+          text(ctx, `×${m.score.toFixed(2)}`, MOD_L + MOD_W - 8, ry + 14, { size: 12, color: isOn ? GOLD : DIM, align: 'right' });
+          text(ctx, m.desc, MOD_L + 28, ry + 30, { size: 10, color: DIM });
+        }
+        const mult = scoreMultiplier([...selected]);
+        const multStr = selected.size ? `Score multiplier: ×${mult.toFixed(2)}` : 'No modifiers — standard run';
+        text(ctx, multStr, cx, MOD_TOP + 14 + MODS.length * MOD_H, { size: 12, align: 'center', color: selected.size ? GOLD : DIM });
+      } else {
+        // Daily: show the locked modifier
+        text(ctx, 'TODAY\'S MODIFIER', MOD_L, MOD_TOP - 2, { size: 11, color: DIM });
+        const dm = MODS.find((m) => m.id === dailyModId);
+        if (dm) {
+          const ry = MOD_TOP + 12;
+          ctx.save(); ctx.globalAlpha = 0.15; ctx.fillStyle = '#3aacc8';
+          ctx.fillRect(MOD_L, ry, MOD_W, MOD_H - 6); ctx.restore();
+          ctx.save(); ctx.globalAlpha = 0.6; ctx.strokeStyle = '#3aacc8'; ctx.lineWidth = 1;
+          ctx.strokeRect(MOD_L, ry, MOD_W, MOD_H - 6); ctx.restore();
+          text(ctx, dm.name, MOD_L + 16, ry + 14, { size: 13, color: '#7ee8ff' });
+          text(ctx, `×${dm.score.toFixed(2)}`, MOD_L + MOD_W - 8, ry + 14, { size: 12, color: GOLD, align: 'right' });
+          text(ctx, dm.desc, MOD_L + 16, ry + 30, { size: 10, color: DIM });
+        }
       }
 
       // Start / Cancel buttons
       const startDisabled = !rec || (mode === 'daily' && dailyAlreadyPlayed);
-      box(ctx, cx - 140, 580, 260, 40, { stroke: startDisabled ? '#2a2a3c' : '#9060d8' });
+      const btnY = 610;
+      const startFocused = mode === 'dive' ? modIdx === MODS.length : true;
+      const btnPulse = startFocused && !startDisabled ? 0.16 + 0.07 * Math.sin(t * 2.2) : 0.10;
+      box(ctx, cx - 140, btnY, 260, 40, { stroke: startDisabled ? '#2a2a3c' : (startFocused ? '#c090ff' : '#9060d8') });
       if (!startDisabled) {
-        ctx.save(); ctx.globalAlpha = 0.13 + 0.06 * Math.sin(t * 2.2);
-        ctx.fillStyle = '#9060d8'; ctx.fillRect(cx - 139, 581, 258, 38); ctx.restore();
+        ctx.save(); ctx.globalAlpha = btnPulse; ctx.fillStyle = '#9060d8';
+        ctx.fillRect(cx - 139, btnY + 1, 258, 38); ctx.restore();
       }
-      text(ctx, startDisabled ? 'ALREADY PLAYED TODAY' : 'START DIVE', cx, 594, { size: 16, align: 'center', color: startDisabled ? DIM : '#c090ff' });
+      text(ctx, startDisabled ? 'ALREADY PLAYED TODAY' : 'START DIVE', cx, btnY + 14, { size: 16, align: 'center', color: startDisabled ? DIM : (startFocused ? '#ffffff' : '#c090ff') });
 
-      text(ctx, 'Esc: back to hub', cx, 660, { size: 13, align: 'center', color: DIM });
+      text(ctx, mode === 'dive' ? '↑↓ navigate   Enter: toggle / start' : 'Enter: start',
+        cx, 660, { size: 11, align: 'center', color: DIM });
+      text(ctx, 'Esc: back', cx, 677, { size: 11, align: 'center', color: DIM });
     },
   };
 }

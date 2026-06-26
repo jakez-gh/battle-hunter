@@ -11,6 +11,7 @@ import { interpolateInternal, RIVALS, rivalStats } from './engine/missions.js';
 import { makeRng } from './engine/rng.js';
 import { reachableTiles, occupiedSet } from './engine/board.js';
 import { perkHasEffect } from './engine/perks.js';
+import { modifierConfig, scoreMultiplier, rollDailyModifier } from './engine/modifiers.js';
 import { buildAtlas } from './render/sprites.js';
 import { playMusic, stopMusic } from './audio/music.js';
 import { setVolumes } from './audio/synth.js';
@@ -95,7 +96,8 @@ function aiHunterConfig(opponent, slot, level, used, rng) {
 }
 
 // Build a createGame config for one depth of a Relic Dive run.
-// runState: { rootSeed, depth, startRelicLevel, daily, dateKey, depthResults }
+// runState: { rootSeed, depth, startRelicLevel, daily, dateKey, depthResults,
+//             perks?, modifiers? }
 // recs: human hunter roster records (P1 first). AI fills remaining slots up to 4.
 // Hunters carry their items from prior depths; HP resets to maxHp each depth.
 export function buildRelicDiveConfig(runState, recs) {
@@ -109,10 +111,16 @@ export function buildRelicDiveConfig(runState, recs) {
   );
   const ownedPerks = runState.perks ?? [];
   const luckyBonus = perkHasEffect(ownedPerks, 'reroll+1') ? 1 : 0;
+  const mods = modifierConfig(runState.modifiers ?? []);
   return {
     seed,
     mode: 'relic-dive',
-    fortune: 1 + luckyBonus,
+    fortune: 'fortune' in mods ? mods.fortune : (1 + luckyBonus), // ironhunter overrides to 0
+    deckSize: mods.deckSize,
+    trapMultiplier: mods.trapMultiplier,
+    maxMonsters: mods.maxMonsters,
+    restDisabled: mods.restDisabled,
+    targetVisible: mods.targetVisible,
     mission: {
       id: `relic-dive-d${runState.depth}`,
       title: `Depth ${runState.depth}`,
