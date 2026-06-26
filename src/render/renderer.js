@@ -545,6 +545,8 @@ export function createRenderer(canvas, opts = {}) {
               vx: Math.cos(a) * 3.8, vy: Math.sin(a) * 3.8 - 1.5,
               t: 0, ttl: 420, color: '#fff' });
           }
+          pulseRings.push({ wx: ev.pos.x + 0.5, wy: ev.pos.y + 0.5, t: 0, ttl: 320, maxR: 1.5, color: '#ffe98a', alpha0: 0.80 });
+          pulseRings.push({ wx: ev.pos.x + 0.5, wy: ev.pos.y + 0.5, t: 80, ttl: 480, maxR: 2.4, color: '#c8a020', alpha0: 0.45 });
         }
         break;
       }
@@ -662,6 +664,27 @@ export function createRenderer(canvas, opts = {}) {
         break;
       case 'escapeRolled':
         if (battle) battle.escape = { aTotal: ev.aTotal, dTotal: ev.dTotal, escaped: !!ev.escaped };
+        { const erp = displayPos(battle?.a ?? k);
+          if (erp) {
+            if (ev.escaped) {
+              // Successful escape: green dash-burst upward + expanding ring
+              for (let i = 0; i < 10; i++) {
+                const a = -Math.PI * 0.5 + (i - 4.5) * 0.35;
+                sparkles.push({ wx: erp.x + 0.5, wy: erp.y + 0.4,
+                  vx: Math.cos(a) * (1.4 + (i % 3) * 0.5), vy: Math.sin(a) * (1.4 + (i % 3) * 0.5),
+                  t: 0, ttl: 420, color: i % 3 === 0 ? '#fff' : i % 3 === 1 ? '#8fd17e' : '#4aaa60' });
+              }
+              pulseRings.push({ wx: erp.x + 0.5, wy: erp.y + 0.5, t: 0, ttl: 300, maxR: 1.4, color: '#8fd17e', alpha0: 0.80 });
+            } else {
+              // Failed escape: red scatter — caught
+              for (let i = 0; i < 8; i++) {
+                const a = (i / 8) * Math.PI * 2;
+                sparkles.push({ wx: erp.x + 0.5, wy: erp.y + 0.4,
+                  vx: Math.cos(a) * 1.0, vy: Math.sin(a) * 1.0 - 0.4,
+                  t: 0, ttl: 360, color: i % 2 === 0 ? '#ff6a5a' : '#cc3030' });
+              }
+            }
+          } }
         break;
       case 'strikeRolled':
         if (battle) battle.strike = { dice: flattenDice(ev.dice), totals: ev.totals,
@@ -677,6 +700,11 @@ export function createRenderer(canvas, opts = {}) {
         if (ev.crit) {
           addSparkles(battle?.d ?? k, '#ffe98a');
           shake = { t: 0, dur: 450, mag: 3.0 };
+          const critp = displayPos(battle?.d ?? k);
+          if (critp) {
+            pulseRings.push({ wx: critp.x + 0.5, wy: critp.y + 0.5, t: 0, ttl: 300, maxR: 1.4, color: '#ffe060', alpha0: 0.90 });
+            pulseRings.push({ wx: critp.x + 0.5, wy: critp.y + 0.5, t: 60, ttl: 380, maxR: 2.2, color: '#ffb820', alpha0: 0.55 });
+          }
         } else if ((ev.damage ?? 0) > 0) {
           // Impact burst: red/orange sparks proportional to damage
           const idk = battle?.d ?? k;
@@ -689,6 +717,10 @@ export function createRenderer(canvas, opts = {}) {
                 vy: Math.sin(a) * 1.1 - 0.8, t: 0, ttl: 360,
                 color: i % 3 === 0 ? '#fff' : i % 3 === 1 ? '#ff9060' : '#ff6a5a' });
             }
+            const dmg = ev.damage ?? 0;
+            const ringCol = dmg >= 6 ? '#ff8820' : '#ff4030';
+            const ringR = dmg >= 6 ? 1.6 : 1.2;
+            pulseRings.push({ wx: idp.x + 0.5, wy: idp.y + 0.5, t: 0, ttl: 320, maxR: ringR, color: ringCol, alpha0: 0.70 });
           }
           if ((ev.damage ?? 0) >= 5) shake = { t: 0, dur: 350, mag: 2.5 };
           else if ((ev.damage ?? 0) >= 3) shake = { t: 0, dur: 250, mag: 1.5 };
@@ -714,10 +746,16 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'critNegated':
+      case 'critNegated': {
         addFloat(k, 'NEGATED', '#9adfe8');
         addSparkles(k, '#9adfe8');
+        const cnp = displayPos(k);
+        if (cnp) {
+          pulseRings.push({ wx: cnp.x + 0.5, wy: cnp.y + 0.5, t: 0, ttl: 350, maxR: 1.5, color: '#9adfe8', alpha0: 0.75 });
+          pulseRings.push({ wx: cnp.x + 0.5, wy: cnp.y + 0.5, t: 80, ttl: 420, maxR: 2.2, color: '#5ac8e0', alpha0: 0.40 });
+        }
         break;
+      }
       case 'hunterDefeated': {
         unitFlash = { key: k, t: 0, dur: EVENT_DURATIONS.hunterDefeated, color: '#f7f7ff' };
         shake = { t: 0, dur: 500, mag: 4 };
