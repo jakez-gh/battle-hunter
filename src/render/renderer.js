@@ -563,8 +563,11 @@ export function createRenderer(canvas, opts = {}) {
                 vy: Math.sin(a) * spd - 0.8, t: 0, ttl: i % 5 === 0 ? 500 : 700,
                 color: i % 5 === 0 ? '#fff' : i % 3 === 0 ? '#ffd040' : '#ffe98a' });
             }
+            // Gold objective rings: fast bright burst + slower wide wave from the carrier
+            pulseRings.push({ wx: tp.x + 0.5, wy: tp.y + 0.5, t: 0, ttl: 320, maxR: 1.8, color: '#fff8c0', alpha0: 1.0 });
+            pulseRings.push({ wx: tp.x + 0.5, wy: tp.y + 0.5, t: 0, ttl: 550, maxR: 3.2, color: '#ffe98a', alpha0: 0.65 });
           } }
-        // Exit portal also erupts gold â€” exit is now "live"
+        // Exit portal also erupts gold â€” exit is now “live”
         { const ex = state?.board?.exit;
           if (ex) {
             for (let i = 0; i < 12; i++) {
@@ -573,6 +576,8 @@ export function createRenderer(canvas, opts = {}) {
                 vy: Math.sin(a) * 2.0 - 0.8, t: 0, ttl: 550,
                 color: i % 4 === 0 ? '#fff' : i % 4 === 1 ? '#ffe98a' : '#7ee8a0' });
             }
+            // Portal activation wave — the exit “comes alive”
+            pulseRings.push({ wx: ex.x + 0.5, wy: ex.y + 0.5, t: 0, ttl: 600, maxR: 3.0, color: '#7ee8a0', alpha0: 0.70 });
           } }
         addRivalVoice(k, 'targetFound');
         break;
@@ -595,6 +600,8 @@ export function createRenderer(canvas, opts = {}) {
         }
         addFloat(k, ev.color ? ev.color.toUpperCase() + ' FLAG!' : 'FLAG!', flagBurstCols[0], { big: true });
         turnFlash = { color: flagBurstCols[0], t: 0, dur: 480 };
+        // Flag capture ring: color-branded wave from the flag's tile
+        if (fcp) pulseRings.push({ wx: fcp.x + 0.5, wy: fcp.y + 0.5, t: 0, ttl: 420, maxR: 2.2, color: flagBurstCols[0], alpha0: 0.80 });
         if (Math.random() < 0.6) addRivalVoice(k, 'flagClaimed');
         break;
       }
@@ -626,7 +633,10 @@ export function createRenderer(canvas, opts = {}) {
               vx: Math.cos(a) * spd, vy: Math.sin(a) * spd - 0.8,
               t: 0, ttl: 520, color: i % 5 === 0 ? '#fff' : i % 5 === 1 ? ewSlotCol : '#7ee8a0' });
           }
+          // Portal swallow: green exit ring + slot-colored send-off from hunter
+          pulseRings.push({ wx: ex.x + 0.5, wy: ex.y + 0.5, t: 0, ttl: 500, maxR: 3.5, color: '#7ee8a0', alpha0: 0.75 });
         }
+        if (ewp) pulseRings.push({ wx: ewp.x + 0.5, wy: ewp.y + 0.5, t: 0, ttl: 380, maxR: 2.2, color: ewSlotCol, alpha0: 0.85 });
         addRivalVoice(k, 'exitWarpedAway');
         break;
       }
@@ -699,6 +709,8 @@ export function createRenderer(canvas, opts = {}) {
               vy: Math.sin(a) * 1.3 - 0.5, t: 0, ttl: 480,
               color: i % 3 === 0 ? '#fff' : stcol });
           }
+          // Status infliction ring — color-coded to the status type
+          pulseRings.push({ wx: stp.x + 0.5, wy: stp.y + 0.5, t: 0, ttl: 360, maxR: 1.6, color: stcol, alpha0: 0.65 });
         }
         break;
       }
