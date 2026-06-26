@@ -646,12 +646,14 @@ export function createRenderer(canvas, opts = {}) {
         addFloat(k, 'NO CARD', '#8d8d9e');
         const dbp = displayPos(k);
         if (dbp) {
-          // Downward scatter â€” empty hand, spirits fall
+          // Downward scatter — empty hand, spirits fall
           for (let i = 0; i < 6; i++) {
             sparkles.push({ wx: dbp.x + 0.25 + i * 0.1, wy: dbp.y + 0.3,
               vx: (i - 2.5) * 0.22, vy: 0.8 + (i % 3) * 0.3,
               t: 0, ttl: 460, color: i % 2 === 0 ? '#8d8d9e' : '#555568' });
           }
+          // Fading grey ring — the moment of helplessness
+          pulseRings.push({ wx: dbp.x + 0.5, wy: dbp.y + 0.5, t: 0, ttl: 400, maxR: 1.0, color: '#7a7a8e', alpha0: 0.55 });
         }
         break;
       }
@@ -1126,13 +1128,13 @@ export function createRenderer(canvas, opts = {}) {
     const y0 = Math.max(0, Math.floor(cam.y / TILE));
     const x1 = Math.min(b.w - 1, Math.ceil((cam.x + vw) / TILE));
     const y1 = Math.min(b.h - 1, Math.ceil((cam.y + vh) / TILE));
-    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH', 'floorI', 'floorJ', 'floorK', 'floorL', 'floorM', 'floorN', 'floorO', 'floorP', 'floorQ', 'floorR', 'floorS', 'floorT', 'floorU', 'floorV', 'floorW', 'floorX', 'floorY', 'floorZ', 'floorAA', 'floorAB', 'floorAC', 'floorAD', 'floorAE', 'floorAF', 'floorAG', 'floorAH', 'floorAI', 'floorAJ', 'floorAK', 'floorAL', 'floorAM', 'floorAN', 'floorAO', 'floorAP', 'floorAQ', 'floorAR', 'floorAS', 'floorAT', 'floorAU', 'floorAV', 'floorAW', 'floorAX', 'floorAY', 'floorAZ', 'floorBA', 'floorBB'];
+    const floors = ['floorA', 'floorB', 'floorC', 'floorD', 'floorE', 'floorF', 'floorG', 'floorH', 'floorI', 'floorJ', 'floorK', 'floorL', 'floorM', 'floorN', 'floorO', 'floorP', 'floorQ', 'floorR', 'floorS', 'floorT', 'floorU', 'floorV', 'floorW', 'floorX', 'floorY', 'floorZ', 'floorAA', 'floorAB', 'floorAC', 'floorAD', 'floorAE', 'floorAF', 'floorAG', 'floorAH', 'floorAI', 'floorAJ', 'floorAK', 'floorAL', 'floorAM', 'floorAN', 'floorAO', 'floorAP', 'floorAQ', 'floorAR', 'floorAS', 'floorAT', 'floorAU', 'floorAV', 'floorAW', 'floorAX', 'floorAY', 'floorAZ', 'floorBA', 'floorBB', 'floorBC', 'floorBD', 'floorBE'];
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
         if (!b.floor[y]?.[x]) {
           // Show stone wall face where the wall borders a walkable floor below it.
-          const wallV = ((x * 2341 + y * 1013) ^ 571) % 57;
-          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : wallV === 8 ? 'tile.wallI' : wallV === 9 ? 'tile.wallJ' : wallV === 10 ? 'tile.wallK' : wallV === 11 ? 'tile.wallL' : wallV === 12 ? 'tile.wallM' : wallV === 13 ? 'tile.wallN' : wallV === 14 ? 'tile.wallO' : wallV === 15 ? 'tile.wallP' : wallV === 16 ? 'tile.wallQ' : wallV === 17 ? 'tile.wallR' : wallV === 18 ? 'tile.wallS' : wallV === 19 ? 'tile.wallT' : wallV === 20 ? 'tile.wallU' : wallV === 21 ? 'tile.wallV' : wallV === 22 ? 'tile.wallW' : wallV === 23 ? 'tile.wallX' : wallV === 24 ? 'tile.wallY' : wallV === 25 ? 'tile.wallZ' : wallV === 26 ? 'tile.wallAA' : wallV === 27 ? 'tile.wallAB' : wallV === 28 ? 'tile.wallAC' : wallV === 29 ? 'tile.wallAD' : wallV === 30 ? 'tile.wallAE' : wallV === 31 ? 'tile.wallAF' : wallV === 32 ? 'tile.wallAG' : wallV === 33 ? 'tile.wallAH' : wallV === 34 ? 'tile.wallAI' : wallV === 35 ? 'tile.wallAJ' : wallV === 36 ? 'tile.wallAK' : wallV === 37 ? 'tile.wallAL' : wallV === 38 ? 'tile.wallAM' : wallV === 39 ? 'tile.wallAN' : wallV === 40 ? 'tile.wallAO' : wallV === 41 ? 'tile.wallAO' : wallV === 42 ? 'tile.wallAP' : wallV === 43 ? 'tile.wallAQ' : wallV === 44 ? 'tile.wallAR' : wallV === 45 ? 'tile.wallAS' : wallV === 46 ? 'tile.wallAT' : wallV === 47 ? 'tile.wallAU' : wallV === 48 ? 'tile.wallAV' : wallV === 49 ? 'tile.wallAW' : wallV === 50 ? 'tile.wallAX' : wallV === 51 ? 'tile.wallAY' : wallV === 52 ? 'tile.wallAZ' : wallV === 53 ? 'tile.wallBA' : wallV === 54 ? 'tile.wallBB' : wallV === 55 ? 'tile.wallBC' : 'tile.wallBD';
+          const wallV = ((x * 2341 + y * 1013) ^ 571) % 59;
+          const wallTile = wallV === 0 ? 'tile.wall' : wallV === 1 ? 'tile.wallB' : wallV === 2 ? 'tile.wallC' : wallV === 3 ? 'tile.wallD' : wallV === 4 ? 'tile.wallE' : wallV === 5 ? 'tile.wallF' : wallV === 6 ? 'tile.wallG' : wallV === 7 ? 'tile.wallH' : wallV === 8 ? 'tile.wallI' : wallV === 9 ? 'tile.wallJ' : wallV === 10 ? 'tile.wallK' : wallV === 11 ? 'tile.wallL' : wallV === 12 ? 'tile.wallM' : wallV === 13 ? 'tile.wallN' : wallV === 14 ? 'tile.wallO' : wallV === 15 ? 'tile.wallP' : wallV === 16 ? 'tile.wallQ' : wallV === 17 ? 'tile.wallR' : wallV === 18 ? 'tile.wallS' : wallV === 19 ? 'tile.wallT' : wallV === 20 ? 'tile.wallU' : wallV === 21 ? 'tile.wallV' : wallV === 22 ? 'tile.wallW' : wallV === 23 ? 'tile.wallX' : wallV === 24 ? 'tile.wallY' : wallV === 25 ? 'tile.wallZ' : wallV === 26 ? 'tile.wallAA' : wallV === 27 ? 'tile.wallAB' : wallV === 28 ? 'tile.wallAC' : wallV === 29 ? 'tile.wallAD' : wallV === 30 ? 'tile.wallAE' : wallV === 31 ? 'tile.wallAF' : wallV === 32 ? 'tile.wallAG' : wallV === 33 ? 'tile.wallAH' : wallV === 34 ? 'tile.wallAI' : wallV === 35 ? 'tile.wallAJ' : wallV === 36 ? 'tile.wallAK' : wallV === 37 ? 'tile.wallAL' : wallV === 38 ? 'tile.wallAM' : wallV === 39 ? 'tile.wallAN' : wallV === 40 ? 'tile.wallAO' : wallV === 41 ? 'tile.wallAO' : wallV === 42 ? 'tile.wallAP' : wallV === 43 ? 'tile.wallAQ' : wallV === 44 ? 'tile.wallAR' : wallV === 45 ? 'tile.wallAS' : wallV === 46 ? 'tile.wallAT' : wallV === 47 ? 'tile.wallAU' : wallV === 48 ? 'tile.wallAV' : wallV === 49 ? 'tile.wallAW' : wallV === 50 ? 'tile.wallAX' : wallV === 51 ? 'tile.wallAY' : wallV === 52 ? 'tile.wallAZ' : wallV === 53 ? 'tile.wallBA' : wallV === 54 ? 'tile.wallBB' : wallV === 55 ? 'tile.wallBC' : wallV === 56 ? 'tile.wallBD' : wallV === 57 ? 'tile.wallBE' : 'tile.wallBF';
           blitTile(b.floor[y + 1]?.[x] ? wallTile : 'tile.pit', x, y);
           // Pit depth: rim catch-light + slow-pulsing void shimmer
           if (!b.floor[y + 1]?.[x]) {
