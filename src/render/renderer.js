@@ -1863,6 +1863,22 @@ export function createRenderer(canvas, opts = {}) {
       if (closed) {
         const bp = worldToScreen(box.x, box.y, cam);
         const pulse = 0.10 + 0.08 * Math.sin(clock / 1100 + box.x * 3.7 + box.y * 2.3);
+        // Exposed modifier: teal beacon on the TARGET box
+        if (state.targetVisible && !state.targetFound && box.contents === 'TARGET') {
+          const ts = TILE * cam.scale;
+          const bcx = bp.x + ts / 2, bcy = bp.y + ts / 2;
+          const tpulse = 0.22 + 0.14 * Math.sin(clock / 600);
+          const tg2 = ctx.createRadialGradient(bcx, bcy, 0, bcx, bcy, ts * 1.1);
+          tg2.addColorStop(0, '#3aacc8'); tg2.addColorStop(0.5, '#1a6888'); tg2.addColorStop(1, 'transparent');
+          ctx.save(); ctx.globalAlpha = tpulse; ctx.fillStyle = tg2;
+          ctx.fillRect(bp.x - ts * 0.3, bp.y - ts * 0.3, ts * 1.6, ts * 1.6); ctx.restore();
+          // "TARGET" label above box
+          const lx = bp.x + ts / 2, ly = bp.y - 4 * cam.scale;
+          ctx.save(); ctx.font = `bold ${Math.round(7 * cam.scale)}px monospace`;
+          ctx.textAlign = 'center'; ctx.fillStyle = '#7ee8ff';
+          ctx.globalAlpha = 0.8 + 0.2 * Math.sin(clock / 400);
+          ctx.fillText('TARGET', lx, ly); ctx.restore();
+        }
         // Radial glow centered on box â€” fades beyond tile edges for a softer ambient
         { const ts = TILE * cam.scale;
           const bcx = bp.x + ts / 2, bcy = bp.y + ts / 2;

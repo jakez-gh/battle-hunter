@@ -661,17 +661,24 @@ function resolveBattleOutcome(state, rng) {
     if (atkKind === 'hunter') {
       defeatHunter(state, attacker, rng);
     } else {
-      // Monster attacker killed by the defender's counter. The defender-defeated
-      // path (above) nulls a slain monster's pos; this path previously did
-      // nothing, so a monster that died WHILE ATTACKING stayed on the board as a
-      // positioned hp<=0 corpse — clogging tiles until the Target holder could no
-      // longer reach the EXIT and the game soft-locked (non-terminating smoke
-      // seeds 3/8). Mirror the cleanup: credit the kill, fire the event, and take
-      // the corpse off the board. (Counter-kill item drop is a faithfulness TODO.)
+      // Monster attacker killed by the defender's counter. Credit the kill to
+      // the defending hunter and clean up the corpse (soft-lock fix: dc579dc).
       if (defKind === 'hunter' && defender.tally) {
         defender.tally.killPts = (defender.tally.killPts || 0) + (MONSTERS[attacker.kind]?.killBonus || 0);
       }
-      addEvent(state, { type: 'monsterKilled', unit: attacker.id, drop: null });
+      let drop = null;
+      if (defKind === 'hunter' && attacker.kind !== 'WYRM' && rng.float() < DROP_CHANCE) {
+        const itemId = MONSTERS[attacker.kind]?.dropItemId;
+        if (itemId) {
+          defender.items = defender.items || [];
+          if (defender.items.length < 6) {
+            defender.items.push({ itemId, identified: true });
+            drop = itemId;
+            addEvent(state, { type: 'itemTaken', unit: defender.id, itemId });
+          }
+        }
+      }
+      addEvent(state, { type: 'monsterKilled', unit: attacker.id, drop });
       attacker.hp = 0;
       attacker.pos = null;
     }
@@ -784,6 +791,7 @@ export function createGame(config) {
     fortune: config.fortune ?? 1, // reroll tokens (1 base per mission; Lucky perk adds more)
     maxMonsters: config.maxMonsters ?? MAX_REGULAR_MONSTERS,
     restDisabled: !!config.restDisabled,
+    targetVisible: !!config.targetVisible,
   };
   addEvent(state, { type: 'turnStarted', unit: state.current });
   return state;
