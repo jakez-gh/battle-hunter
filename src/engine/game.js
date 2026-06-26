@@ -657,8 +657,24 @@ function resolveBattleOutcome(state, rng) {
     }
   }
 
-  if (result.outcome.attackerDefeated && atkKind === 'hunter') {
-    defeatHunter(state, attacker, rng);
+  if (result.outcome.attackerDefeated) {
+    if (atkKind === 'hunter') {
+      defeatHunter(state, attacker, rng);
+    } else {
+      // Monster attacker killed by the defender's counter. The defender-defeated
+      // path (above) nulls a slain monster's pos; this path previously did
+      // nothing, so a monster that died WHILE ATTACKING stayed on the board as a
+      // positioned hp<=0 corpse — clogging tiles until the Target holder could no
+      // longer reach the EXIT and the game soft-locked (non-terminating smoke
+      // seeds 3/8). Mirror the cleanup: credit the kill, fire the event, and take
+      // the corpse off the board. (Counter-kill item drop is a faithfulness TODO.)
+      if (defKind === 'hunter' && defender.tally) {
+        defender.tally.killPts = (defender.tally.killPts || 0) + (MONSTERS[attacker.kind]?.killBonus || 0);
+      }
+      addEvent(state, { type: 'monsterKilled', unit: attacker.id, drop: null });
+      attacker.hp = 0;
+      attacker.pos = null;
+    }
   }
 
   applyEndTurn(state, rng);
