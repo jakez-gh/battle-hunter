@@ -1509,6 +1509,29 @@ export function createRenderer(canvas, opts = {}) {
               ctx.fillStyle = smg;
               ctx.fillRect(smcx - smr, smcy - smr, smr * 2, smr * 2);
             } }
+          // Blood stain: ~5% of floor tiles bear a dried reddish-brown battle scar
+          { const bsh = ((x * 3719 + y * 2011) ^ 1777) & 0xFFFF;
+            if ((bsh & 0xFF) < 12) {
+              const bcs = cam.scale;
+              const bcx = fp.x + (3 + (bsh >> 4 & 0x9)) * bcs;
+              const bcy = fp.y + (4 + (bsh >> 9 & 0x7)) * bcs;
+              const br = (3.5 + (bsh & 3)) * bcs;
+              ctx.save(); ctx.globalAlpha = 0.30 + ((bsh >> 8) & 3) * 0.04;
+              const bsg = ctx.createRadialGradient(bcx, bcy, 0, bcx, bcy, br);
+              bsg.addColorStop(0, '#4a1818'); bsg.addColorStop(0.55, '#3a1010'); bsg.addColorStop(1, 'transparent');
+              ctx.fillStyle = bsg; ctx.fillRect((bcx - br) | 0, (bcy - br) | 0, br * 2 | 0, br * 2 | 0);
+              // Two satellite splotches for an irregular splash pattern
+              for (let bi = 0; bi < 2; bi++) {
+                const bsx = bcx + (((bsh >> (2 + bi * 5)) & 0xF) - 7) * bcs * 0.55;
+                const bsy = bcy + (((bsh >> (6 + bi * 5)) & 0xF) - 7) * bcs * 0.55;
+                const bsr = (1.4 + bi) * bcs;
+                const bsg2 = ctx.createRadialGradient(bsx, bsy, 0, bsx, bsy, bsr);
+                bsg2.addColorStop(0, '#4a1818'); bsg2.addColorStop(1, 'transparent');
+                ctx.globalAlpha = 0.18 + bi * 0.06;
+                ctx.fillStyle = bsg2; ctx.fillRect((bsx - bsr) | 0, (bsy - bsr) | 0, bsr * 2 | 0, bsr * 2 | 0);
+              }
+              ctx.restore();
+            } }
           // Hairline crack: ~5% of floor tiles get a 3-5 pixel diagonal scratch
           if (((ph >> 8) & 0xFF) < 13) {
             const cs = cam.scale;
