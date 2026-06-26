@@ -5247,6 +5247,30 @@ const FLOOR_DM = [ // half-brick — g headers and stretchers alternating within
   'GGGGGGGGGGGGGGGg',
   'GGGGGGGGGGGGGGGG',
 ];
+const FLOOR_FS = [ // square spiral — g pixels trace a single inward-tightening square spiral from the border
+  'gggggggggggggggg', 'gGGGGGGGGGGGGGGg', 'gGggggggggggggGg',
+  'gGgGGGGGGGGGGgGg', 'gGgGggggggggGgGg', 'gGgGgGGGGGGgGgGg',
+  'gGgGgGggggGgGgGg', 'gGgGgGgGGgGgGgGg', 'gGgGgGgGGgGgGgGg',
+  'gGgGgGGGGGGgGgGg', 'gGgGggggggggGgGg', 'gGgGGGGGGGGGGgGg',
+  'gGggggggggggggGg', 'gGGGGGGGGGGGGGGg', 'gggggggggggggggg',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_FT = [ // diamond lattice — intersecting ↘ and ↗ g diagonals at 6px period forming open lozenges
+  'gGGGGGgGGGGGgGGG', 'GgGGGgGgGGGgGgGG', 'GGgGgGGGgGgGGGgG',
+  'GGGgGGGGGgGGGGGg', 'GGgGgGGGgGgGGGgG', 'GgGGGgGgGGGgGgGG',
+  'gGGGGGgGGGGGgGGG', 'GgGGGgGgGGGgGgGG', 'GGgGgGGGgGgGGGgG',
+  'GGGgGGGGGgGGGGGg', 'GGgGgGGGgGgGGGgG', 'GgGGGgGgGGGgGgGG',
+  'gGGGGGgGGGGGgGGG', 'GgGGGgGgGGGgGgGG', 'GGgGgGGGgGgGGGgG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_FU = [ // hourglass — two mirrored triangles sharing a center point; symmetric left-right and top-bottom
+  'gggggggggggggggg', 'GgGGGGGGGGGGGGgG', 'GGgGGGGGGGGGGgGG',
+  'GGGgGGGGGGGGgGGG', 'GGGGgGGGGGGgGGGG', 'GGGGGgGGGGgGGGGG',
+  'GGGGGGgGGgGGGGGG', 'GGGGGGGggGGGGGGG', 'GGGGGGgGGgGGGGGG',
+  'GGGGGgGGGGgGGGGG', 'GGGGgGGGGGGgGGGG', 'GGGgGGGGGGGGgGGG',
+  'GGgGGGGGGGGGGgGG', 'GgGGGGGGGGGGGGgG', 'gggggggggggggggg',
+  'GGGGGGGGGGGGGGGG',
+];
 const FLOOR_FP = [ // sparse diagonal — 1px g pixels on a ↘ diagonal at 6px period
   'gGGGGGgGGGGGgGGG', 'GgGGGGGgGGGGGgGG', 'GGgGGGGGgGGGGGgG',
   'GGGgGGGGGgGGGGGg', 'GGGGgGGGGGgGGGGG', 'GGGGGgGGGGGgGGGG',
