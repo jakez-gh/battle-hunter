@@ -185,9 +185,14 @@ Phase hard; prove each phase is fun before funding the next. Promote to
   share string). Keep a "Classic Campaign" wrapper. **Shipped `38d7212`** —
   345/345 tests green. DIVE + DAILY HUNT on Hub; depth-transition + run-summary
   screens; share-string copy on run end. Design doc: `ROADMAP.md` Phase 1.
-- [ ] **Phase 2 — Horizontal perks** (choose-1-of-3 between depths, same
-  effect-string format `items.js` already parses; breadth not vertical power).
-- [ ] **Phase 3 — Run modifiers + per-depth room objectives.**
+- [x] **Phase 2 — Horizontal perks** (choose-1-of-3 between depths; 2A perk
+  catalog + 2B perk-pick screen shipped; Lucky perk wired into fortune tokens).
+- [x] **Phase 3 — Run modifiers** (6 mutators: Minefield/Sprint/No Rest/Swarm/
+  Iron Hunter/Exposed; score multiplier stacks; daily auto-modifier; full toggle
+  UI in Relic Dive entry screen). Per-depth room objectives (rotate fetch/
+  rescue/resteal each depth) deferred — adds complexity for modest variety gain.
+- [ ] **Deferred** — cloud leaderboard + ghost races (needs a backend = new
+  external resource; only after the offline daily proves return visits).
 - [ ] **Deferred** — cloud leaderboard + ghost races (needs a backend = new
   external resource; only after the offline daily proves return visits).
 
