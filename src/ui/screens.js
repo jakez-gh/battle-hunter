@@ -871,7 +871,7 @@ export function makeCreationScreen(app) {
       name: QUICK_NAMES[nameIdx],
       spriteId: sprite,
       palette: pal,
-      internal: { mv: 3, at: 3, df: 2, hp: 3 }, // balanced 11-point build
+      internal: { mv: 4, at: 4, df: 3, hp: 4 }, // balanced: 11 pts above base-1 each
     });
     app.roster.hunters.push(rec);
     app.session.hunterId = rec.id;
