@@ -1112,6 +1112,21 @@ export function createRenderer(canvas, opts = {}) {
                 const pg = ctx.createRadialGradient(pcx, pcy, 0, pcx, pcy, ps * 0.38);
                 pg.addColorStop(0, `rgba(30,45,90,${pa.toFixed(3)})`); pg.addColorStop(1, 'rgba(0,0,0,0)');
                 ctx.fillStyle = pg; ctx.fillRect(pp.x | 0, (pp.y + ps * 0.25) | 0, ps, ps * 0.75); } }
+            // Void motes: 2 faint phosphorescent particles slowly rising from the abyss
+            { const vmh = ((x * 4001 + y * 2963) ^ 7331) & 0xFFFF;
+              const vmper = 2800 + ((vmh >> 5) & 0x7FF);
+              for (let vmi = 0; vmi < 2; vmi++) {
+                const vhh = (vmh >> (vmi * 4)) & 0xFF;
+                const vmph = ((clock + vmi * (vmper >> 1) + vhh * 31) % vmper) / vmper;
+                const vma = Math.sin(vmph * Math.PI) * 0.19;
+                if (vma < 0.03) continue;
+                const vmxOff = (vhh & 0xF) % 14 + 1;
+                const vmsx = (pp.x + vmxOff * cam.scale + Math.sin(vmph * Math.PI * 2 + vmi * 1.9) * cam.scale) | 0;
+                const vmsy = (pp.y + ps - vmph * ps) | 0;
+                ctx.save(); ctx.globalAlpha = vma;
+                ctx.fillStyle = vmi ? '#1c2448' : '#28203a';
+                ctx.fillRect(vmsx, vmsy, cam.scale, cam.scale); ctx.restore();
+              } }
           }
           // Section tint on wall faces (matches quadrant identity from floor tint)
           if (b.floor[y + 1]?.[x]) {
