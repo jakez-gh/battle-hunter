@@ -819,6 +819,7 @@ export function makeRosterScreen(app, opts = {}) {
 
 export function makeCreationScreen(app) {
   const POOL = 11;
+  const QUICK_NAMES = ['ACE', 'VALE', 'DRAY', 'KESS', 'ROOK', 'YUNA', 'BRIX', 'NOVA'];
   const state = {
     name: '',
     spriteId: 0,
@@ -862,6 +863,23 @@ export function makeCreationScreen(app) {
     app.stack.pop();
   }
 
+  function quickStart() {
+    const nameIdx = app.roster.hunters.length % QUICK_NAMES.length;
+    const pal = PALETTE_NAMES[Math.floor(Math.random() * PALETTE_NAMES.length)];
+    const sprite = Math.floor(Math.random() * HUNTER_SPRITES.length);
+    const rec = makeHunterRecord({
+      name: QUICK_NAMES[nameIdx],
+      spriteId: sprite,
+      palette: pal,
+      internal: { mv: 3, at: 3, df: 2, hp: 3 }, // balanced 11-point build
+    });
+    app.roster.hunters.push(rec);
+    app.session.hunterId = rec.id;
+    app.save();
+    sfx.menuConfirm();
+    app.stack.pop();
+  }
+
   return {
     update(dt) { state.t += dt; },
     onKey(k, e) {
@@ -884,6 +902,7 @@ export function makeCreationScreen(app) {
       } else if (k === 'cancel') { sfx.menuCancel(); app.stack.pop(); }
     },
     onClick(pos) {
+      if (inRect(pos, { x: 600, y: 460, w: 280, h: 36 })) { quickStart(); return; }
       // click a row to focus it; click again on done/adjustables to act
       for (let i = 0; i < ROWS.length; i++) {
         const r = { x: 60, y: 120 + i * 56 - 4, w: 480, h: 52 };
@@ -1015,6 +1034,13 @@ export function makeCreationScreen(app) {
         let dcx = 750 - dtw / 2;
         for (const s of dSegs) { ctx.fillStyle = s.c ?? DIM; ctx.fillText(s.t, dcx, 420); dcx += ctx.measureText(s.t).width; }
       }
+      // Quick Start button (below preview box)
+      { const qbx = 600, qby = 460, qbw = 280, qbh = 36;
+        const qpulse = 0.06 + 0.04 * Math.sin(state.t * 2.0);
+        ctx.save(); ctx.globalAlpha = qpulse * 3; ctx.fillStyle = '#3a6ee0';
+        ctx.fillRect(qbx, qby, qbw, qbh); ctx.restore();
+        box(ctx, qbx, qby, qbw, qbh, { stroke: '#3a6ee0' });
+        text(ctx, 'QUICK START (balanced build)', qbx + qbw / 2, qby + 12, { size: 12, align: 'center', color: '#7eaaff' }); }
       text(ctx, 'type to name - arrows to adjust - Enter on BEGIN', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
     },
   };
@@ -1230,8 +1256,17 @@ export function makeHubScreen(app) {
         }
         drawItemList(ctx, rec.items, 640, 412, t);
       } else {
-        ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = BAD;
-        text(ctx, 'No active hunter - visit the OFFICE first.', 120, 430, { size: 16, color: BAD, shadow: false });
+        // First-play welcome — pulsing arrow points at OFFICE icon
+        const nhPulse = 0.55 + 0.45 * Math.abs(Math.sin(t * 2.0));
+        ctx.save(); ctx.globalAlpha = nhPulse; ctx.shadowBlur = 12; ctx.shadowColor = OK;
+        text(ctx, 'New here?  Visit the OFFICE to register your first hunter!',
+          app.W / 2, 430, { size: 16, align: 'center', color: OK, shadow: false });
+        ctx.restore();
+        // Arrow up toward OFFICE icon
+        const officeR = iconRect(0);
+        const ax = officeR.x + officeR.w / 2, ay = officeR.y + officeR.h + 8;
+        ctx.save(); ctx.globalAlpha = nhPulse * 0.85; ctx.fillStyle = OK;
+        ctx.beginPath(); ctx.moveTo(ax, ay - 8); ctx.lineTo(ax - 6, ay + 4); ctx.lineTo(ax + 6, ay + 4); ctx.closePath(); ctx.fill();
         ctx.restore();
       }
       text(ctx, 'Esc: back to title   L: personal best', app.W / 2, 680, { size: 13, align: 'center', color: DIM });
