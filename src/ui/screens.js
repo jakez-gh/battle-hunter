@@ -1275,6 +1275,7 @@ export function makeRelicDiveScreen(app, opts = {}) {
       dateKey: mode === 'daily' ? todayKey : null,
       depthResults: [],
       modifiers: activeModIds,
+      hunterId: rec.id,
     };
     // Track daily streak: increment only when starting a new daily
     if (mode === 'daily') {
@@ -3048,13 +3049,14 @@ export function makeResultsScreen(app, g) {
         fresh.storyProgress = Math.max(fresh.storyProgress ?? 0, g.mission.id);
       }
     }
-    // Record the primary human hunter's score in the personal-best board
-    if (primaryEntry && primaryEntry.score > 0) {
-      const lbMode = app.session.mode === 'story' ? 'story' : app.session.mode === 'relic-dive' ? 'relic-dive' : 'normal';
+    // Record the primary human hunter's score in the personal-best board.
+    // Relic Dive: total run score is recorded in makeRunSummaryScreen instead.
+    if (primaryEntry && primaryEntry.score > 0 && app.session.mode !== 'relic-dive') {
+      const lbMode = app.session.mode === 'story' ? 'story' : 'normal';
       addLeaderboardEntry(lbMode, {
         name: primary.name ?? 'Hunter',
         score: primaryEntry.score,
-        extras: lbMode === 'relic-dive' ? { depths: g.runState?.depth ?? 1 } : { missionId: g.mission?.id ?? null },
+        extras: { missionId: g.mission?.id ?? null },
       });
     }
     app.save();
@@ -3584,6 +3586,15 @@ export function makeRunSummaryScreen(app, g) {
       }
     }
     saveRelicDiveBest(record);
+    // Leaderboard: total score with modifier multiplier applied
+    const mult = scoreMultiplier(rs.modifiers ?? []);
+    const finalScore = Math.round(totalScore * mult);
+    const hunterName = app.roster?.hunters?.find((r) => r.id === rs.hunterId)?.name ?? 'Hunter';
+    addLeaderboardEntry('relic-dive', {
+      name: hunterName,
+      score: finalScore,
+      extras: { depths: depthsCleared, mult: mult !== 1 ? mult : undefined },
+    });
   }
 
   function copyShare() {
@@ -3644,11 +3655,18 @@ export function makeRunSummaryScreen(app, g) {
       ctx.save(); ctx.fillStyle = headerColor; ctx.globalAlpha = 0.35;
       ctx.fillRect(120, 156, app.W - 240, 1); ctx.restore();
 
-      // Score
+      // Score (with modifier multiplier if active)
+      const mult = scoreMultiplier(rs.modifiers ?? []);
+      const finalScore = Math.round(totalScore * mult);
       ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = GOLD;
-      text(ctx, `${totalScore}`, cx, 210, { size: 48, align: 'center', color: GOLD, shadow: false });
+      text(ctx, `${finalScore}`, cx, 210, { size: 48, align: 'center', color: GOLD, shadow: false });
       ctx.restore();
-      text(ctx, 'total score', cx, 246, { size: 14, align: 'center', color: DIM });
+      if (mult !== 1) {
+        text(ctx, `${totalScore} × ${mult.toFixed(2)} (modifiers)`, cx, 242, { size: 12, align: 'center', color: DIM });
+        text(ctx, 'total score', cx, 258, { size: 14, align: 'center', color: DIM });
+      } else {
+        text(ctx, 'total score', cx, 246, { size: 14, align: 'center', color: DIM });
+      }
 
       // New best callout
       if (newBest) {
