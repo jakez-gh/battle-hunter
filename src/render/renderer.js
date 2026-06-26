@@ -331,6 +331,11 @@ export function createRenderer(canvas, opts = {}) {
           const mu = findUnit(k);
           const mc = MONSTER_TURN_COL[mu?.kind] ?? '#c83a3a';
           turnFlash = { color: mc, t: 0, dur: mu?.kind === 'WYRM' ? 560 : 420 };
+          // Small type-branded ring at the monster's feet — tactile "it's your move" pulse
+          const mtp = displayPos(k);
+          if (mtp) {
+            pulseRings.push({ wx: mtp.x + 0.5, wy: mtp.y + 0.5, t: 0, ttl: 340, maxR: 1.3, color: mc, alpha0: 0.60 });
+          }
         }
         break;
       case 'stepped': {
@@ -527,6 +532,7 @@ export function createRenderer(canvas, opts = {}) {
               vx: side * (1.8 + (i >> 1) * 0.6), vy: -0.4 - (i >> 1) * 0.2,
               t: 0, ttl: 320, color: i % 3 === 0 ? '#fff' : '#9adfe8' });
           }
+          pulseRings.push({ wx: ddp.x + 0.5, wy: ddp.y + 0.5, t: 0, ttl: 260, maxR: 1.3, color: '#9adfe8', alpha0: 0.70 });
         }
         break;
       }
@@ -657,10 +663,21 @@ export function createRenderer(canvas, opts = {}) {
         }
         break;
       }
-      case 'battleStarted':
+      case 'battleStarted': {
         battle = { a: k ?? unitKey(ev.attacker), d: unitKey(ev.defender ?? ev.target),
           response: null, escape: null, strike: null };
+        // Pre-combat clash aura: pulse rings at both combatants + flash
+        const baKey = battle.a, bdKey = battle.d;
+        const bap = baKey ? displayPos(baKey) : null;
+        const bdp = bdKey ? displayPos(bdKey) : null;
+        if (bap) {
+          pulseRings.push({ wx: bap.x + 0.5, wy: bap.y + 0.5, t: 0, ttl: 280, maxR: 1.1, color: '#e88050', alpha0: 0.85 });
+        }
+        if (bdp) {
+          pulseRings.push({ wx: bdp.x + 0.5, wy: bdp.y + 0.5, t: 0, ttl: 280, maxR: 1.1, color: '#e85050', alpha0: 0.85 });
+        }
         break;
+      }
       case 'responseChosen':
         if (battle) battle.response = ev.response ?? null;
         break;
