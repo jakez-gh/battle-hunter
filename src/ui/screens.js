@@ -33,6 +33,7 @@ const TIP_DEFS = {
   steer:    ['MOVEMENT — pick your route before committing', 'Arrow keys or click  ·  Z to undo the last step'],
   response: ['BATTLE — choose your response carefully', 'Counter=fight  Guard=absorb  Escape=flee  Surrender=give'],
   win:      ['Mission complete, Hunter!', 'Play DAILY HUNT every day to track your personal best.'],
+  wyrm:     ['THE WYRM hunts the Target holder!', 'WYRM defeat = WIPE: all items + credits lost forever.'],
 };
 
 function loadSeenTips() {
@@ -2147,7 +2148,7 @@ export function makeGameScreen(app, g) {
           say(`${cap(ev.color)} flag - rolled ${ev.roll}!`, 2.2, FC[ev.color] ?? GOLD);
           break; }
         case 'monsterSpawned': say(`A ${ev.kind} appears!`, 2.2, '#cc4a3a'); break;
-        case 'wyrmSpawned': say('THE WYRM RISES!', 3, BAD); wyrmCinState = { max: 2.8, t: 2.8, line2: 'RISES' }; break;
+        case 'wyrmSpawned': say('THE WYRM RISES!', 3, BAD); wyrmCinState = { max: 2.8, t: 2.8, line2: 'RISES' }; showTip('wyrm'); break;
         case 'wyrmRespawned': say('The WYRM returns...', 3, '#e06090'); wyrmCinState = { max: 1.8, t: 1.8, line2: 'RETURNS' }; break;
         case 'missionWon':
           g.outcome.winnerRef = ev.winner ?? ev.unit ?? null;
