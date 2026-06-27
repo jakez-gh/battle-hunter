@@ -4144,6 +4144,24 @@ export function makeManualScreen(app) {
         { head: 'Story Rivals', headColor: '#cc4a3a', body: 'Keld (attack specialist) and Mira (speed specialist) are recurring rivals with stats that scale with mission level. Both use Clever AI: collect items until the Target is found, then pursue relentlessly.' },
       ],
     },
+    {
+      title: 'RELIC DIVE & DAILY HUNT',
+      sections: [
+        { head: 'Relic Dive', headColor: '#9060d8', body: 'A chained run of escalating dungeons. Each depth raises the relic level (and the difficulty). Win a depth to DESCEND deeper or BANK OUT and lock in your score.' },
+        { head: 'Daily Hunt', headColor: '#3aacc8', body: 'One fixed seed per day — everyone in the world faces the same dungeon. Play once; results are final. Share your score line to compare with friends.' },
+        { head: 'Fortune Tokens', headColor: GOLD, body: 'Each depth starts with one Fortune token. Use it before your dice roll to reroll the die. The Lucky perk grants +1 token per depth. Iron Hunter modifier disables Fortune.' },
+        { head: 'Carry-Over', headColor: OK, body: 'Your HP and items persist between depths. Manage resources carefully — healing is scarce and every defeat costs max HP until your next hospital visit.' },
+      ],
+    },
+    {
+      title: 'PERKS & MODIFIERS',
+      sections: [
+        { head: 'Perks', headColor: '#a060d8', body: 'After each won depth you choose 1 of 3 perks. Stat perks (+AT/DF/MV, +max HP) stack on every descend. Utility perks: Restless (+1 rest draw), Hoarder (+1 hand cap), Surefoot (safe own traps), Iron Legs (Leg immune), Composed (auto Panic cure), Scout (reveal traps), Warded (no nearby spawns), Lucky (+1 Fortune/depth), Prepared (first box ID\'d), Merchant (+25% credits), Survivor (full heal on descend), Gambler (+50% score / start at half HP).' },
+        { head: 'Rarity', headColor: GOLD, body: 'Common (grey): always in the pool.  Uncommon (green): slightly rarer.  Rare (gold): powerful, rarely offered.' },
+        { head: 'Modifiers', headColor: BAD, body: 'Optional challenge flags on Relic Dive (not Daily). Each adds a score multiplier. Minefield (2× traps), Sprint (deck 25, fast WYRM), No Rest (no resting), Swarm (3 monsters), Iron Hunter (no Fortune), Exposed (Target box revealed from start).' },
+        { head: 'Score Multiplier', headColor: GOLD, body: 'Each active modifier multiplies your total score. Stack modifiers for a higher leaderboard ceiling — but every extra flag makes each depth harder.' },
+      ],
+    },
   ];
 
   let page = 0;
