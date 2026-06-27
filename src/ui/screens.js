@@ -2044,6 +2044,8 @@ export function makeOptionsScreen(app) {
 
 const DIR_BY_KEY = { up: 'N', down: 'S', left: 'W', right: 'E' };
 const TIMING = { period: 0.9, window: 0.08, timeout: 2.7 };
+// On-screen pause/menu button — the touch equivalent of Esc (phones have no Esc).
+const PAUSE_BTN = { x: 8, y: 8, w: 46, h: 46 };
 
 export function makeGameScreen(app, g) {
   // g: { state, renderer, mission, outcome:{} } built by app.startMission
@@ -2140,6 +2142,10 @@ export function makeGameScreen(app, g) {
           if (inBattleMusic) { inBattleMusic = false; app.music(g.songBase); }
           break;
         case 'targetFound': say('TARGET ITEM FOUND!', 2.2, GOLD); break;
+        case 'itemTaken':
+          if (ev.itemId === 'TARGET' && A.resolveUnit(g.state, ev.unit)?.human)
+            say('RELIC SEIZED!', 3, GOLD);
+          break;
         case 'boxOpened':
           if (ev.contents && ev.contents !== 'TARGET') say(`Found: ${ITEMS[ev.contents]?.name ?? ev.contents}`, 2.2, '#3aacc8');
           break;
@@ -2438,23 +2444,7 @@ export function makeGameScreen(app, g) {
       if (broken) { if (k === 'cancel') { app.music('hub'); app.stack.pop(); } return; }
       if (handoff) { handoff = null; return; }
       if (tipOverlay) dismissTip();
-      if (k === 'cancel' && !host.top()) {
-        host.push(makeMenu(
-          [
-            { label: 'Resume', value: 'resume', color: OK },
-            { label: 'Return to Hub', value: 'hub', color: BAD },
-          ],
-          {
-            title: 'Paused',
-            onPick(v) {
-              if (v === 'resume') host.pop();
-              else if (v === 'hub') { app.music('hub'); app.stack.pop(); }
-            },
-            onCancel() { host.pop(); },
-          }
-        ));
-        return;
-      }
+      if (k === 'cancel' && !host.top()) { openPauseMenu(); return; }
       if (host.top()) { host.key(k); return; }
       if (k === 'speedDown') { aiSpeed = Math.max(1, Math.floor(aiSpeed / 2)); say(`AI speed: ${aiSpeed}x`, 1.2); return; }
       if (k === 'speedUp') { aiSpeed = Math.min(64, aiSpeed * 2); say(`AI speed: ${aiSpeed}x`, 1.2); return; }
@@ -2494,6 +2484,8 @@ export function makeGameScreen(app, g) {
         act({ type: 'timing', hit: Math.abs(p - 0.5) <= TIMING.window });
         return;
       }
+      // Touch pause button (top-left) — only when no menu is open.
+      if (!host.top() && inRect(pos, PAUSE_BTN)) { openPauseMenu(); return; }
       if (host.click(pos)) return;
       if (steering) {
         const tile = A.tileAt(g.renderer, pos);
@@ -2533,6 +2525,8 @@ export function makeGameScreen(app, g) {
         sg.addColorStop(0, 'transparent'); sg.addColorStop(1, 'rgba(0,0,0,0.55)');
         ctx.fillStyle = sg; ctx.fillRect(706, 0, 18, app.H); }
       drawHud(ctx, st);
+      // Touch pause affordance — hidden while a menu/timing/overlay is up.
+      if (!host.top() && !timing && !handoff && !tipOverlay && !st.result) drawPauseButton(ctx);
       const m = host.top();
       // Dim the game area while pause menu is open
       if (m) {
@@ -2681,6 +2675,41 @@ export function makeGameScreen(app, g) {
     } else {
       ctx.fillStyle = '#f0f4ff'; ctx.fillRect(mx - 3, by - 6, 6, 30);
     }
+  }
+
+  // Pause menu (Esc on desktop, the top-left button on touch).
+  function openPauseMenu() {
+    host.push(makeMenu(
+      [
+        { label: 'Resume', value: 'resume', color: OK },
+        { label: 'Return to Hub', value: 'hub', color: BAD },
+      ],
+      {
+        title: 'Paused',
+        onPick(v) {
+          if (v === 'resume') host.pop();
+          else if (v === 'hub') { app.music('hub'); app.stack.pop(); }
+        },
+        onCancel() { host.pop(); },
+      }
+    ));
+  }
+
+  function drawPauseButton(ctx) {
+    const { x, y, w, h } = PAUSE_BTN;
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#11131e';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = '#4a5280';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+    ctx.globalAlpha = 0.92;
+    ctx.fillStyle = '#cfd6f0';
+    const bw = 6, bh = 20, gap = 8, cx = x + w / 2, cy = y + h / 2;
+    ctx.fillRect(cx - gap / 2 - bw, cy - bh / 2, bw, bh);
+    ctx.fillRect(cx + gap / 2, cy - bh / 2, bw, bh);
+    ctx.restore();
   }
 
   function drawSteerHint(ctx, st) {
