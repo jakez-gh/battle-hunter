@@ -3679,6 +3679,40 @@ export function makeDepthTransitionScreen(app, g) {
         text(ctx, 'Maximum depth reached.', cx, 190, { size: 15, align: 'center', color: DIM });
       }
 
+      // Carry-over status — shows HP/items/perks going into the next depth,
+      // so DESCEND vs BANK OUT is an informed push-your-luck dilemma (F1)
+      { const human = (g.state?.hunters || []).find((h) => h.human);
+        if (human) {
+          const hpFrac = human.maxHp > 0 ? human.hp / human.maxHp : 0;
+          const hpCol = hpFrac > 0.5 ? OK : hpFrac > 0.25 ? '#e0a840' : BAD;
+          const items = human.items || [];
+          const perks = rs.perks || [];
+          box(ctx, cx - 220, 226, 440, canDescend ? 84 : 80, { title: 'CARRY OVER →', stroke: '#3c4364' });
+          // HP row with mini-bar
+          text(ctx, `HP ${human.hp}/${human.maxHp}`, cx - 200, 254, { size: 12, color: hpCol });
+          const barW = 80, barX = cx - 148, barY = 257;
+          ctx.fillStyle = '#151828'; ctx.fillRect(barX, barY, barW, 7);
+          if (hpFrac > 0) {
+            const bfill = Math.round(barW * hpFrac);
+            const hg = ctx.createLinearGradient(barX, barY, barX, barY + 7);
+            hg.addColorStop(0, hpFrac > 0.5 ? '#50c870' : hpFrac > 0.25 ? '#e0a840' : '#e04040');
+            hg.addColorStop(1, hpFrac > 0.5 ? '#30a050' : hpFrac > 0.25 ? '#b07820' : '#c02020');
+            ctx.fillStyle = hg; ctx.fillRect(barX, barY, bfill, 7);
+          }
+          // Items
+          const itemLabel = items.length
+            ? items.slice(0, 5).map((it) => (it.identified ? ITEMS[it.itemId]?.name : '???') ?? it.itemId).join(', ')
+              + (items.length > 5 ? '…' : '')
+            : 'no items';
+          text(ctx, `Bag: ${itemLabel}`, cx - 200, 272, { size: 11, color: items.length ? GOLD : DIM });
+          // Perks
+          if (perks.length) {
+            const perkLabel = perks.map((id) => describePerk(id)?.name ?? id).join(' · ');
+            text(ctx, `Perks: ${perkLabel}`, cx - 200, 288, { size: 10, color: '#a090cc' });
+          }
+        }
+      }
+
       // DESCEND / BANK OUT buttons
       const BW = 200, BH = 44;
       if (canDescend) {
