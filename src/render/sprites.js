@@ -2417,6 +2417,27 @@ const WALL_DK = [ // ashlar with shadow reveal — deep d reveal between blocks 
   'XXXXXXXXXXXXXXXX',
   'GGGGGGGGGGGGGGGG',
 ];
+const WALL_GC = [ // figure-eight — two tangent r=3 lozenge outlines centred at (7,4) and (7,10), sharing a touch point
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGdGGGGGGgX', 'XcGGGGdGdGGGGGgX',
+  'XcGGGdGGGdGGGGgX', 'XcGGdGGGGGdGGGgX', 'XcGGGdGGGdGGGGgX',
+  'XcGGGGdGdGGGGGgX', 'XcGGGGGdGGGGGGgX', 'XcGGGGdGdGGGGGgX',
+  'XcGGGdGGGdGGGGgX', 'XcGGdGGGGGdGGGgX', 'XcGGGdGGGdGGGGgX',
+  'XcGGGGdGdGGGGGgX', 'XcGGGGGdGGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_GD = [ // Greek cross — bold 2px-wide d plus sign with arms spanning the full stone face
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGddGGGGGgX', 'XcGGGGGddGGGGGgX',
+  'XcGGGGGddGGGGGgX', 'XcGGGGGddGGGGGgX', 'XcGGGGGddGGGGGgX',
+  'XcddddddddddddgX', 'XcddddddddddddgX', 'XcGGGGGddGGGGGgX',
+  'XcGGGGGddGGGGGgX', 'XcGGGGGddGGGGGgX', 'XcGGGGGddGGGGGgX',
+  'XcGGGGGddGGGGGgX', 'XcGGGGGddGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_GE = [ // triple chevron — three downward-pointing d V-marks stacked with single-row gaps
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGdGGGdGGGGgX',
+  'XcGGGGdGdGGGGGgX', 'XcGGGGGdGGGGGGgX', 'XcGGGGGGGGGGGGgX',
+  'XcGGGdGGGdGGGGgX', 'XcGGGGdGdGGGGGgX', 'XcGGGGGdGGGGGGgX',
+  'XcGGGGGGGGGGGGgX', 'XcGGGdGGGdGGGGgX', 'XcGGGGdGdGGGGGgX',
+  'XcGGGGGdGGGGGGgX', 'XcGGGGGGGGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
 const WALL_FZ = [ // Tudor depressed arch — flat 6px crown with quickly spreading legs; characteristic late-Gothic form
   'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGddddddGGGgX',
   'XcGGdGGGGGGdGGgX', 'XcGdGGGGGGGGdGgX', 'XcdGGGGGGGGGGdgX',
@@ -5310,6 +5331,30 @@ const FLOOR_DM = [ // half-brick — g headers and stretchers alternating within
   'GGGGGGGGGGGGGGGg',
   'GGGGGGGGGGGGGGGG',
 ];
+const FLOOR_GB = [ // brick running bond — horizontal g mortar lines every 5 rows with staggered vertical joints
+  'GGGGGGGGgGGGGGGG', 'GGGGGGGGgGGGGGGG', 'GGGGGGGGgGGGGGGG',
+  'GGGGGGGGgGGGGGGG', 'gggggggggggggggg', 'GGGGgGGGGGGGgGGG',
+  'GGGGgGGGGGGGgGGG', 'GGGGgGGGGGGGgGGG', 'GGGGgGGGGGGGgGGG',
+  'GGGGgGGGGGGGgGGG', 'gggggggggggggggg', 'GGGGGGGGgGGGGGGG',
+  'GGGGGGGGgGGGGGGG', 'GGGGGGGGgGGGGGGG', 'GGGGGGGGgGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_GC = [ // large checker — alternating 8×8 G and g blocks in a 2×2 checkerboard
+  'GGGGGGGGgggggggg', 'GGGGGGGGgggggggg', 'GGGGGGGGgggggggg',
+  'GGGGGGGGgggggggg', 'GGGGGGGGgggggggg', 'GGGGGGGGgggggggg',
+  'GGGGGGGGgggggggg', 'GGGGGGGGgggggggg', 'ggggggggGGGGGGGG',
+  'ggggggggGGGGGGGG', 'ggggggggGGGGGGGG', 'ggggggggGGGGGGGG',
+  'ggggggggGGGGGGGG', 'ggggggggGGGGGGGG', 'ggggggggGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_GD = [ // twill weave — g markers rotate through a 4-step diagonal pattern at period 4
+  'gGGGgGGGgGGGgGGG', 'GgGGGgGGGgGGGgGG', 'GGGgGGGgGGGgGGGg',
+  'GGgGGGgGGGgGGGgG', 'gGGGgGGGgGGGgGGG', 'GgGGGgGGGgGGGgGG',
+  'GGGgGGGgGGGgGGGg', 'GGgGGGgGGGgGGGgG', 'gGGGgGGGgGGGgGGG',
+  'GgGGGgGGGgGGGgGG', 'GGGgGGGgGGGgGGGg', 'GGgGGGgGGGgGGGgG',
+  'gGGGgGGGgGGGgGGG', 'GgGGGgGGGgGGGgGG', 'GGGgGGGgGGGgGGGg',
+  'GGGGGGGGGGGGGGGG',
+];
 const FLOOR_FY = [ // cross stitch — four g plus-sign marks at (4,4), (12,4), (4,11), (12,11)
   'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
   'GGGGgGGGGGGGgGGG', 'GGGgggGGGGGgggGG', 'GGGGgGGGGGGGgGGG',
@@ -6811,6 +6856,9 @@ export const TILES = {
   floorDK: { grid: FLOOR_DK, palette: TILE_PALETTE },
   floorDL: { grid: FLOOR_DL, palette: TILE_PALETTE },
   floorDM: { grid: FLOOR_DM, palette: TILE_PALETTE },
+  floorGB: { grid: FLOOR_GB, palette: TILE_PALETTE },
+  floorGC: { grid: FLOOR_GC, palette: TILE_PALETTE },
+  floorGD: { grid: FLOOR_GD, palette: TILE_PALETTE },
   floorFY: { grid: FLOOR_FY, palette: TILE_PALETTE },
   floorFZ: { grid: FLOOR_FZ, palette: TILE_PALETTE },
   floorGA: { grid: FLOOR_GA, palette: TILE_PALETTE },
@@ -7002,6 +7050,9 @@ export const TILES = {
   wallDI: { grid: WALL_DI, palette: TILE_PALETTE },
   wallDJ: { grid: WALL_DJ, palette: TILE_PALETTE },
   wallDK: { grid: WALL_DK, palette: TILE_PALETTE },
+  wallGC: { grid: WALL_GC, palette: TILE_PALETTE },
+  wallGD: { grid: WALL_GD, palette: TILE_PALETTE },
+  wallGE: { grid: WALL_GE, palette: TILE_PALETTE },
   wallFZ: { grid: WALL_FZ, palette: TILE_PALETTE },
   wallGA: { grid: WALL_GA, palette: TILE_PALETTE },
   wallGB: { grid: WALL_GB, palette: TILE_PALETTE },
