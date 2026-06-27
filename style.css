@@ -5,16 +5,25 @@ html, body {
   height: 100%;
   background: #0b0b12;
   overflow: hidden;
+  /* Mobile: no text selection / long-press menu / tap flash on the game. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 
 body {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Keep the canvas clear of notches / rounded corners on phones. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
 }
 
 #game {
-  /* largest 4:3 rectangle that fits the window */
+  /* largest 4:3 rectangle that fits the safe viewport */
   width: min(100vw, calc(100vh * 4 / 3));
   height: min(100vh, calc(100vw * 3 / 4));
   background: #000;
@@ -22,4 +31,6 @@ body {
   image-rendering: crisp-edges;
   outline: none;
   cursor: default;
+  /* All touch gestures on the canvas are the game's — never scroll/zoom. */
+  touch-action: none;
 }

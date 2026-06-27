@@ -80,14 +80,14 @@ ZIP_DEST="$HOME/Desktop/battle-hunter-web.zip"
 rm -f "$ZIP_DEST"
 
 if command -v zip &>/dev/null; then
-    zip -r "$ZIP_DEST" index.html style.css src/ \
+    zip -r "$ZIP_DEST" index.html style.css manifest.webmanifest icon.svg src/ \
         -x "*.DS_Store" -x "*/.git/*" > /dev/null
 elif command -v python3 &>/dev/null; then
     python3 - "$ZIP_DEST" <<'PYEOF'
 import sys, zipfile, pathlib
 dest = sys.argv[1]
 with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as z:
-    for name in ('index.html', 'style.css'):
+    for name in ('index.html', 'style.css', 'manifest.webmanifest', 'icon.svg'):
         z.write(name)
     for p in pathlib.Path('src').rglob('*'):
         if p.is_file():

@@ -89,7 +89,7 @@ if exist "!ZIP_DEST!" del /f "!ZIP_DEST!"
 powershell -NoProfile -Command ^
   "Add-Type -AssemblyName System.IO.Compression.FileSystem;" ^
   "$zip = [System.IO.Compression.ZipFile]::Open('%ZIP_DEST%', 'Create');" ^
-  "foreach ($name in @('index.html','style.css')) {" ^
+  "foreach ($name in @('index.html','style.css','manifest.webmanifest','icon.svg')) {" ^
   "  [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, (Resolve-Path $name).Path, $name, 'Optimal') | Out-Null" ^
   "};" ^
   "Get-ChildItem -Path 'src' -Recurse -File | ForEach-Object {" ^

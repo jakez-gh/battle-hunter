@@ -70,3 +70,25 @@ test('canvasPos handles 1:1 (no CSS scaling)', () => {
   assert.equal(pos.x, 50);
   assert.equal(pos.y, 75);
 });
+
+// Touch: a tap must map to the same canvas-space point as a mouse click, so the
+// game is playable on a phone. canvasPos reads touches[0] / changedTouches[0].
+test('canvasPos reads a touchstart point (touches[0])', () => {
+  const canvas = {
+    width: 320, height: 240,
+    getBoundingClientRect: () => ({ left: 10, top: 20, width: 640, height: 480 }),
+  };
+  const pos = canvasPos(canvas, { touches: [{ clientX: 10 + 320, clientY: 20 + 240 }] });
+  assert.equal(pos.x, 160);
+  assert.equal(pos.y, 120);
+});
+
+test('canvasPos reads a touchend point (changedTouches[0], empty touches)', () => {
+  const canvas = {
+    width: 320, height: 240,
+    getBoundingClientRect: () => ({ left: 0, top: 0, width: 320, height: 240 }),
+  };
+  const pos = canvasPos(canvas, { touches: [], changedTouches: [{ clientX: 50, clientY: 75 }] });
+  assert.equal(pos.x, 50);
+  assert.equal(pos.y, 75);
+});

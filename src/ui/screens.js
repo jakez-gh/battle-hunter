@@ -3596,6 +3596,11 @@ export function makePerkPickScreen(app, g) {
       ctx.restore();
       text(ctx, `After Depth ${rs.depth}  ·  Run perks: ${(rs.perks ?? []).length}`,
         cx, 84, { size: 14, align: 'center', color: DIM });
+      const myPerks = (rs.perks ?? []).map(describePerk).filter(Boolean);
+      if (myPerks.length > 0) {
+        const pLine = myPerks.map((p) => p.name).join('  ·  ');
+        text(ctx, pLine, cx, 116, { size: 12, align: 'center', color: '#a060d8' });
+      }
 
       const cardW = 200, cardH = 220, cardY = 230;
       const xs = [cx - 300, cx - 100, cx + 100];

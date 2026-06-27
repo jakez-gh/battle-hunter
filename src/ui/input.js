@@ -1,7 +1,9 @@
-// Keyboard + mouse routing (DESIGN.md §1.2). Raw DOM events become semantic
-// keys and canvas-space clicks, dispatched to the active screen's
+// Keyboard + mouse + TOUCH routing (DESIGN.md §1.2). Raw DOM events become
+// semantic keys and canvas-space points, dispatched to the active screen's
 // onKey(sem, e) / onClick(pos, e) / onHover(pos, e). The first user gesture
-// calls synth.unlock() (browsers block WebAudio until then).
+// calls synth.unlock() (browsers block WebAudio until then). Touch is wired so
+// the game is fully playable on a phone (Android): a tap is an onClick, so
+// tap-to-move/steer, tap-a-menu, and the tap-timed minigame all work.
 import { unlock } from '../audio/synth.js';
 
 // Arrows/WASD steer + move cursors, Enter/Space confirm, Esc cancels,
@@ -23,11 +25,13 @@ export function semanticKey(e) {
 }
 
 // Client coords -> internal canvas pixels (canvas is CSS-scaled, style.css).
+// Accepts a mouse event OR a touch event (reads the first/changed touch point).
 export function canvasPos(canvas, e) {
   const r = canvas.getBoundingClientRect();
+  const p = e.touches?.[0] ?? e.changedTouches?.[0] ?? e;
   return {
-    x: (e.clientX - r.left) * (canvas.width / r.width),
-    y: (e.clientY - r.top) * (canvas.height / r.height),
+    x: (p.clientX - r.left) * (canvas.width / r.width),
+    y: (p.clientY - r.top) * (canvas.height / r.height),
   };
 }
 
@@ -60,16 +64,38 @@ export function initInput(canvas, getScreen, { onFirstGesture } = {}) {
     mouse = canvasPos(canvas, e);
     getScreen()?.onHover?.(mouse, e);
   };
+  // Touch: a tap is a press (onClick) at the touch point. preventDefault stops
+  // the browser from scrolling/zooming the page or firing a delayed synthetic
+  // mousedown (which would double-handle the tap). touchstart fires on contact,
+  // so it measures the press for the timing minigame just like mousedown.
+  const touchstart = (e) => {
+    gesture();
+    if (e.cancelable) e.preventDefault();
+    mouse = canvasPos(canvas, e);
+    getScreen()?.onClick?.(mouse, e);
+  };
+  const touchmove = (e) => {
+    if (e.cancelable) e.preventDefault();
+    mouse = canvasPos(canvas, e);
+    getScreen()?.onHover?.(mouse, e);
+  };
+  const touchend = (e) => { if (e.cancelable) e.preventDefault(); };
 
   window.addEventListener('keydown', keydown);
   canvas.addEventListener('mousedown', mousedown);
   canvas.addEventListener('mousemove', mousemove);
+  canvas.addEventListener('touchstart', touchstart, { passive: false });
+  canvas.addEventListener('touchmove', touchmove, { passive: false });
+  canvas.addEventListener('touchend', touchend, { passive: false });
   return {
     mouse: () => mouse,
     dispose() {
       window.removeEventListener('keydown', keydown);
       canvas.removeEventListener('mousedown', mousedown);
       canvas.removeEventListener('mousemove', mousemove);
+      canvas.removeEventListener('touchstart', touchstart);
+      canvas.removeEventListener('touchmove', touchmove);
+      canvas.removeEventListener('touchend', touchend);
     },
   };
 }

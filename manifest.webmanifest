@@ -1,0 +1,15 @@
+{
+  "name": "Battle Hunter",
+  "short_name": "Battle Hunter",
+  "description": "Race a procedural dungeon for a hidden relic — dice movement, card battles, a daily run.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#06060c",
+  "theme_color": "#06060c",
+  "icons": [
+    { "src": "icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "maskable" }
+  ]
+}
