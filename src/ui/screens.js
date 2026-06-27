@@ -2044,8 +2044,33 @@ export function makeOptionsScreen(app) {
 
 const DIR_BY_KEY = { up: 'N', down: 'S', left: 'W', right: 'E' };
 const TIMING = { period: 0.9, window: 0.08, timeout: 2.7 };
-// On-screen pause/menu button — the touch equivalent of Esc (phones have no Esc).
+// On-screen touch controls (left edge), the equivalents of the desktop keys that
+// phones can't press: Esc (pause), [ ] (speed), Tab (info), Z (undo a step).
 const PAUSE_BTN = { x: 8, y: 8, w: 46, h: 46 };
+const SPEED_BTN = { x: 8, y: 60, w: 46, h: 46 };
+const INFO_BTN = { x: 8, y: 112, w: 46, h: 46 };
+const UNDO_BTN = { x: 8, y: 164, w: 46, h: 46 };
+
+// §2.12 score rows from the documented tally fields: 15/tile, 25/HP, flag and
+// kill points at face value, handicap (relic - level) x 250, items 250 each and
+// Target 1250, capped at 50,000. Credits = floor(score / 15 x relic). Pure —
+// shared by the in-game live-score HUD AND the results screen. It previously
+// lived only inside makeResultsScreen, so the in-game HUD threw "scoreRows is
+// not defined" every frame; module scope fixes that.
+function scoreRows(st) {
+  return (st.hunters || []).map((h) => {
+    const t = h.tally || {};
+    const moved = (t.moved ?? 0) * 15;
+    const damage = (t.damage ?? 0) * 25;
+    const flagPts = t.flagPts ?? 0;
+    const killPts = t.killPts ?? 0;
+    const handicap = Math.max(0, ((st.relicLevel ?? 1) - (h.level ?? 1)) * 250);
+    const itemPts = (h.items?.length ?? 0) * 250 + (h.hasTarget ? 1250 : 0);
+    const total = Math.min(50000, moved + damage + flagPts + killPts + handicap + itemPts);
+    const credits = Math.floor((total * (st.relicLevel ?? 1)) / 15);
+    return { id: h.id, name: h.name, moved, damage, flagPts, killPts, handicap, itemPts, total, credits };
+  });
+}
 
 export function makeGameScreen(app, g) {
   // g: { state, renderer, mission, outcome:{} } built by app.startMission
@@ -2479,14 +2504,21 @@ export function makeGameScreen(app, g) {
       if (broken) return;
       if (handoff) { handoff = null; return; }
       if (tipOverlay) { dismissTip(); return; }
+      // On-screen controls (top-left) take precedence and work even mid-animation
+      // — except during the timing minigame (the whole screen is the tap) and the
+      // pause menu. Pause/speed/info always; undo only while steering.
+      if (!timing && host.top()?.title !== 'Paused') {
+        if (inRect(pos, PAUSE_BTN)) { openPauseMenu(); return; }
+        if (inRect(pos, SPEED_BTN)) { aiSpeed = aiSpeed >= 64 ? 1 : aiSpeed * 2; say(`AI speed: ${aiSpeed}x`, 1.2); return; }
+        if (inRect(pos, INFO_BTN)) { infoIndex = (infoIndex + 1) % (g.state.hunters?.length || 1); return; }
+        if (steering && undoStack.length && inRect(pos, UNDO_BTN)) { undoStep(); return; }
+      }
       if (A.rendererBusy(g.renderer)) { A.rendererSkip(g.renderer); return; }
       if (timing) {
         const p = markerPos(timing.t);
         act({ type: 'timing', hit: Math.abs(p - 0.5) <= TIMING.window });
         return;
       }
-      // Touch pause button (top-left) — only when no menu is open.
-      if (!host.top() && inRect(pos, PAUSE_BTN)) { openPauseMenu(); return; }
       if (host.click(pos)) return;
       if (steering) {
         const tile = A.tileAt(g.renderer, pos);
@@ -2526,16 +2558,25 @@ export function makeGameScreen(app, g) {
         sg.addColorStop(0, 'transparent'); sg.addColorStop(1, 'rgba(0,0,0,0.55)');
         ctx.fillStyle = sg; ctx.fillRect(706, 0, 18, app.H); }
       drawHud(ctx, st);
-      // Touch pause affordance — hidden while a menu/timing/overlay is up.
-      if (!host.top() && !timing && !handoff && !tipOverlay && !st.result) drawPauseButton(ctx);
+      // Touch controls — visible during normal play (incl. the turn menu, which
+      // is always on host); hidden only when the pause menu is already open or
+      // during the timing minigame / handoff / tip / results.
+      if (host.top()?.title !== 'Paused' && !timing && !handoff && !tipOverlay && !st.result) {
+        drawPauseButton(ctx);
+        drawToolbar(ctx);
+      }
       const m = host.top();
-      // Dim the game area while pause menu is open
       if (m) {
-        ctx.save(); ctx.globalAlpha = 0.45; ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, 720, app.H); ctx.restore();
-        ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = '#b07a08';
-        text(ctx, 'PAUSED', 360, 340, { size: 28, align: 'center', color: GOLD, shadow: false });
-        ctx.restore();
+        // Dim the board + show PAUSED ONLY for the actual pause menu — the turn /
+        // sub / battle / choice menus are normal in-play menus and must NOT dim
+        // the board or claim the game is paused (they go through host too).
+        if (m.title === 'Paused') {
+          ctx.save(); ctx.globalAlpha = 0.45; ctx.fillStyle = '#000';
+          ctx.fillRect(0, 0, 720, app.H); ctx.restore();
+          ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = '#b07a08';
+          text(ctx, 'PAUSED', 360, 340, { size: 28, align: 'center', color: GOLD, shadow: false });
+          ctx.restore();
+        }
         drawMenu(ctx, m, 724, 420, 232, { lineH: 22, size: 13 });
       }
       if (steering) drawSteerHint(ctx, st);
@@ -2696,21 +2737,42 @@ export function makeGameScreen(app, g) {
     ));
   }
 
+  function btnBox(ctx, r) {
+    ctx.save();
+    ctx.globalAlpha = 0.5; ctx.fillStyle = '#11131e';
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.strokeStyle = '#4a5280'; ctx.lineWidth = 2;
+    ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+    ctx.restore();
+  }
+
   function drawPauseButton(ctx) {
     const { x, y, w, h } = PAUSE_BTN;
+    btnBox(ctx, PAUSE_BTN);
     ctx.save();
-    ctx.globalAlpha = 0.5;
-    ctx.fillStyle = '#11131e';
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = '#4a5280';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
-    ctx.globalAlpha = 0.92;
-    ctx.fillStyle = '#cfd6f0';
+    ctx.globalAlpha = 0.92; ctx.fillStyle = '#cfd6f0';
     const bw = 6, bh = 20, gap = 8, cx = x + w / 2, cy = y + h / 2;
     ctx.fillRect(cx - gap / 2 - bw, cy - bh / 2, bw, bh);
     ctx.fillRect(cx + gap / 2, cy - bh / 2, bw, bh);
     ctx.restore();
+  }
+
+  // The touch toolbar: speed (cycles AI speed), info (cycles hunter readout), and
+  // undo (only while steering, when there's a step to take back).
+  function drawToolbar(ctx) {
+    btnBox(ctx, SPEED_BTN);
+    text(ctx, `${aiSpeed}×`, SPEED_BTN.x + SPEED_BTN.w / 2, SPEED_BTN.y + 12, { size: 15, align: 'center', color: '#cfd6f0' });
+    text(ctx, 'speed', SPEED_BTN.x + SPEED_BTN.w / 2, SPEED_BTN.y + 32, { size: 8, align: 'center', color: '#8088a8' });
+
+    btnBox(ctx, INFO_BTN);
+    text(ctx, 'i', INFO_BTN.x + INFO_BTN.w / 2, INFO_BTN.y + 10, { size: 20, align: 'center', color: '#cfd6f0' });
+    text(ctx, 'info', INFO_BTN.x + INFO_BTN.w / 2, INFO_BTN.y + 32, { size: 8, align: 'center', color: '#8088a8' });
+
+    if (steering && undoStack.length) {
+      btnBox(ctx, UNDO_BTN);
+      text(ctx, '↶', UNDO_BTN.x + UNDO_BTN.w / 2, UNDO_BTN.y + 11, { size: 22, align: 'center', color: '#cfd6f0' });
+      text(ctx, 'undo', UNDO_BTN.x + UNDO_BTN.w / 2, UNDO_BTN.y + 32, { size: 8, align: 'center', color: '#8088a8' });
+    }
   }
 
   function drawSteerHint(ctx, st) {
@@ -3532,24 +3594,6 @@ export function makeResultsScreen(app, g) {
       text(ctx, exitHint + replayHint, app.W / 2, 600, { size: 15, align: 'center', color: FG });
     },
   };
-
-  // §2.12 rows from the documented tally fields: 15/tile, 25/HP, flag and
-  // kill points at face value, handicap (relic - level) x 250, items 250 each
-  // and Target 1250, capped at 50,000. Credits = floor(score / 15 x relic).
-  function scoreRows(st) {
-    return (st.hunters || []).map((h) => {
-      const t = h.tally || {};
-      const moved = (t.moved ?? 0) * 15;
-      const damage = (t.damage ?? 0) * 25;
-      const flagPts = t.flagPts ?? 0;
-      const killPts = t.killPts ?? 0;
-      const handicap = Math.max(0, ((st.relicLevel ?? 1) - (h.level ?? 1)) * 250);
-      const itemPts = (h.items?.length ?? 0) * 250 + (h.hasTarget ? 1250 : 0);
-      const total = Math.min(50000, moved + damage + flagPts + killPts + handicap + itemPts);
-      const credits = Math.floor((total * (st.relicLevel ?? 1)) / 15);
-      return { id: h.id, name: h.name, moved, damage, flagPts, killPts, handicap, itemPts, total, credits };
-    });
-  }
 }
 
 // ---------------------------------------------------------------------------
