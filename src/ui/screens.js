@@ -2349,7 +2349,8 @@ export function makeGameScreen(app, g) {
     }
 
     if (phase === 'mission.over') {
-      host.push(subMenu('MISSION COMPLETE', acts.length ? acts : [{ type: 'confirm' }]));
+      const overTitle = g.outcome.won === false ? 'MISSION FAILED' : 'MISSION COMPLETE';
+      host.push(subMenu(overTitle, acts.length ? acts : [{ type: 'confirm' }]));
       return;
     }
 
