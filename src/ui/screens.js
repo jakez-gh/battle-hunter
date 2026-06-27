@@ -2994,6 +2994,22 @@ export function makeGameScreen(app, g) {
       }
     }
 
+    // Live score — shows the human hunter's running tally so decisions feel legible
+    { const human = (st.hunters || []).find((h) => h.human);
+      if (human) {
+        const rows = scoreRows(st);
+        const row = rows.find((r) => r.id === human.id);
+        if (row) {
+          const pts = row.total;
+          const topScore = Math.max(...rows.map((r) => r.total));
+          const isLeading = pts >= topScore;
+          const scoreCol = isLeading ? OK : '#8090d8';
+          ctx.save(); ctx.shadowBlur = 4; ctx.shadowColor = isLeading ? OK : '#304080';
+          text(ctx, `Score: ${pts} pts`, X + 10, 474, { size: 10, color: scoreCol, shadow: false });
+          ctx.restore();
+        }
+      }
+    }
     // AI speed hint — always visible so players discover the [ / ] keys
     text(ctx, `[ / ] AI speed: ${aiSpeed}\xd7`, X + 10, 498, { size: 10, color: DIM });
 
@@ -3097,6 +3113,32 @@ export function makeGameScreen(app, g) {
           text(ctx, cv, cx + 21, cy + 22, { size: 14, align: 'center', color: cc, shadow: false });
           ctx.restore(); }
       });
+      // Deck composition — surfaces known-quantity input randomness (F5 / design-principles doc)
+      if (st.deck) {
+        const byColor = { red: 0, yellow: 0, blue: 0, green: 0 };
+        let eCards = 0;
+        for (const cid of (st.deck || [])) {
+          try { const col = cardColor(cid); byColor[col] = (byColor[col] || 0) + 1; } catch {}
+          if (cid === 'BE') eCards++;
+        }
+        const dyY = 670;
+        ctx.font = font(9, false);
+        ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+        let bx2 = X + 10;
+        const dsegs = [
+          { t: `R:${byColor.red}`, c: CARD_HEX.red },
+          { t: `  Y:${byColor.yellow}`, c: CARD_HEX.yellow },
+          { t: `  B:${byColor.blue - eCards}`, c: CARD_HEX.blue },
+          { t: `  G:${byColor.green}`, c: CARD_HEX.green },
+        ];
+        if (eCards > 0) dsegs.push({ t: `  E:${eCards}`, c: BAD });
+        for (const seg of dsegs) {
+          ctx.fillStyle = '#000'; ctx.fillText(seg.t, bx2 + 1, dyY + 1);
+          ctx.fillStyle = seg.c; ctx.fillText(seg.t, bx2, dyY);
+          bx2 += Math.round(ctx.measureText(seg.t).width);
+        }
+        text(ctx, 'deck remaining', X + W - 8, dyY, { size: 9, align: 'right', color: DIM, shadow: false, bold: false });
+      }
     }
   }
 }
