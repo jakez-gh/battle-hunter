@@ -50,11 +50,20 @@ the URL on your phone:
 
 A hosted HTTPS URL also makes it a proper installable PWA (stable home-screen app).
 
+## On-screen controls (left edge)
+
+A small touch toolbar gives every desktop-key action a button — validated on an
+emulated Galaxy A15:
+
+- **❚❚ pause** — open the pause menu (Resume / Return to Hub). The Esc equivalent.
+- **N× speed** — tap to cycle how fast the AI turns animate (the `[` `]` keys).
+- **i info** — cycle which hunter the INFO panel reads out (the `Tab` key).
+- **↶ undo** — appears while steering; take back your last step (the `Z` key).
+
+Everything else is tap-driven: tap a tile to move/steer, tap a tile you're on (or
+the path end) to stop, tap menu options, and tap to time the dodge/brace minigame.
+
 ## Known mobile limitations (small, non-blocking)
 
-- Keyboard-only extras have touch coverage where it matters: move/steer/stop and
-  all menus are tap-driven, and **pause is the on-screen ❚❚ button**. The desktop
-  speed keys (`[` `]`), info (`Tab`), and one-step undo (`Z`) don't yet have an
-  on-screen control — a small touch toolbar is the natural follow-up.
 - Text is sized for a 960×720 canvas; on a small phone some hub/manual text is
   dense. Landscape + the browser's zoom (page, not the game) helps if needed.
