@@ -445,6 +445,28 @@ const app = {
       return false;
     }
   },
+  // Like startMission but pushes GAME on top of the current screen instead of replacing it.
+  // Use when there's already a screen below that should be returned to after results.
+  pushMission(mission) {
+    if (!game || !ai) return false;
+    const rec = this.roster.hunters.find((h) => h.id === this.session.hunterId);
+    if (!rec) return false;
+    try {
+      const coopRecs = (this.session.coopIds || [])
+        .map((id) => this.roster.hunters.find((h) => h.id === id))
+        .filter(Boolean);
+      const config = buildMissionConfig(mission, [rec, ...coopRecs], this.session.mode);
+      const state = adapt.createGame(config);
+      const renderer = adapt.makeRenderer(canvas, atlas);
+      adapt.rendererFeed(renderer, state, state.events ?? []);
+      state.events = [];
+      stack.push(makeGameScreen(app, { state, renderer, mission, outcome: {} }));
+      return true;
+    } catch (e) {
+      console.error('pushMission failed', e);
+      return false;
+    }
+  },
 };
 
 initInput(canvas, () => stack.top(), {

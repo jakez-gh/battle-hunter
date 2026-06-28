@@ -557,8 +557,15 @@ export function makeTitleScreen(app) {
       app.session.hunterId = rec.id;
       app.save();
     }
+    // Push Hub below so results screen pops back to it, then launch directly into
+    // a Level 1 Normal mission — skips the Client/party-setup friction (F6 demo path).
     app.session.mode = 'normal';
     app.stack.push(makeHubScreen(app));
+    const hunter = currentHunter(app);
+    if (hunter) {
+      const mission = makeNormalMission([hunter]);
+      app.pushMission(mission);
+    }
   }
 
   const menu = makeMenu([
