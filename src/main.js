@@ -10,7 +10,7 @@
 import { interpolateInternal, RIVALS, rivalStats } from './engine/missions.js';
 import { makeRng } from './engine/rng.js';
 import { reachableTiles, occupiedSet } from './engine/board.js';
-import { perkHasEffect } from './engine/perks.js';
+import { perkHasEffect, perkStatBonuses } from './engine/perks.js';
 import { modifierConfig, scoreMultiplier, rollDailyModifier } from './engine/modifiers.js';
 import { buildAtlas } from './render/sprites.js';
 import { playMusic, stopMusic } from './audio/music.js';
@@ -99,7 +99,7 @@ function aiHunterConfig(opponent, slot, level, used, rng) {
 // runState: { rootSeed, depth, startRelicLevel, daily, dateKey, depthResults,
 //             perks?, modifiers? }
 // recs: human hunter roster records (P1 first). AI fills remaining slots up to 4.
-// Hunters carry their items from prior depths; HP resets to maxHp each depth.
+// Hunters carry their items and HP from prior depths; stat perks fold in here.
 export function buildRelicDiveConfig(runState, recs) {
   const seed = hashRunSeed(runState.rootSeed, runState.depth);
   const relicLevel = Math.max(1, Math.min(15, runState.startRelicLevel + runState.depth - 1));
@@ -111,6 +111,7 @@ export function buildRelicDiveConfig(runState, recs) {
   );
   const ownedPerks = runState.perks ?? [];
   const luckyBonus = perkHasEffect(ownedPerks, 'reroll+1') ? 1 : 0;
+  const bonuses = perkStatBonuses(ownedPerks); // at/df/mv/maxhp deltas from stat perks
   const mods = modifierConfig(runState.modifiers ?? []);
   return {
     seed,
@@ -131,19 +132,35 @@ export function buildRelicDiveConfig(runState, recs) {
       carrierIndex: null,
     },
     hunters: [
-      ...recs.map((rec, i) => ({
-        id: rec.id,
-        slot: i,
-        name: rec.name,
-        spriteId: rec.spriteId,
-        palette: rec.palette,
-        human: true,
-        archetype: null,
-        level: rec.level,
-        internal: { ...rec.internal },
-        maxHp: rec.maxHp,
-        items: rec.items.map((s) => ({ ...s })),
-      })),
+      ...recs.map((rec, i) => {
+        const newMaxHp = rec.maxHp + bonuses.maxhp;
+        // Saved HP from end of previous depth; capped to new maxHp
+        const savedHp = runState.hunterHps?.[rec.id] ?? newMaxHp;
+        const startHp = perkHasEffect(ownedPerks, 'descendHeal')
+          ? newMaxHp                              // Survivor: heal to full
+          : perkHasEffect(ownedPerks, 'descendBonus')
+          ? Math.max(1, Math.floor(newMaxHp / 2)) // Gambler: start at half HP
+          : Math.min(savedHp, newMaxHp);           // normal: carry HP, cap to new max
+        return {
+          id: rec.id,
+          slot: i,
+          name: rec.name,
+          spriteId: rec.spriteId,
+          palette: rec.palette,
+          human: true,
+          archetype: null,
+          level: rec.level,
+          internal: {
+            ...rec.internal,
+            at: (rec.internal?.at ?? 1) + bonuses.at,
+            df: (rec.internal?.df ?? 1) + bonuses.df,
+            mv: (rec.internal?.mv ?? 1) + bonuses.mv,
+          },
+          maxHp: newMaxHp,
+          hp: startHp,
+          items: rec.items.map((s) => ({ ...s })),
+        };
+      }),
       ...opponents.map((o, i) => aiHunterConfig(o, recs.length + i, relicLevel, used, setupRng)),
     ],
   };

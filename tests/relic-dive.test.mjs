@@ -7,6 +7,7 @@ import {
 } from '../src/save.js';
 import { createGame, legalActions, applyAction } from '../src/engine/game.js';
 import { chooseAction } from '../src/engine/ai.js';
+import { perkStatBonuses, perkHasEffect } from '../src/engine/perks.js';
 
 // Simulate a full game (all-AI) up to mission.over or maxSteps.
 function runGame(config, maxSteps = 5000) {
@@ -224,4 +225,101 @@ test('depth-chain: depth 1 and depth 2 produce different event sequences', () =>
   const eq = r1.events.length === r2.events.length &&
     r1.events.every((e, i) => e.type === r2.events[i].type);
   assert.ok(!eq, 'depth 1 and depth 2 must produce different event sequences');
+});
+
+// perkStatBonuses ------------------------------------------------------------
+
+test('perkStatBonuses: no perks → all zeros', () => {
+  const b = perkStatBonuses([]);
+  assert.equal(b.at, 0); assert.equal(b.df, 0);
+  assert.equal(b.mv, 0); assert.equal(b.maxhp, 0);
+});
+
+test('perkStatBonuses: sharp adds +1 at', () => {
+  assert.equal(perkStatBonuses(['sharp']).at, 1);
+});
+
+test('perkStatBonuses: hardened adds +1 df', () => {
+  assert.equal(perkStatBonuses(['hardened']).df, 1);
+});
+
+test('perkStatBonuses: fleet adds +1 mv', () => {
+  assert.equal(perkStatBonuses(['fleet']).mv, 1);
+});
+
+test('perkStatBonuses: vigor adds +3 maxhp', () => {
+  assert.equal(perkStatBonuses(['vigor']).maxhp, 3);
+});
+
+test('perkStatBonuses: stacks across multiple perks', () => {
+  const b = perkStatBonuses(['sharp', 'sharp', 'fleet', 'vigor', 'vigor']);
+  assert.equal(b.at, 2);
+  assert.equal(b.mv, 1);
+  assert.equal(b.maxhp, 6);
+});
+
+test('perkStatBonuses: utility perks yield zero stat bonus', () => {
+  const b = perkStatBonuses(['lucky', 'scout', 'ward', 'surefoot']);
+  assert.equal(b.at, 0); assert.equal(b.df, 0);
+  assert.equal(b.mv, 0); assert.equal(b.maxhp, 0);
+});
+
+// perkHasEffect ---------------------------------------------------------------
+
+test('perkHasEffect: returns true when owned perk matches key', () => {
+  assert.ok(perkHasEffect(['lucky'], 'reroll+1'));
+  assert.ok(perkHasEffect(['ward'], 'wardstone'));
+  assert.ok(perkHasEffect(['survivor'], 'descendHeal'));
+});
+
+test('perkHasEffect: returns false when perk not owned', () => {
+  assert.ok(!perkHasEffect([], 'reroll+1'));
+  assert.ok(!perkHasEffect(['sharp'], 'reroll+1'));
+});
+
+// HP carry-over via createGame -----------------------------------------------
+
+test('createGame: hp field in hunter config carries over (not reset to maxHp)', () => {
+  const config = {
+    seed: 42, mode: 'relic-dive',
+    mission: { id: 'd1', type: 'fetch', level: 1, targetItemId: null, carrierIndex: null, opponents: [] },
+    hunters: [
+      { id: 'h0', slot: 0, name: 'Jake', spriteId: 0, palette: 'cobalt', human: true,
+        archetype: null, level: 1, internal: { mv: 3, at: 2, df: 2, hp: 3 },
+        maxHp: 16, hp: 8, items: [] },
+      fastHunter('h1', 1),
+    ],
+  };
+  const state = createGame(config);
+  const jake = state.hunters.find((h) => h.id === 'h0');
+  assert.ok(jake, 'hunter h0 must exist');
+  assert.equal(jake.hp, 8, 'hp should carry from config, not reset to maxHp');
+  assert.equal(jake.maxHp, 16);
+});
+
+test('createGame: hp capped to maxHp if config hp exceeds maxHp', () => {
+  const config = {
+    seed: 77, mode: 'relic-dive',
+    mission: { id: 'd1', type: 'fetch', level: 1, targetItemId: null, carrierIndex: null, opponents: [] },
+    hunters: [
+      { id: 'h0', slot: 0, name: 'Jake', spriteId: 0, palette: 'cobalt', human: true,
+        archetype: null, level: 1, internal: { mv: 3, at: 2, df: 2, hp: 3 },
+        maxHp: 16, hp: 20, items: [] },
+      fastHunter('h1', 1),
+    ],
+  };
+  const state = createGame(config);
+  const jake = state.hunters.find((h) => h.id === 'h0');
+  assert.equal(jake.hp, 16, 'hp must be capped at maxHp');
+});
+
+test('createGame: hp defaults to maxHp when not provided', () => {
+  const config = {
+    seed: 55, mode: 'relic-dive',
+    mission: { id: 'd1', type: 'fetch', level: 1, targetItemId: null, carrierIndex: null, opponents: [] },
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  };
+  const state = createGame(config);
+  const h = state.hunters[0];
+  assert.equal(h.hp, h.maxHp, 'hp defaults to maxHp when config has no hp field');
 });

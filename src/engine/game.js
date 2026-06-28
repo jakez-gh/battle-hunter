@@ -723,7 +723,7 @@ export function createGame(config) {
       internal,
       maxHp: hRec.maxHp ?? baseMaxHp,
       baseMaxHp,
-      hp: hRec.maxHp ?? baseMaxHp,
+      hp: Math.min(hRec.hp ?? (hRec.maxHp ?? baseMaxHp), hRec.maxHp ?? baseMaxHp),
       hand: deck.splice(0, 5),
       items: (hRec.items || []).map((it) => ({ ...it })),
       pos: { ...start },

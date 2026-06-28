@@ -3407,6 +3407,11 @@ export function makeResultsScreen(app, g) {
         if (g.runState) {
           g.runState.depthResults.push({ won: win, score: depthScore });
           if (win) {
+            // Save ending HP so next depth can carry it over
+            g.runState.hunterHps = {};
+            for (const h of (st.hunters || []).filter((h) => h.human)) {
+              g.runState.hunterHps[h.id] = h.hp;
+            }
             app.stack.replace(makePerkPickScreen(app, g));
           } else {
             app.stack.replace(makeRunSummaryScreen(app, g));
