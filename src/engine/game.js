@@ -3,6 +3,7 @@ import { generateBoard, neighbors, occupiedSet, pathDistance, reachableTiles, ra
 import { rollBoxItem, effectiveStats, hunterHasEffect, hunterHasCounter } from './items.js';
 import { monsterStats, MONSTERS, SPAWN_CHANCE, DROP_CHANCE, MAX_REGULAR_MONSTERS } from './monsters.js';
 import { resolveBattle } from './combat.js';
+import { perkHasEffect } from './perks.js';
 
 const DIRS = {
   N: { x: 0, y: -1 }, S: { x: 0, y: 1 }, W: { x: -1, y: 0 }, E: { x: 1, y: 0 },
@@ -307,7 +308,7 @@ function applyEndTurn(state, rng) {
   // Calmant: auto-cure panic at turn START (§2.14) — fires for incoming unit.
   if (next.kind === 'hunter') {
     const nextUnit = resolveUnit(state, next);
-    if (nextUnit && hunterHasEffect(nextUnit, 'calmant')) nextUnit.status.panic = 0;
+    if (nextUnit && (hunterHasEffect(nextUnit, 'calmant') || perkHasEffect(nextUnit.perks, 'panicCalm'))) nextUnit.status.panic = 0;
   }
   addEvent(state, { type: 'turnStarted', unit: state.current });
 }
@@ -336,8 +337,8 @@ function maybeSpawnMonster(state, rng) {
 
   const regular = (state.monsters || []).filter((m) => m.kind !== 'WYRM' && m.hp > 0);
   if (regular.length >= (state.maxMonsters ?? MAX_REGULAR_MONSTERS)) return;
-  // Wardstone: any hunter holding an identified Wardstone blocks the spawn check (§2.10).
-  if (state.hunters.some((h) => h.pos && hunterHasEffect(h, 'wardstone'))) return;
+  // Wardstone: any hunter holding an identified Wardstone or Warded perk blocks the spawn check (§2.10).
+  if (state.hunters.some((h) => h.pos && (hunterHasEffect(h, 'wardstone') || perkHasEffect(h.perks, 'wardstone')))) return;
   const chance = state.turn?.cardPlayed && cardColor(state.turn.cardPlayed) === 'yellow' ? SPAWN_CHANCE / 2 : SPAWN_CHANCE;
   if (rng.float() >= chance) return;
   const freeTiles = [];
@@ -724,6 +725,7 @@ export function createGame(config) {
       maxHp: hRec.maxHp ?? baseMaxHp,
       baseMaxHp,
       hp: Math.min(hRec.hp ?? (hRec.maxHp ?? baseMaxHp), hRec.maxHp ?? baseMaxHp),
+      perks: hRec.perks ?? [],
       hand: deck.splice(0, 5),
       items: (hRec.items || []).map((it) => ({ ...it })),
       pos: { ...start },
@@ -1023,13 +1025,17 @@ function triggerTrap(state, unit, trap, rng, isHunterUnit) {
   state.board.traps = state.board.traps.filter((t) => t !== trap);
   addEvent(state, { type: 'trapTriggered', unit: unit.id, kind: trap.kind, pos: { x: trap.x, y: trap.y } });
   if (!isHunterUnit) { applyEndTurn(state, rng); return; }
+  if (trap.byHunter === unit.id && perkHasEffect(unit.perks, 'noSelfTrap')) {
+    applyEndTurn(state, rng);
+    return;
+  }
   if (trap.kind === 'damage') {
     const damage = 2;
     unit.hp = Math.max(0, unit.hp - damage);
   } else if (trap.kind === 'stun') {
     if (unit.status) unit.status.stun = (unit.status.stun || 0) + 1;
   } else if (trap.kind === 'leg') {
-    if (unit.status) unit.status.leg = true;
+    if (unit.status && !perkHasEffect(unit.perks, 'legProof')) unit.status.leg = true;
   } else if (trap.kind === 'empty') {
     if (unit.status) unit.status.empty = 1;
     unit.hand = [];
@@ -1097,7 +1103,8 @@ function applyRest(state, rng) {
     current.hp = Math.min(current.maxHp, current.hp + amount);
     addEvent(state, { type: 'healed', unit: current.id, amount });
   }
-  drawDeckCards(state, current, rng, current.hand.length === 0 ? 3 : 2);
+  const restBonus = perkHasEffect(current.perks, 'restDraw+1') ? 1 : 0;
+  drawDeckCards(state, current, rng, (current.hand.length === 0 ? 3 : 2) + restBonus);
   state.turn.rested = true;
   applyEndTurn(state, rng);
 }

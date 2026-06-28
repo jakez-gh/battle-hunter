@@ -158,6 +158,7 @@ export function buildRelicDiveConfig(runState, recs) {
           },
           maxHp: newMaxHp,
           hp: startHp,
+          perks: ownedPerks,
           items: rec.items.map((s) => ({ ...s })),
         };
       }),

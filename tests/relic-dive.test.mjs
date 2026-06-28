@@ -323,3 +323,29 @@ test('createGame: hp defaults to maxHp when not provided', () => {
   const h = state.hunters[0];
   assert.equal(h.hp, h.maxHp, 'hp defaults to maxHp when config has no hp field');
 });
+
+test('createGame: perks field threaded through to hunter state', () => {
+  const config = {
+    seed: 88, mode: 'relic-dive',
+    mission: { id: 'd1', type: 'fetch', level: 1, targetItemId: null, carrierIndex: null, opponents: [] },
+    hunters: [
+      { id: 'h0', slot: 0, name: 'Jake', spriteId: 0, palette: 'cobalt', human: true,
+        archetype: null, level: 1, internal: { mv: 3, at: 2, df: 2, hp: 3 },
+        maxHp: 16, hp: 16, perks: ['ironleg', 'calm'], items: [] },
+      fastHunter('h1', 1),
+    ],
+  };
+  const state = createGame(config);
+  const jake = state.hunters.find((h) => h.id === 'h0');
+  assert.deepEqual(jake.perks, ['ironleg', 'calm'], 'perks array must be on hunter state');
+});
+
+test('createGame: hunter with no perks config has empty perks array', () => {
+  const config = {
+    seed: 91, mode: 'relic-dive',
+    mission: { id: 'd1', type: 'fetch', level: 1, targetItemId: null, carrierIndex: null, opponents: [] },
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  };
+  const state = createGame(config);
+  assert.deepEqual(state.hunters[0].perks, [], 'AI hunter missing perks field must default to []');
+});
