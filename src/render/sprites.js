@@ -2417,6 +2417,27 @@ const WALL_DK = [ // ashlar with shadow reveal — deep d reveal between blocks 
   'XXXXXXXXXXXXXXXX',
   'GGGGGGGGGGGGGGGG',
 ];
+const WALL_GX = [ // square spiral — two-level clockwise d spiral: outer frame, 1-row gap, inner frame
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcddddddddddGGgX',
+  'XcGGGGGGGGGdGGgX', 'XcGdGGGGGGGdGGgX', 'XcGdGdddddGdGGgX',
+  'XcGdGdGGGdGdGGgX', 'XcGdGdGGGdGdGGgX', 'XcGdGdGGGdGdGGgX',
+  'XcGdGdddddGdGGgX', 'XcGdGGGGGGGdGGgX', 'XcGdddddddddGGgX',
+  'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_GY = [ // triskelion spiral — arm 1 curves up-right, arm 2 curves lower-right, arm 3 curves lower-left
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGGGdGGGGgX',
+  'XcGGGGGGGdGGGGgX', 'XcGGGGGGdGGGGGgX', 'XcGGGGGGdGGGGGgX',
+  'XcGGGGGdGGGGGGgX', 'XcGGGGGdGGGGGGgX', 'XcGGGGdGdGGGGGgX',
+  'XcGGGdGGGdGGGGgX', 'XcGGdGGGGdGGGGgX', 'XcGGdGGGGdGGGGgX',
+  'XcGdGGGGGGdGGGgX', 'XcGGGGGGGGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_GZ = [ // step pyramid — four-tier d outline pyramid: 1px peak, 5px, 9px, 11px tiers
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGdGGGGGGgX',
+  'XcGGGGGdGGGGGGgX', 'XcGGGdddddGGGGgX', 'XcGGGdGGGdGGGGgX',
+  'XcGdddddddddGGgX', 'XcGdGGGGGGGdGGgX', 'XcdddddddddddGgX',
+  'XcdGGGGGGGGGdGgX', 'XcdGGGGGGGGGdGgX', 'XcdGGGGGGGGGdGgX',
+  'XcdGGGGGGGGGdGgX', 'XcGGGGGGGGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
 const WALL_GU = [ // hexagram — two overlapping triangle outlines: upward apex row 3, base row 10; downward apex row 11, base row 4
   'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGGGGGGGGgX',
   'XcGGGGGdGGGGGGgX', 'XcGdddddddddGGgX', 'XcGdGdGGGdGdGGgX',
@@ -5457,6 +5478,30 @@ const FLOOR_DM = [ // half-brick — g headers and stretchers alternating within
   'GGGGGGGGGGGGGGGg',
   'GGGGGGGGGGGGGGGG',
 ];
+const FLOOR_GW = [ // brick wall — 8px-wide horizontal bricks, half-period stagger, 1px g mortar every 5 rows
+  'GGGGGGGgGGGGGGGg', 'GGGGGGGgGGGGGGGg', 'GGGGGGGgGGGGGGGg',
+  'GGGGGGGgGGGGGGGg', 'gggggggggggggggg', 'GGGgGGGGGGGgGGGG',
+  'GGGgGGGGGGGgGGGG', 'GGGgGGGGGGGgGGGG', 'GGGgGGGGGGGgGGGG',
+  'gggggggggggggggg', 'GGGGGGGgGGGGGGGg', 'GGGGGGGgGGGGGGGg',
+  'GGGGGGGgGGGGGGGg', 'GGGGGGGgGGGGGGGg', 'gggggggggggggggg',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_GX = [ // linen weave — rows alternate between ggGG and GGgg at half-period offset
+  'ggGGggGGggGGggGG', 'GGggGGggGGggGGgg', 'ggGGggGGggGGggGG',
+  'GGggGGggGGggGGgg', 'ggGGggGGggGGggGG', 'GGggGGggGGggGGgg',
+  'ggGGggGGggGGggGG', 'GGggGGggGGggGGgg', 'ggGGggGGggGGggGG',
+  'GGggGGggGGggGGgg', 'ggGGggGGggGGggGG', 'GGggGGggGGggGGgg',
+  'ggGGggGGggGGggGG', 'GGggGGggGGggGGgg', 'ggGGggGGggGGggGG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_GY = [ // period-4 crosshatch — g where (x+y)%4==0 or (x-y+16)%4==0
+  'gGGGgGGGgGGGgGGG', 'GgGgGgGgGgGgGgGg', 'GGgGGGgGGGgGGGgG',
+  'GgGgGgGgGgGgGgGg', 'gGGGgGGGgGGGgGGG', 'GgGgGgGgGgGgGgGg',
+  'GGgGGGgGGGgGGGgG', 'GgGgGgGgGgGgGgGg', 'gGGGgGGGgGGGgGGG',
+  'GgGgGgGgGgGgGgGg', 'GGgGGGgGGGgGGGgG', 'GgGgGgGgGgGgGgGg',
+  'gGGGgGGGgGGGgGGG', 'GgGgGgGgGgGgGgGg', 'GGgGGGgGGGgGGGgG',
+  'GGGGGGGGGGGGGGGG',
+];
 const FLOOR_GT = [ // 2px diagonal NW→SE — 2-pixel-wide g stripe running from top-left to bottom-right
   'ggGGGGGGGGGGGGGG', 'GggGGGGGGGGGGGGG', 'GGggGGGGGGGGGGGG',
   'GGGggGGGGGGGGGGG', 'GGGGggGGGGGGGGGG', 'GGGGGggGGGGGGGGG',
@@ -7126,6 +7171,9 @@ export const TILES = {
   floorDK: { grid: FLOOR_DK, palette: TILE_PALETTE },
   floorDL: { grid: FLOOR_DL, palette: TILE_PALETTE },
   floorDM: { grid: FLOOR_DM, palette: TILE_PALETTE },
+  floorGW: { grid: FLOOR_GW, palette: TILE_PALETTE },
+  floorGX: { grid: FLOOR_GX, palette: TILE_PALETTE },
+  floorGY: { grid: FLOOR_GY, palette: TILE_PALETTE },
   floorGT: { grid: FLOOR_GT, palette: TILE_PALETTE },
   floorGU: { grid: FLOOR_GU, palette: TILE_PALETTE },
   floorGV: { grid: FLOOR_GV, palette: TILE_PALETTE },
@@ -7338,6 +7386,9 @@ export const TILES = {
   wallDI: { grid: WALL_DI, palette: TILE_PALETTE },
   wallDJ: { grid: WALL_DJ, palette: TILE_PALETTE },
   wallDK: { grid: WALL_DK, palette: TILE_PALETTE },
+  wallGX: { grid: WALL_GX, palette: TILE_PALETTE },
+  wallGY: { grid: WALL_GY, palette: TILE_PALETTE },
+  wallGZ: { grid: WALL_GZ, palette: TILE_PALETTE },
   wallGU: { grid: WALL_GU, palette: TILE_PALETTE },
   wallGV: { grid: WALL_GV, palette: TILE_PALETTE },
   wallGW: { grid: WALL_GW, palette: TILE_PALETTE },
