@@ -3422,6 +3422,12 @@ export function makeResultsScreen(app, g) {
         applyToRoster();
         app.startMission(g.mission); // replay — replaces RESULTS with GAME
       }
+      if (e?.code === 'KeyH' && win && !g.runState && t >= 1.8) {
+        sfx.menuConfirm();
+        applyToRoster();
+        app.stack.pop(); // go to hub first
+        app.stack.push(makeRelicDiveScreen(app, { daily: true }));
+      }
     },
     onClick() { this.onKey('confirm'); },
     draw(ctx) {
@@ -3641,6 +3647,17 @@ export function makeResultsScreen(app, g) {
         : g.runState ? 'Enter: end run'
         : 'Enter: return to hub';
       text(ctx, exitHint + replayHint, app.W / 2, 600, { size: 15, align: 'center', color: FG });
+      // Daily Hunt nudge — show for story/normal wins when today's daily hasn't been played
+      if (win && !g.runState && app.session.mode !== 'relic-dive') {
+        const todayPlayed = loadRelicDiveBest().daily?.dateKey === todayDateKey();
+        if (!todayPlayed) {
+          const nudgePulse = 0.60 + 0.40 * Math.sin(t * 1.6);
+          ctx.save(); ctx.globalAlpha = Math.min(1, (t - 2.0) / 0.5) * nudgePulse;
+          ctx.shadowBlur = 8; ctx.shadowColor = '#3aacc8';
+          text(ctx, '[ H ] Play today\'s Daily Hunt!', app.W / 2, 626, { size: 12, align: 'center', color: '#3aacc8', shadow: false });
+          ctx.restore();
+        }
+      }
     },
   };
 }
