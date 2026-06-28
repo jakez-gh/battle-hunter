@@ -2190,6 +2190,10 @@ export function makeGameScreen(app, g) {
           g.outcome.reason = ev.reason ?? 'lost';
           g.outcome.won = false;
           break;
+        case 'exitWarpedAway':
+          if (A.resolveUnit(g.state, ev.unit)?.human)
+            say('EXIT needs the RELIC!', 2.2, BAD);
+          break;
         default: break;
       }
     }
