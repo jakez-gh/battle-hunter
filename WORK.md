@@ -265,6 +265,15 @@ whoever holds the visual-polish claim first. Prerequisite: Phase 1 done at
   replacement, `perkStatBonuses` / `perkHasEffect` / `describePerk`. **Shipped
   `9df339d`** by `opus-coord-3ba000`.
 
+- [x] **2C — All 16 perks wired into engine** — perks array threaded from
+  `buildRelicDiveConfig` through `createGame` onto hunter state. All 16
+  perks now have real effects: stat perks (at/df/mv/maxhp), HP carry-over
+  with survivor/gambler, calm/ward/ironleg/surefoot/restless/hoard/scout
+  all wired at their branch points; merchant applies +25% credits in
+  `applyResults`; prepared perk implements §2.1 item identification (human
+  hunters now receive unidentified box items; prepared auto-identifies the
+  first). **Shipped `9e92a25`…`de2159e`** — 431/431 tests.
+
 ### UI lane
 
 - [x] **2B — Perk-pick screen (`screens.js`)** — `makePerkPickScreen` shown
@@ -274,6 +283,11 @@ whoever holds the visual-polish claim first. Prerequisite: Phase 1 done at
   **Shipped `9b661ae`** by `study-sonnet-1cd904`. Also done in same session:
   distinct status SFX (`statusInflicted` → panic/stun/leg/empty dispatch) +
   counter-item SFX on `battleStarted` — `0d611e6`.
+
+- [x] **Demo-path (F6)** — `quickStart()` now pushes Hub then immediately
+  launches a Level 1 Normal mission via `app.pushMission()` (stack.push
+  variant of startMission); after results, player lands on Hub. Eliminates
+  3 navigation menus for new players. **Shipped `c759022`**.
 
 ---
 

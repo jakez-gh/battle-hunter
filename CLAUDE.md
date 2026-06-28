@@ -8,7 +8,7 @@ to find the active work plan. Read it first, then `ARCHITECTURE.md` for system s
 ## Quick start
 
 ```bash
-# Run all tests (428 as of 2026-06-28 — all green before committing)
+# Run all tests (431 as of 2026-06-28 — all green before committing)
 node --test
 
 # Serve the game locally
