@@ -2211,6 +2211,18 @@ export function makeGameScreen(app, g) {
         case 'trapDodged':
           if (A.resolveUnit(g.state, ev.unit)?.human) say('DODGED!', 1.6, OK);
           break;
+        case 'statusInflicted': {
+          const _statusTarget = A.resolveUnit(g.state, ev.target ?? ev.unit);
+          if (_statusTarget?.human) {
+            const msgs = { panic: 'PANICKED! AI controls your next turn.', stun: 'STUNNED! Next turn skipped.', leg: 'LEG DAMAGE! Movement capped.', empty: 'EMPTY! Hand discarded.' };
+            const msg = msgs[ev.kind];
+            if (msg) say(msg, 2.4, '#e0a030');
+          }
+          break;
+        }
+        case 'actAgain':
+          if (A.resolveUnit(g.state, ev.unit)?.human) say('ACT AGAIN!', 1.8, GOLD);
+          break;
         default: break;
       }
     }
