@@ -2194,6 +2194,14 @@ export function makeGameScreen(app, g) {
           if (A.resolveUnit(g.state, ev.unit)?.human)
             say('EXIT needs the RELIC!', 2.2, BAD);
           break;
+        case 'hunterDefeated': {
+          const _defeated = A.resolveUnit(g.state, ev.unit);
+          if (_defeated?.human) {
+            const newMax = _defeated.maxHp;
+            say(`TAKEN DOWN! Max HP now ${newMax}.`, 3, BAD);
+          }
+          break;
+        }
         default: break;
       }
     }
