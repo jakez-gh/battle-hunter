@@ -2207,6 +2207,10 @@ export function makeGameScreen(app, g) {
           }
           break;
         }
+        case 'critNegated': say('CRIT NEGATED!', 1.8, OK); break;
+        case 'trapDodged':
+          if (A.resolveUnit(g.state, ev.unit)?.human) say('DODGED!', 1.6, OK);
+          break;
         default: break;
       }
     }
