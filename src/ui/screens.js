@@ -2186,10 +2186,15 @@ export function makeGameScreen(app, g) {
           g.outcome.won = true;
           showTip('win');
           break;
-        case 'missionLost':
+        case 'missionLost': {
           g.outcome.reason = ev.reason ?? 'lost';
           g.outcome.won = false;
+          const reason = String(g.outcome.reason);
+          if (/wyrm/i.test(reason)) say('THE WYRM DEVOURED THE RELIC HOLDER!', 3.2, BAD);
+          else if (/rival.*exit|exited/i.test(reason)) say('RIVAL ESCAPED WITH THE RELIC!', 2.8, BAD);
+          else if (/rescue/i.test(reason)) say('RAVEN REACHED THE TARGET FIRST!', 2.8, BAD);
           break;
+        }
         case 'exitWarpedAway':
           if (A.resolveUnit(g.state, ev.unit)?.human)
             say('EXIT needs the RELIC!', 2.2, BAD);
