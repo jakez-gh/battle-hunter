@@ -22,7 +22,7 @@ import { makeHunterRecord, exportSave, importSave, loadRoster,
          storageArea } from '../save.js';
 import { makeRng } from '../engine/rng.js';
 import { rollPerkChoices, describePerk } from '../engine/perks.js';
-import { allModifiers, scoreMultiplier, rollDailyModifier } from '../engine/modifiers.js';
+import { MODIFIERS, allModifiers, scoreMultiplier, rollDailyModifier } from '../engine/modifiers.js';
 
 // ---------------------------------------------------------------------------
 // First-play tutorial tips (F6 demo-path: teach by doing, not by reading the manual)
@@ -34,6 +34,7 @@ const TIP_DEFS = {
   response: ['BATTLE — choose your response carefully', 'Counter=fight  Guard=absorb  Escape=flee  Surrender=give'],
   win:      ['Mission complete, Hunter!', 'Play DAILY HUNT every day to track your personal best.'],
   wyrm:     ['THE WYRM hunts the Target holder!', 'WYRM defeat = WIPE: all items + credits lost forever.'],
+  dive:     ['RELIC DIVE — win the depth, then choose your fate', 'DESCEND for more score (HP carries over)  ·  BANK OUT to lock it in safely'],
 };
 
 function loadSeenTips() {
@@ -2158,7 +2159,10 @@ export function makeGameScreen(app, g) {
           };
           break;
         }
-        case 'cardDrawn': showTip('card'); break;
+        case 'cardDrawn':
+          if (g.runState) showTip('dive');
+          else showTip('card');
+          break;
         case 'fortuneUsed':
           sfx.menuConfirm();
           say(`Fortune used! ${ev.remaining > 0 ? `${ev.remaining} left` : 'none left'}`, 2.0, GOLD);
@@ -2888,7 +2892,10 @@ export function makeGameScreen(app, g) {
       ctx.save(); ctx.globalAlpha = rp; ctx.fillStyle = rrg;
       ctx.fillRect(X + 126, 6, 78, 26); ctx.restore(); }
     ctx.save(); ctx.shadowBlur = 4; ctx.shadowColor = '#7860a8';
-    text(ctx, `relic L${st.relicLevel ?? '?'}`, X + 138, 13, { size: 13, color: '#a898c8', shadow: false });
+    const _relicLabel = g.runState
+      ? `D${g.runState.depth} · L${st.relicLevel ?? '?'}`
+      : `relic L${st.relicLevel ?? '?'}`;
+    text(ctx, _relicLabel, X + 138, 13, { size: 13, color: '#a898c8', shadow: false });
     ctx.restore();
     if ((st.fortune ?? 0) > 0) {
       ctx.save(); ctx.shadowBlur = 5; ctx.shadowColor = GOLD;
@@ -3134,6 +3141,15 @@ export function makeGameScreen(app, g) {
           ctx.restore();
         }
       }
+    }
+    // Active run perks — remind player of accumulated perks during Relic Dive
+    if (g.runState?.perks?.length) {
+      const perkNames = g.runState.perks.map((id) => describePerk(id)?.name ?? id).filter(Boolean);
+      const MAX_SHOW = 3;
+      const shown = perkNames.slice(0, MAX_SHOW);
+      const extra = perkNames.length - MAX_SHOW;
+      const pLine = shown.join(' · ') + (extra > 0 ? ` +${extra}` : '');
+      text(ctx, pLine, X + 10, 486, { size: 10, color: '#9060d8' });
     }
     // AI speed hint — always visible so players discover the [ / ] keys
     text(ctx, `[ / ] AI speed: ${aiSpeed}\xd7`, X + 10, 498, { size: 10, color: DIM });
@@ -3919,7 +3935,10 @@ export function makeRunSummaryScreen(app, g) {
       if (e?.code === 'KeyS') copyShare();
     },
     onClick(pos) {
-      if (pos.y > 620 && pos.y < 660) copyShare();
+      const metaRows = (rs.perks?.length ? 1 : 0) + (rs.modifiers?.length ? 1 : 0);
+      const shareBoxY = Math.max(330 + metaRows * 20 + 6, 340);
+      const btnY = shareBoxY + 92;
+      if (pos.y >= btnY && pos.y < btnY + 36) copyShare();
       else { sfx.menuConfirm(); app.stack.pop(); }
     },
     draw(ctx) {
@@ -3976,20 +3995,36 @@ export function makeRunSummaryScreen(app, g) {
       text(ctx, `Started at Relic Level ${rs.startRelicLevel}`,
         cx, 310, { size: 13, align: 'center', color: DIM });
 
+      // Perks + modifiers used this run
+      let metaY = 330;
+      if (rs.perks?.length) {
+        const perkNames = rs.perks.map((id) => describePerk(id)?.name ?? id).join(' · ');
+        text(ctx, `Perks: ${perkNames}`, cx, metaY, { size: 11, align: 'center', color: '#a060d8' });
+        metaY += 20;
+      }
+      if (rs.modifiers?.length) {
+        const modNames = rs.modifiers.map((id) => MODIFIERS[id]?.name ?? id).join(' · ');
+        text(ctx, `Mods: ${modNames}`, cx, metaY, { size: 11, align: 'center', color: '#c07060' });
+        metaY += 20;
+      }
+      const shareBoxY = Math.max(metaY + 6, 340);
+      const btnY = shareBoxY + 92;
+      const enterY = btnY + 68;
+
       // Share string box
       if (shareStr) {
-        box(ctx, 120, 340, app.W - 240, 80, { stroke: '#3c3464' });
+        box(ctx, 120, shareBoxY, app.W - 240, 80, { stroke: '#3c3464' });
         const lines = shareStr.split('\n');
-        lines.forEach((line, i) => text(ctx, line, cx, 358 + i * 20, { size: 13, align: 'center', color: FG }));
+        lines.forEach((line, i) => text(ctx, line, cx, shareBoxY + 18 + i * 20, { size: 13, align: 'center', color: FG }));
       }
 
       // Copy button
-      box(ctx, cx - 100, 432, 200, 36, { stroke: '#3a6ee0' });
+      box(ctx, cx - 100, btnY, 200, 36, { stroke: '#3a6ee0' });
       ctx.save(); ctx.globalAlpha = 0.10; ctx.fillStyle = '#3a6ee0';
-      ctx.fillRect(cx - 99, 433, 198, 34); ctx.restore();
-      text(ctx, '[ S ] COPY SHARE', cx, 445, { size: 14, align: 'center', color: '#6a9eee' });
+      ctx.fillRect(cx - 99, btnY + 1, 198, 34); ctx.restore();
+      text(ctx, '[ S ] COPY SHARE', cx, btnY + 13, { size: 14, align: 'center', color: '#6a9eee' });
 
-      text(ctx, 'Enter: return to hub', cx, 508, { size: 14, align: 'center', color: FG });
+      text(ctx, 'Enter: return to hub', cx, enterY, { size: 14, align: 'center', color: FG });
     },
   };
 }
