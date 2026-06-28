@@ -3330,7 +3330,7 @@ export function makeResultsScreen(app, g) {
     app.roster.hunters = applyResults(app.roster.hunters, {
       relicLevel: st.relicLevel, win: primaryWon, wipe, storyCleared,
       hunters: hunterEntries,
-    });
+    }, g.runState?.perks ?? []);
     for (const entry of hunterEntries) {
       const fresh = app.roster.hunters.find((r) => r.id === entry.id);
       if (!fresh) continue;

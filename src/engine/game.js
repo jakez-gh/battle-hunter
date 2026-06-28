@@ -248,7 +248,8 @@ function setMissionOver(state, win, reason = null) {
 function applyEndTurn(state, rng) {
   const current = resolveUnit(state, state.current);
   if (state.current?.kind === 'hunter') {
-    if (!state.turn?.rested && !(current.status?.empty > 0) && current.hand.length < 5) {
+    const handCap = 5 + (perkHasEffect(current?.perks, 'handCap+1') ? 1 : 0);
+    if (!state.turn?.rested && !(current.status?.empty > 0) && current.hand.length < handCap) {
       if (state.deck.length > 0) {
         const card = state.deck.shift();
         current.hand.push(card);
@@ -459,8 +460,9 @@ function flagEffect(state, hunter, flag, roll, rng) {
 }
 
 function drawDeckCards(state, hunter, rng, count) {
+  const cap = 5 + (perkHasEffect(hunter?.perks, 'handCap+1') ? 1 : 0);
   for (let i = 0; i < count; i++) {
-    if (hunter.hand.length >= 5) break;
+    if (hunter.hand.length >= cap) break;
     if (state.deck.length <= 0) {
       addEvent(state, { type: 'drewBlank', unit: hunter.id });
       break;
@@ -966,6 +968,11 @@ function applyStep(state, action, rng) {
   addEvent(state, { type: 'stepped', unit: current.id, from: { ...current.pos }, to: { ...nextPos } });
   current.pos = nextPos;
   if (isHunterUnit && current.tally) current.tally.moved = (current.tally.moved || 0) + 1;
+  if (isHunterUnit && perkHasEffect(current.perks, 'revealTraps')) {
+    for (const t of state.board.traps) {
+      if (Math.abs(t.x - nextPos.x) + Math.abs(t.y - nextPos.y) <= 2) t.revealed = true;
+    }
+  }
   state.move.path.push({ ...nextPos });
   state.move.remaining = Math.max(0, state.move.remaining - 1);
   if (isHunterUnit) {

@@ -1,4 +1,5 @@
 // Mission list, rewards and roster progression per DESIGN.md §2.12-§2.15.
+import { perkHasEffect } from './perks.js';
 // Opponent strings are AI archetype names (§2.11), 'RAVEN' for syndicate
 // agents (always behave Panicked), or rival ids 'keld'/'mira'. `level` is
 // the mission's relic/opponent level (story missions unlock one per level).
@@ -134,14 +135,17 @@ export function storyClearReward(level) {
 // roster; records without a matching result entry pass through unchanged.
 // wipe = WYRM killed the Target holder in normal mode: items and ALL
 // banked credits are lost (maxHP damage still persists).
-export function applyResults(roster, result) {
+export function applyResults(roster, result, ownedPerks = []) {
   const byId = new Map(result.hunters.map((h) => [h.id, h]));
+  const merchantBonus = perkHasEffect(ownedPerks, 'credits+25');
   return roster.map((rec) => {
     const h = byId.get(rec.id);
     if (!h) return rec;
     if (result.wipe) return { ...rec, credits: 0, items: [], maxHp: h.maxHp };
     // floor(score / 15 * relicLevel); product first keeps integer math exact
-    let credits = (rec.credits || 0) + Math.floor((h.score * result.relicLevel) / 15);
+    let earned = Math.floor((h.score * result.relicLevel) / 15);
+    if (merchantBonus) earned = Math.floor(earned * 1.25);
+    let credits = (rec.credits || 0) + earned;
     if (h.returnedTarget) credits += h.targetPrice || 0;
     if (result.storyCleared) credits += storyClearReward(rec.level);
     return { ...rec, credits, items: h.items.map((it) => ({ ...it })), maxHp: h.maxHp };
