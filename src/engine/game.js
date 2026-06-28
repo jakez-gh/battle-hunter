@@ -382,9 +382,17 @@ function drawBox(state, hunter) {
     addEvent(state, { type: 'boxOpened', pos: { ...box }, contents: null });
     return;
   }
+  // Human hunters find items unidentified (§2.1); AI and the prepared perk bypass this.
+  let identified = !hunter.human;
+  if (hunter.human) {
+    if (perkHasEffect(hunter.perks, 'firstBoxId') && !state.preparedBoxUsed) {
+      identified = true;
+      state.preparedBoxUsed = true;
+    }
+  }
   hunter.items = hunter.items || [];
   if (hunter.items.length < 6) {
-    hunter.items.push({ itemId: contents, identified: true });
+    hunter.items.push({ itemId: contents, identified });
     addEvent(state, { type: 'boxOpened', pos: { ...box }, contents });
     addEvent(state, { type: 'itemTaken', unit: hunter.id, itemId: contents });
     return;
@@ -392,7 +400,7 @@ function drawBox(state, hunter) {
   state.pendingChoice = {
     kind: 'discardOverflow',
     chooser: unitRef(state, hunter),
-    incoming: { itemId: contents, identified: true, label: 'New item' },
+    incoming: { itemId: contents, identified, label: 'New item' },
     options: hunter.items.map((item) => ({ ...item })),
   };
   addEvent(state, { type: 'boxOpened', pos: { ...box }, contents });
@@ -796,6 +804,7 @@ export function createGame(config) {
     maxMonsters: config.maxMonsters ?? MAX_REGULAR_MONSTERS,
     restDisabled: !!config.restDisabled,
     targetVisible: !!config.targetVisible,
+    preparedBoxUsed: false, // prepared perk: track if first-box id bonus was used this depth
   };
   addEvent(state, { type: 'turnStarted', unit: state.current });
   return state;

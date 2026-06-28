@@ -349,3 +349,63 @@ test('createGame: hunter with no perks config has empty perks array', () => {
   const state = createGame(config);
   assert.deepEqual(state.hunters[0].perks, [], 'AI hunter missing perks field must default to []');
 });
+
+// Item identification (§2.1) --------------------------------------------------
+
+function humanHunter(id, slot, perks = []) {
+  return { id, slot, name: id, spriteId: 0, palette: 'cobalt', human: true, archetype: null,
+    level: 1, internal: { mv: 3, at: 2, df: 2, hp: 3 }, maxHp: 16, hp: 16, perks, items: [] };
+}
+
+function openBoxForHunter(state, hunterId) {
+  // Teleport the hunter to any un-opened item box, then apply stop action to trigger drawBox.
+  const box = state.board.boxes.find((b) => !b.opened && b.contents && b.contents !== 'TARGET');
+  if (!box) return false;
+  const hunter = state.hunters.find((h) => h.id === hunterId);
+  if (!hunter) return false;
+  hunter.pos = { x: box.x, y: box.y };
+  // Force turn.steer phase with a fake prior step so stop is legal.
+  state.phase = 'turn.steer';
+  state.move = { remaining: 0, path: [{ x: box.x, y: box.y }], cardPlayed: null, trap: null };
+  state.current = { kind: 'hunter', index: state.hunters.indexOf(hunter) };
+  const out = applyAction(state, { type: 'stop' });
+  Object.assign(state, out.state);
+  return true;
+}
+
+test('createGame: preparedBoxUsed initialises to false', () => {
+  const state = createGame({
+    seed: 7, mode: 'relic-dive',
+    mission: { id: 'd1', type: 'fetch', level: 1, targetItemId: null, carrierIndex: null, opponents: [] },
+    hunters: [fastHunter('h0', 0), fastHunter('h1', 1)],
+  });
+  assert.equal(state.preparedBoxUsed, false);
+});
+
+test('box items: human hunter receives UNIDENTIFIED item (§2.1)', () => {
+  const state = createGame({
+    seed: 42, mode: 'relic-dive',
+    mission: { id: 'd1', type: 'fetch', level: 1, targetItemId: null, carrierIndex: null, opponents: [] },
+    hunters: [humanHunter('h0', 0), fastHunter('h1', 1)],
+  });
+  openBoxForHunter(state, 'h0');
+  const jake = state.hunters.find((h) => h.id === 'h0');
+  const found = jake.items.find((it) => it.itemId !== 'TARGET');
+  if (found) assert.equal(found.identified, false, 'human hunter box items must start unidentified');
+});
+
+test('box items: prepared perk identifies first box item', () => {
+  const state = createGame({
+    seed: 42, mode: 'relic-dive',
+    mission: { id: 'd1', type: 'fetch', level: 1, targetItemId: null, carrierIndex: null, opponents: [] },
+    hunters: [humanHunter('h0', 0, ['prepared']), fastHunter('h1', 1)],
+  });
+  assert.equal(state.preparedBoxUsed, false);
+  openBoxForHunter(state, 'h0');
+  const jake = state.hunters.find((h) => h.id === 'h0');
+  const found = jake.items.find((it) => it.itemId !== 'TARGET');
+  if (found) {
+    assert.equal(found.identified, true, 'prepared perk must identify first box item');
+    assert.equal(state.preparedBoxUsed, true, 'preparedBoxUsed must be set after first box');
+  }
+});
