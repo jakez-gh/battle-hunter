@@ -193,8 +193,6 @@ Phase hard; prove each phase is fun before funding the next. Promote to
   rescue/resteal each depth) deferred — adds complexity for modest variety gain.
 - [ ] **Deferred** — cloud leaderboard + ghost races (needs a backend = new
   external resource; only after the offline daily proves return visits).
-- [ ] **Deferred** — cloud leaderboard + ghost races (needs a backend = new
-  external resource; only after the offline daily proves return visits).
 
 ---
 
@@ -289,6 +287,19 @@ whoever holds the visual-polish claim first. Prerequisite: Phase 1 done at
   variant of startMission); after results, player lands on Hub. Eliminates
   3 navigation menus for new players. **Shipped `c759022`**.
 
+- [x] **Menu single-tap UX** — click/tap now selects AND activates in one
+  gesture (was focus-then-activate; non-standard for mouse, unusable on
+  touch). Disabled items play error SFX. Extended to hub icons, options,
+  and creation rows. **`4dec384` + `75af511`**
+
+- [x] **Gambler perk score bug** — `+50% score on descend` was silently not
+  applied; only the half-HP cost worked. Now `depthScore` is multiplied ×1.5
+  when `descendBonus` is active before pushing to `depthResults`. **`18968ba`**
+
+- [x] **ITEMS manual page** — new page 9 in HOW TO PLAY explaining sealed
+  items, cursed items, equipment stacking, sell/haggle, and counter items.
+  Closes the documentation gap for identification. **`9d9c4c1` + `ad4f367`**
+
 ---
 
 ## Backlog (future sprints)
@@ -301,3 +312,4 @@ whoever holds the visual-polish claim first. Prerequisite: Phase 1 done at
 - [x] **Leaderboard screen** — `makeLeaderboardScreen`: 3-tab (Normal/Story/Relic Dive), top-10 per mode, rank badges, extras column; Hub `[ L ]` entry. `b30b8d2`
 - [x] **Accessibility** — colour-blind mode (Options: saturate+contrast canvas filter, `2fb5e18`); `[Q]` Quick Start keyboard shortcut in creation; WYRM first-play tip on spawn (`de79981`); keyboard nav audited — all screens already covered.
 - [x] **Score consistency** — personal best + share string now use modifier-multiplied score, matching leaderboard display. `8cde9d8` + `d2697a7`
+- [ ] **Deferred** — cloud leaderboard + ghost races (needs a backend; only after the offline daily proves return visits).
