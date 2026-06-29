@@ -21,7 +21,7 @@ import { makeHunterRecord, exportSave, importSave, loadRoster,
          buildShareString, hashRunSeed, getLeaderboard, addLeaderboardEntry,
          storageArea } from '../save.js';
 import { makeRng } from '../engine/rng.js';
-import { rollPerkChoices, describePerk } from '../engine/perks.js';
+import { rollPerkChoices, describePerk, perkHasEffect } from '../engine/perks.js';
 import { MODIFIERS, allModifiers, scoreMultiplier, rollDailyModifier } from '../engine/modifiers.js';
 
 // ---------------------------------------------------------------------------
@@ -1129,8 +1129,7 @@ export function makeHubScreen(app) {
     onClick(pos) {
       for (let i = 0; i < ICONS.length; i++) {
         if (inRect(pos, iconRect(i))) {
-          if (idx === i) open(ICONS[i].id);
-          else { idx = i; sfx.menuMove(); }
+          idx = i; open(ICONS[i].id); // single tap focuses + opens (touch-friendly)
           return;
         }
       }
@@ -1969,12 +1968,11 @@ export function makeOptionsScreen(app) {
       for (let i = 0; i < rows.length; i++) {
         const r = { x: 240, y: 120 + i * 56, w: 480, h: 50 };
         if (inRect(pos, r)) {
-          if (idx === i) {
-            if (rows[i] === 'back') leave();
-            else if (rows[i] === 'export') doExport();
-            else if (rows[i] === 'import') doImport();
-            else adjust(pos.x > r.x + r.w / 2 ? 1 : -1);
-          } else { idx = i; sfx.menuMove(); }
+          idx = i; // single tap acts (touch-friendly): sliders adjust by tapped half
+          if (rows[i] === 'back') leave();
+          else if (rows[i] === 'export') doExport();
+          else if (rows[i] === 'import') doImport();
+          else adjust(pos.x > r.x + r.w / 2 ? 1 : -1);
           return;
         }
       }
@@ -3342,7 +3340,9 @@ export function makeResultsScreen(app, g) {
     });
     // Capture primary score for relic dive depth result
     const primaryEntry = hunterEntries.find((e) => e.id === primaryId) ?? hunterEntries[0];
-    depthScore = primaryEntry?.score ?? 0;
+    { const raw = primaryEntry?.score ?? 0;
+      depthScore = (g.runState && perkHasEffect(g.runState.perks ?? [], 'descendBonus'))
+        ? Math.floor(raw * 1.5) : raw; }
     app.roster.hunters = applyResults(app.roster.hunters, {
       relicLevel: st.relicLevel, win: primaryWon, wipe, storyCleared,
       hunters: hunterEntries,
