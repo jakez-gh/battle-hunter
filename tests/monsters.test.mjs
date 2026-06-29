@@ -100,7 +100,7 @@ test('story missions: types, carriers, rivals, target overrides per DESIGN', () 
   for (const id of [2, 8, 9, 10, 11, 12, 14, 15]) {
     assert.deepEqual(byId.get(id).opponents, ['RAVEN', 'RAVEN', 'RAVEN'], `M${id}`);
   }
-  assert.deepEqual(byId.get(1).opponents, ['Normal', 'Normal']);
+  assert.deepEqual(byId.get(1).opponents, ['Normal', 'Normal', 'Normal']); // §2.15: M1 = 3 Normal AI
   for (const id of [4, 6]) {
     assert.ok(byId.get(id).opponents.includes('keld') && byId.get(id).opponents.includes('mira'), `M${id} rivals`);
   }
