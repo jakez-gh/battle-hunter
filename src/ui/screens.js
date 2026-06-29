@@ -366,8 +366,12 @@ function makeMenu(items, { title = '', onPick, onCancel, footer = '', footerColo
     click(pos) {
       for (let i = 0; i < m.rects.length; i++) {
         if (m.rects[i] && inRect(pos, m.rects[i])) {
-          if (m.idx === i) m.pick();
-          else if (!m.items[i].disabled) { m.idx = i; sfx.menuMove(); }
+          // A tap/click selects AND activates the item in one go. (Was
+          // focus-then-tap-again, which forced an unusable double-tap on touch
+          // and is also non-standard for a mouse — you click what you mean.)
+          if (m.items[i].disabled) { sfx.error(); return true; }
+          m.idx = i;
+          m.pick();
           return true;
         }
       }
