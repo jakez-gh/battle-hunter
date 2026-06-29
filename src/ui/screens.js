@@ -4286,7 +4286,7 @@ export function makeManualScreen(app) {
       title: 'ITEMS',
       sections: [
         { head: 'Found Sealed', headColor: '#3aacc8', body: 'Items found in boxes arrive sealed (effects inactive). Visit the CLIENT between missions to Appraise them. Fee: 50cr × your level. Monsters sometimes drop counter items — these are always identified.' },
-        { head: 'Cursed Items ☠', headColor: BAD, body: 'Cursed items (Black Gem, Fear Stone, Dark Gem, Cursed Gem, Old Doll) activate immediately — identified or not. They cannot be discarded once held. Check what you pick up.' },
+        { head: 'Cursed Items ☠', headColor: BAD, body: 'Cursed items (Black Gem, Fear Stone, Dark Gem, Cursed Gem) activate immediately — identified or not. Their effects are always live, for better or worse. Check what you pick up.' },
         { head: 'Equipment', headColor: GOLD, body: 'Weapons (+AT), Armour (+DF), Escape (+flee roll), Sensors (+trap dodge%) — same category does not stack, strongest applies. Up to 6 inventory slots. AI hunters start with auto-identified items at higher levels.' },
         { head: 'Selling (CLIENT)', headColor: GOLD, body: 'Sell identified items at the CLIENT. Base price uses relic level. Haggle for +10% (30% odds) — failure forces sale at 50% of base. Only identified items can be sold.' },
         { head: 'Counter Items', headColor: '#cc4a3a', body: 'Override (vs VAC), Repellent (vs OOZ), Patch (vs FNG), Tamer (vs WYRM). Attack the matching monster while holding its identified counter item and it fights stunned: DF 0, no counter.' },
