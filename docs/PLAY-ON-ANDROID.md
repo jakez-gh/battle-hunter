@@ -5,6 +5,12 @@ tap menu options, tap to time the dodge/brace minigame, and tap the **❚❚ but
 (top-left)** to pause / return to the hub. Pinch-zoom and scroll are disabled on
 the game surface so your taps and swipes always reach the game.
 
+**A single tap activates** — menus, hub icons, options, and the title screen all
+respond to one tap (no double-tap). Every screen — title, hub, Office/Client/
+Hospital, Relic Dive, Daily Hunt, leaderboard, the manual (tap the left/right
+third to page, middle to close), and in-dungeon play — is fully tap-navigable;
+all validated on an emulated Galaxy A15.
+
 Best experience: **hold the phone in landscape** (the board is 4:3, so landscape
 fills the screen). Use **QUICK START** on the title screen to jump straight into a
 run.
