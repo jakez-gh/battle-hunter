@@ -942,15 +942,15 @@ export function makeCreationScreen(app) {
     },
     onClick(pos) {
       if (inRect(pos, { x: 600, y: 460, w: 280, h: 36 })) { quickStart(); return; }
-      // click a row to focus it; click again on done/adjustables to act
+      // Single tap focuses + acts (touch-friendly): 'done' runs, stat rows adjust
+      // by the tapped half; the 'name' row just focuses (typed via keyboard).
       for (let i = 0; i < ROWS.length; i++) {
         const r = { x: 60, y: 120 + i * 56 - 4, w: 480, h: 52 };
         if (inRect(pos, r)) {
-          if (state.row === i) {
-            if (ROWS[i] === 'done') done();
-            else if (pos.x > r.x + r.w / 2) adjust(1);
-            else adjust(-1);
-          } else { state.row = i; sfx.menuMove(); }
+          state.row = i;
+          if (ROWS[i] === 'done') done();
+          else if (ROWS[i] !== 'name') adjust(pos.x > r.x + r.w / 2 ? 1 : -1);
+          else sfx.menuMove();
           return;
         }
       }
