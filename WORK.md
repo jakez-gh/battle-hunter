@@ -48,10 +48,8 @@ it's shaped this way) → `WORK.md` (what to do right now) → `docs/decisions/`
 
 ### Pending
 
-- [ ] **ROADMAP.md** — needed when the backlog grows beyond ~5 independent items.
-  Currently unnecessary; promote this item if a multi-slice initiative (network
-  play, replay mode) is greenlit. Format: epics with goal + acceptance criteria +
-  phase breakdown.
+- [x] **ROADMAP.md** — created during Phase 1 (Relic Dive epic + phases). Exists
+  at `ROADMAP.md`; all four phases documented there.
 
 - [x] **ADR-004: hunter record vs ref** — `docs/decisions/004-hunter-record-vs-ref.md`.
   `f606061`
