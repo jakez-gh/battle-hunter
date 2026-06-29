@@ -35,6 +35,7 @@ const TIP_DEFS = {
   win:      ['Mission complete, Hunter!', 'Play DAILY HUNT every day to track your personal best.'],
   wyrm:     ['THE WYRM hunts the Target holder!', 'WYRM defeat = WIPE: all items + credits lost forever.'],
   dive:     ['RELIC DIVE — win the depth, then choose your fate', 'DESCEND for more score (HP carries over)  ·  BANK OUT to lock it in safely'],
+  sealed:   ['Item sealed — effects inactive until appraised', 'Visit the CLIENT between missions to identify it  ·  Cursed items activate unidentified'],
 };
 
 function loadSeenTips() {
@@ -2181,9 +2182,13 @@ export function makeGameScreen(app, g) {
         case 'itemTaken':
           if (ev.itemId === 'TARGET' && A.resolveUnit(g.state, ev.unit)?.human)
             say('RELIC SEIZED!', 3, GOLD);
+          if (ev.identified === false) showTip('sealed');
           break;
         case 'boxOpened':
-          if (ev.contents && ev.contents !== 'TARGET') say(`Found: ${ITEMS[ev.contents]?.name ?? ev.contents}`, 2.2, '#3aacc8');
+          if (ev.contents && ev.contents !== 'TARGET') {
+            const boxLabel = ev.identified ? (ITEMS[ev.contents]?.name ?? ev.contents) : '??? (sealed)';
+            say(`Found: ${boxLabel}`, 2.2, ev.identified ? '#3aacc8' : DIM);
+          }
           break;
         case 'flagClaimed': {
           const FC = { red: '#ff6a5a', blue: '#4a7dff', green: '#3aa84a', yellow: '#e0c63a' };

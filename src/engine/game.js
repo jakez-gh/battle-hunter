@@ -393,8 +393,8 @@ function drawBox(state, hunter) {
   hunter.items = hunter.items || [];
   if (hunter.items.length < 6) {
     hunter.items.push({ itemId: contents, identified });
-    addEvent(state, { type: 'boxOpened', pos: { ...box }, contents });
-    addEvent(state, { type: 'itemTaken', unit: hunter.id, itemId: contents });
+    addEvent(state, { type: 'boxOpened', pos: { ...box }, contents, identified });
+    addEvent(state, { type: 'itemTaken', unit: hunter.id, itemId: contents, identified });
     return;
   }
   state.pendingChoice = {
