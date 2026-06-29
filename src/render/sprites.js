@@ -2417,6 +2417,27 @@ const WALL_DK = [ // ashlar with shadow reveal — deep d reveal between blocks 
   'XXXXXXXXXXXXXXXX',
   'GGGGGGGGGGGGGGGG',
 ];
+const WALL_HD = [ // diamond — d outline of a rotated square (Manhattan distance=5 from centre at row 7, col 7)
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGdGGGGGGgX',
+  'XcGGGGdGdGGGGGgX', 'XcGGGdGGGdGGGGgX', 'XcGGdGGGGGdGGGgX',
+  'XcGdGGGGGGGdGGgX', 'XcdGGGGGGGGGdGgX', 'XcGdGGGGGGGdGGgX',
+  'XcGGdGGGGGdGGGgX', 'XcGGGdGGGdGGGGgX', 'XcGGGGdGdGGGGGgX',
+  'XcGGGGGdGGGGGGgX', 'XcGGGGGGGGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_HE = [ // portcullis — d top lintel + two vertical rails + two horizontal cross-bars
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGddddddddGGgX',
+  'XcGGdGGGGGGdGGgX', 'XcGGdGGGGGGdGGgX', 'XcGGdGGGGGGdGGgX',
+  'XcGGddddddddGGgX', 'XcGGdGGGGGGdGGgX', 'XcGGdGGGGGGdGGgX',
+  'XcGGdGGGGGGdGGgX', 'XcGGddddddddGGgX', 'XcGGdGGGGGGdGGgX',
+  'XcGGdGGGGGGdGGgX', 'XcGGGGGGGGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
+const WALL_HF = [ // fleur-de-lis — central petal tip, spreading side petals, collar bar, and stem
+  'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGdGGGGGGgX',
+  'XcGGGGdddGGGGGgX', 'XcGGGdddddGGGGgX', 'XcGGddGGGddGGGgX',
+  'XcGddGGGGGGddGgX', 'XcGGddGGGddGGGgX', 'XcGGdddddddGGGgX',
+  'XcGGGGdddGGGGGgX', 'XcGGGGGdGGGGGGgX', 'XcGGGGGdGGGGGGgX',
+  'XcGGGGGdGGGGGGgX', 'XcGGGGGGGGGGGGgX', 'XXXXXXXXXXXXXXXX', 'GGGGGGGGGGGGGGGG',
+];
 const WALL_HA = [ // ogee arch — S-curved d arch: straight legs, belly widens to row 7-8, curves inward to apex
   'XXXXXXXXXXXXXXXX', 'XcGGGGGGGGGGGGgX', 'XcGGGGGdGGGGGGgX',
   'XcGGGGdGdGGGGGgX', 'XcGGGdGGGdGGGGgX', 'XcGGdGGGGGdGGGgX',
@@ -5499,6 +5520,30 @@ const FLOOR_DM = [ // half-brick — g headers and stretchers alternating within
   'GGGGGGGGGGGGGGGg',
   'GGGGGGGGGGGGGGGG',
 ];
+const FLOOR_HC = [ // period-6 diagonal crosshatch — two families: (x+y)%6==0 and (x-y+16)%6==0
+  'gGgGGGgGgGGGgGgG', 'GGGgGgGGGgGgGGGg', 'GGGGgGGGGGgGGGGG',
+  'GGGgGgGGGgGgGGGg', 'gGgGGGgGgGGGgGgG', 'GgGGGGGgGGGGGgGG',
+  'gGgGGGgGgGGGgGgG', 'GGGgGgGGGgGgGGGg', 'GGGGgGGGGGgGGGGG',
+  'GGGgGgGGGgGgGGGg', 'gGgGGGgGgGGGgGgG', 'GgGGGGGgGGGGGgGG',
+  'gGgGGGgGgGGGgGgG', 'GGGgGgGGGgGgGGGg', 'GGGGgGGGGGgGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_HD = [ // quad-dot cluster — 2×2 groups of g at (0,0),(2,0),(0,2),(2,2) tiled at period 8
+  'gGgGGGGGgGgGGGGG', 'GGGGGGGGGGGGGGGG', 'gGgGGGGGgGgGGGGG',
+  'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'gGgGGGGGgGgGGGGG',
+  'GGGGGGGGGGGGGGGG', 'gGgGGGGGgGgGGGGG', 'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
+const FLOOR_HE = [ // sine wave — single g pixel per column traces one full period of sin(2πx/16)
+  'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGgggGG',
+  'GGGGGGGGGGgGGGgG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGgGGGGGg',
+  'GGGGGGGGGGGGGGGG', 'gGGGGGGGgGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'GgGGGGGgGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGgGGGgGGGGGGGGG',
+  'GGGgggGGGGGGGGGG', 'GGGGGGGGGGGGGGGG', 'GGGGGGGGGGGGGGGG',
+  'GGGGGGGGGGGGGGGG',
+];
 const FLOOR_GZ = [ // scatter grain — 2 g pixels per row at pseudo-random positions, simulating stone pitting
   'GGgGGGGGgGGGGGGG', 'GGGGGgGGGGGGGgGG', 'GgGGGGGGGGGgGGGG',
   'GGGGGGgGGGGGGGgG', 'GGGgGGGGGGgGGGGG', 'gGGGGGGGgGGGGGGG',
@@ -7216,6 +7261,9 @@ export const TILES = {
   floorDK: { grid: FLOOR_DK, palette: TILE_PALETTE },
   floorDL: { grid: FLOOR_DL, palette: TILE_PALETTE },
   floorDM: { grid: FLOOR_DM, palette: TILE_PALETTE },
+  floorHC: { grid: FLOOR_HC, palette: TILE_PALETTE },
+  floorHD: { grid: FLOOR_HD, palette: TILE_PALETTE },
+  floorHE: { grid: FLOOR_HE, palette: TILE_PALETTE },
   floorGZ: { grid: FLOOR_GZ, palette: TILE_PALETTE },
   floorHA: { grid: FLOOR_HA, palette: TILE_PALETTE },
   floorHB: { grid: FLOOR_HB, palette: TILE_PALETTE },
@@ -7434,6 +7482,9 @@ export const TILES = {
   wallDI: { grid: WALL_DI, palette: TILE_PALETTE },
   wallDJ: { grid: WALL_DJ, palette: TILE_PALETTE },
   wallDK: { grid: WALL_DK, palette: TILE_PALETTE },
+  wallHD: { grid: WALL_HD, palette: TILE_PALETTE },
+  wallHE: { grid: WALL_HE, palette: TILE_PALETTE },
+  wallHF: { grid: WALL_HF, palette: TILE_PALETTE },
   wallHA: { grid: WALL_HA, palette: TILE_PALETTE },
   wallHB: { grid: WALL_HB, palette: TILE_PALETTE },
   wallHC: { grid: WALL_HC, palette: TILE_PALETTE },
