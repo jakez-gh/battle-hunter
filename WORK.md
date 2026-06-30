@@ -302,25 +302,16 @@ whoever holds the visual-polish claim first. Prerequisite: Phase 1 done at
 
 ## Defect triage (from full-codebase audit, 2026-06-30 — see `DEFECTS.md`)
 
-24 verified defects registered in [DEFECTS.md](DEFECTS.md) (1 critical, 4 high,
-4 medium, 15 low). Fix highest-severity first; several require updating tests that
-currently assert the buggy behavior (D01, D02). None are fixed yet.
-
-**Failing regression tests exist** for every defect in `tests/defects-*.test.mjs`
-(27 tests, one+ per defect). Each asserts the *correct* behavior and is wrapped as
-a `node:test` `todo`, so the suite stays green (`fail 0`, exit 0) but each prints a
-`✖ ... # DEFECT Dxx` while broken. When you fix a defect: its test flips to a
-passing-todo (`✔ # DEFECT Dxx`) — then **remove the `todo` flag** to make it a hard
-regression guard. 12 are behavioral (engine/combat/odds/share/leaderboard/AI); 12
-are source-introspection (renderer/UI/audio/dead-code) keyed to the suggested fix.
-
-- [ ] **D01 (critical)** — deck-out WYRM spawned with no AT/DF/MV → NaN combat
-  corrupts hunter HP; boss fight non-functional. `src/engine/game.js:325-331`.
-- [ ] **D02–D05 (high)** — escape skips defCard (`game.js:1150`); AI wastes `BE`
-  card (`ai.js:205`); `coopIds` leaks into solo story/Quick Start (`screens.js`);
-  monster ids mis-keyed in renderer (`renderer.js:180`).
-- [ ] **D06–D09 (medium)** and **D10–D24 (low)** — see `DEFECTS.md` for locations
-  and fixes.
+- [x] **All 24 audited defects FIXED** (+ D25, a turn-loop deadlock found during the
+  fix pass) — see [DEFECTS.md](DEFECTS.md). Each has a hard regression test in
+  `tests/defects-*.test.mjs` (the former `todo` placeholders are now real guards).
+  Suite: **458 pass, 0 fail, 0 todo**. 12 behavioral (engine/combat/odds/share/
+  leaderboard/AI), 12 source-introspection (renderer/UI/audio/dead-code).
+- **Open follow-up (low):** `screens.js` (`battleOdds` call sites ~2320/2408) still
+  doesn't pass the new `blackgem`/`amulet`/Warbanner/Aegis flags to `battleOdds`, so
+  the pre-commit odds readout remains slightly off for holders of those items even
+  though `odds.js` now models them ([DEFECTS.md](DEFECTS.md) D13). Dead `monsterMoved`
+  renderer case (~`renderer.js:393`) could also be pruned.
 
 ## Backlog (future sprints)
 

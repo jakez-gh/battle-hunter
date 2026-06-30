@@ -9,8 +9,10 @@ The four findings that did not survive verification are listed at the bottom.
   is therefore on an **uncovered or test-masked** path — a green suite does not
   contradict them. Several are actively *masked* by tests that assert the buggy
   behavior (see [Cross-cutting notes](#cross-cutting-notes)).
-- **Status:** documented, **not yet fixed**. Locations are `path:line` against the
-  current tree. Spec references are to `DESIGN.md` sections.
+- **Status: ALL FIXED (2026-06-30).** Every defect below is resolved; each has a
+  hard regression test in `tests/defects-*.test.mjs` (suite: 458 pass, 0 fail).
+  One further engine defect ([D25](#d25)) was found and fixed during the fix pass.
+  Locations are `path:line` against the tree at audit time. Spec refs → `DESIGN.md`.
 - Severity = player-facing blast radius × likelihood of hitting the path in real play.
 
 | # | Severity | Area | Defect |
@@ -39,6 +41,7 @@ The four findings that did not survive verification are listed at the bottom.
 | [D22](#d22) | Low | ui | Held arrow key during steering auto-walks/overshoots (no `e.repeat` guard) |
 | [D23](#d23) | Low | ui | Held Enter falls through the YOUR-TURN menu into the Move/Attack submenu |
 | [D24](#d24) | Low | audio | `setVolumes()` assigns `gain.value` directly → click/pop on slider scrub |
+| [D25](#d25) | High | engine | Boxed-in monster (no move, no adjacent target) deadlocks the turn loop |
 
 ---
 
@@ -439,6 +442,29 @@ The four findings that did not survive verification are listed at the bottom.
 - **Fix:** Ramp instead of step, e.g.
   `gain.setTargetAtTime(value, ctx.currentTime, 0.01)` or
   `gain.linearRampToValueAtTime(value, ctx.currentTime + 0.02)`.
+
+---
+
+## Found during the fix pass
+
+### D25 — A boxed-in monster with no legal action deadlocks the turn loop {#d25}
+
+- **Location:** `src/engine/game.js` `legalActions` (the `turn.action` branch).
+- **Defect:** In `turn.action`, `rest` is offered only to hunters, and `move`/
+  `attack` require a reachable adjacent tile / an adjacent enemy. A monster that is
+  boxed in (every neighbour a wall or another unit) with no adjacent hunter therefore
+  gets an **empty** action list. The turn loop (and the real game loop) has no way to
+  advance past a unit with zero legal actions, so the game livelocks in `turn.action`.
+  Surfaced as a hang in `termination` seed 17 once the D03/D07 behaviour changes
+  steered two FNG monsters into adjacent tiles, one boxing the other in. Latent before
+  (no seed happened to reach the state), but a genuine deadlock.
+- **Impact:** The game can hang indefinitely (no progress, no terminal state) whenever
+  a monster ends up unable to move with no hunter adjacent.
+- **Fix:** When a `turn.action` unit has no other legal action, offer `{ type: 'pass' }`
+  (routes through the existing `applyPass → applyEndTurn`, skipping the unit's turn).
+  Only fires when the list is otherwise empty, so it never changes behaviour for a unit
+  that can act — and cannot affect determinism for any previously-passing seed.
+- **Guard:** `tests/termination.test.mjs` (all 20 seeds reach `mission.over`).
 
 ---
 
