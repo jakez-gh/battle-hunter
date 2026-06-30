@@ -36,7 +36,6 @@ const SRC = readFileSync(new URL('../src/render/renderer.js', import.meta.url), 
 // [\s\S]) ties the assertion to the documented fix rather than to incidental
 // text elsewhere in the file.
 test('D05: evKey resolves raw monster ids via the pool (canonicalKey), not a bare \'h\' prefix',
-  { todo: "DEFECT D05 — numeric monster ids mis-keyed as 'h...' so monster moves teleport; remove todo when fixed (see DEFECTS.md)" },
   () => {
     const m = SRC.match(/function evKey\(ev\)\s*\{[\s\S]*?\n {2}\}/);
     assert.ok(m, 'expected to locate the evKey() function in renderer.js');

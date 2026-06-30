@@ -192,19 +192,24 @@ export function createRenderer(canvas, opts = {}) {
   }
 
   // Resolve a raw ID (number or string) to the canonical unit key by searching
-  // both pools. Needed for battleStarted events where ev.attacker/defender are
-  // raw numeric IDs that unitKey() would wrongly prefix as 'h'.
+  // both live pools and the ghost map (for recently killed monsters still animating).
+  // Needed wherever events carry raw numeric IDs (stepped, battleStarted, …) that
+  // unitKey() would wrongly prefix as 'h'.
   function canonicalKey(rawId) {
     if (rawId == null) return null;
     const sid = String(rawId);
     if (sid[0] === 'h' || sid[0] === 'm') return sid; // already prefixed
     if ((state?.hunters ?? []).some((u) => String(u.id) === sid)) return `h${sid}`;
     if ((state?.monsters ?? []).some((u) => String(u.id) === sid)) return `m${sid}`;
+    for (const gk of ghosts.keys()) { if (gk[0] === 'm' && gk.slice(1) === sid) return gk; }
     return `h${sid}`; // fallback: assume hunter
   }
 
   function evKey(ev) {
-    return unitKey(ev.unit ?? ev.hunter ?? ev.monster ?? null);
+    const ref = ev.unit ?? ev.hunter ?? ev.monster ?? null;
+    if (ref == null) return null;
+    if (typeof ref === 'object') return unitKey(ref);
+    return canonicalKey(ref); // raw numeric/string id — resolve against live pools
   }
 
   function displayPos(k) {
@@ -373,6 +378,49 @@ export function createRenderer(canvas, opts = {}) {
             }
           }
         }
+        // Monster departure sparkles (was in dead monsterMoved branch — now wired via fixed evKey)
+        if (fromPos && k?.[0] === 'm') {
+          const mu = findUnit(k);
+          const STEP_COL = { VAC: '#3080a8', OOZ: '#288a38', FNG: '#9a6c20', WYRM: '#5c1c9a' };
+          const mc = STEP_COL[mu?.kind] ?? '#664444';
+          for (let i = 0; i < 4; i++) {
+            const a = (i / 4) * Math.PI * 2;
+            sparkles.push({ wx: fromPos.x + 0.5, wy: fromPos.y + 0.5,
+              vx: Math.cos(a) * 0.6, vy: Math.sin(a) * 0.6, t: 0, ttl: 350, color: mc });
+          }
+          if (mu?.kind === 'VAC') {
+            for (let i = 0; i < 12; i++) {
+              const a = (i / 12) * Math.PI * 2; const spd = 2.2 + (i % 3) * 0.5;
+              sparkles.push({ wx: fromPos.x + 0.5, wy: fromPos.y + 0.5,
+                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, t: 0, ttl: 420,
+                color: i % 3 === 0 ? '#fff' : '#50b0e8' });
+            }
+          }
+          if (mu?.kind === 'OOZ') {
+            for (let i = 0; i < 8; i++) {
+              const a = (i / 8) * Math.PI * 2; const spd = 0.9 + (i % 3) * 0.4;
+              sparkles.push({ wx: fromPos.x + 0.5, wy: fromPos.y + 0.7,
+                vx: Math.cos(a) * spd * 0.7, vy: Math.abs(Math.sin(a)) * spd + 0.3,
+                t: 0, ttl: 500, color: i % 4 === 0 ? '#a0f0a8' : '#2ea840' });
+            }
+          }
+          if (mu?.kind === 'FNG') {
+            for (let i = 0; i < 8; i++) {
+              const a = -Math.PI * 0.5 + (i - 3.5) * 0.35; const spd = 1.4 + (i % 3) * 0.6;
+              sparkles.push({ wx: fromPos.x + 0.5, wy: fromPos.y + 0.5,
+                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, t: 0, ttl: 380,
+                color: i % 3 === 0 ? '#fff880' : i % 3 === 1 ? '#ff8820' : '#cc3010' });
+            }
+          }
+          if (mu?.kind === 'WYRM') {
+            for (let i = 0; i < 10; i++) {
+              const a = (i / 10) * Math.PI * 2; const spd = 1.8 + (i % 4) * 0.7;
+              sparkles.push({ wx: fromPos.x + 0.5, wy: fromPos.y + 0.5,
+                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, t: 0, ttl: 460,
+                color: i % 5 === 0 ? '#e8c8ff' : i % 5 === 4 ? '#fff' : '#8030c8' });
+            }
+          }
+        }
         // Puddle splash: blue circular ripple when landing on a wet tile
         { const toPos = ev.to ?? ev.pos ?? null;
           if (toPos) {
@@ -390,79 +438,8 @@ export function createRenderer(canvas, opts = {}) {
           } }
         break;
       }
-      case 'monsterMoved': {
-        const mfrom = ev.from ?? null;
-        beginSlide(k, mfrom,
-          ev.to ?? ev.pos ?? (Array.isArray(ev.path) ? ev.path[ev.path.length - 1] : null));
-        // Monster footstep dust from departure tile
-        if (mfrom) {
-          const STEP_COL = { VAC: '#3080a8', OOZ: '#288a38', FNG: '#9a6c20', WYRM: '#5c1c9a' };
-          const mu = findUnit(k);
-          const mc = STEP_COL[mu?.kind] ?? '#664444';
-          for (let i = 0; i < 4; i++) {
-            const a = (i / 4) * Math.PI * 2;
-            sparkles.push({ wx: mfrom.x + 0.5, wy: mfrom.y + 0.5,
-              vx: Math.cos(a) * 0.6, vy: Math.sin(a) * 0.6,
-              t: 0, ttl: 350, color: mc });
-          }
-          // VAC sonar burst: fast ring of 12 cyan pixels radiating outward
-          if (mu?.kind === 'VAC') {
-            for (let i = 0; i < 12; i++) {
-              const a = (i / 12) * Math.PI * 2;
-              const spd = 2.2 + (i % 3) * 0.5;
-              sparkles.push({ wx: mfrom.x + 0.5, wy: mfrom.y + 0.5,
-                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
-                t: 0, ttl: 420, color: i % 3 === 0 ? '#fff' : '#50b0e8' });
-            }
-          }
-          // OOZ slime splatter: 8 viscous droplets biased downward
-          if (mu?.kind === 'OOZ') {
-            for (let i = 0; i < 8; i++) {
-              const a = (i / 8) * Math.PI * 2;
-              const spd = 0.9 + (i % 3) * 0.4;
-              sparkles.push({ wx: mfrom.x + 0.5, wy: mfrom.y + 0.7,
-                vx: Math.cos(a) * spd * 0.7, vy: Math.abs(Math.sin(a)) * spd + 0.3,
-                t: 0, ttl: 500, color: i % 4 === 0 ? '#a0f0a8' : '#2ea840' });
-            }
-          }
-          // FNG ember spray: 8 sparks kicked upward from exhaust during movement
-          if (mu?.kind === 'FNG') {
-            for (let i = 0; i < 8; i++) {
-              const a = -Math.PI * 0.5 + (i - 3.5) * 0.35;
-              const spd = 1.4 + (i % 3) * 0.6;
-              sparkles.push({ wx: mfrom.x + 0.5, wy: mfrom.y + 0.5,
-                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
-                t: 0, ttl: 380, color: i % 3 === 0 ? '#fff880' : i % 3 === 1 ? '#ff8820' : '#cc3010' });
-            }
-          }
-          // WYRM void burst: 10 dark-purple particles with 2 bright white flares
-          if (mu?.kind === 'WYRM') {
-            for (let i = 0; i < 10; i++) {
-              const a = (i / 10) * Math.PI * 2;
-              const spd = 1.8 + (i % 4) * 0.7;
-              sparkles.push({ wx: mfrom.x + 0.5, wy: mfrom.y + 0.5,
-                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
-                t: 0, ttl: 460, color: i % 5 === 0 ? '#e8c8ff' : i % 5 === 4 ? '#fff' : '#8030c8' });
-            }
-          }
-        }
-        // Puddle splash for monster landing tile
-        { const mto = ev.to ?? ev.pos ?? (Array.isArray(ev.path) ? ev.path[ev.path.length - 1] : null);
-          if (mto) {
-            const pudH = ((mto.x * 1637 + mto.y * 3571) ^ 997) & 0xFFFF;
-            if ((pudH & 0xFF) < 30) {
-              for (let i = 0; i < 8; i++) {
-                const a = (i / 8) * Math.PI * 2;
-                const spd = 0.55 + (i % 3) * 0.28;
-                sparkles.push({ wx: mto.x + 0.5, wy: mto.y + 0.68,
-                  vx: Math.cos(a) * spd, vy: Math.sin(a) * spd * 0.35 - 0.1,
-                  t: 0, ttl: 300, color: i % 3 === 0 ? '#c8e8f8' : i % 3 === 1 ? '#7aabe0' : '#a0c8ec',
-                  round: true });
-              }
-            }
-          } }
+      case 'monsterMoved': // engine never emits this event; stepped handles all movement
         break;
-      }
       case 'cardPlayed': {
         const cc = CARD_MINI[String(ev.card ?? '')[0]] ?? '#c8d0ff';
         if (ev.card) addFloat(k, String(ev.card), cc, { ttl: 560 });
