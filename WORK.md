@@ -306,6 +306,14 @@ whoever holds the visual-polish claim first. Prerequisite: Phase 1 done at
 4 medium, 15 low). Fix highest-severity first; several require updating tests that
 currently assert the buggy behavior (D01, D02). None are fixed yet.
 
+**Failing regression tests exist** for every defect in `tests/defects-*.test.mjs`
+(27 tests, one+ per defect). Each asserts the *correct* behavior and is wrapped as
+a `node:test` `todo`, so the suite stays green (`fail 0`, exit 0) but each prints a
+`✖ ... # DEFECT Dxx` while broken. When you fix a defect: its test flips to a
+passing-todo (`✔ # DEFECT Dxx`) — then **remove the `todo` flag** to make it a hard
+regression guard. 12 are behavioral (engine/combat/odds/share/leaderboard/AI); 12
+are source-introspection (renderer/UI/audio/dead-code) keyed to the suggested fix.
+
 - [ ] **D01 (critical)** — deck-out WYRM spawned with no AT/DF/MV → NaN combat
   corrupts hunter HP; boss fight non-functional. `src/engine/game.js:325-331`.
 - [ ] **D02–D05 (high)** — escape skips defCard (`game.js:1150`); AI wastes `BE`
