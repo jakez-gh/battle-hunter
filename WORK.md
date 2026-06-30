@@ -300,6 +300,20 @@ whoever holds the visual-polish claim first. Prerequisite: Phase 1 done at
 
 ---
 
+## Defect triage (from full-codebase audit, 2026-06-30 — see `DEFECTS.md`)
+
+24 verified defects registered in [DEFECTS.md](DEFECTS.md) (1 critical, 4 high,
+4 medium, 15 low). Fix highest-severity first; several require updating tests that
+currently assert the buggy behavior (D01, D02). None are fixed yet.
+
+- [ ] **D01 (critical)** — deck-out WYRM spawned with no AT/DF/MV → NaN combat
+  corrupts hunter HP; boss fight non-functional. `src/engine/game.js:325-331`.
+- [ ] **D02–D05 (high)** — escape skips defCard (`game.js:1150`); AI wastes `BE`
+  card (`ai.js:205`); `coopIds` leaks into solo story/Quick Start (`screens.js`);
+  monster ids mis-keyed in renderer (`renderer.js:180`).
+- [ ] **D06–D09 (medium)** and **D10–D24 (low)** — see `DEFECTS.md` for locations
+  and fixes.
+
 ## Backlog (future sprints)
 
 - Network play (WebRTC or WebSocket) for remote multiplayer
