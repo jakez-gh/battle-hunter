@@ -38,16 +38,28 @@ function defTotal(d1, d2, df, guard, card) {
 //   atkCard/defCard: the card each side would play (or null)
 //   atkWarbanner  : striker's crit deals ×2 (Warbanner item)
 //   defAegis      : defender's own doubles → take 0 (Aegis item)
+//   blackgem      : striker's dice clamped to min(d,4) before the doubles/totals
+//   amulet        : striker's dice clamped to max(d,3) before the doubles/totals
+// The item value-clamp shifts the strike TOTALS. pCrit is enumerated from the
+// clamped striker faces over the 36 pairings (D13): base 6/36, but ~12/36 under a
+// cap item since clamping collapses distinct faces onto the cap (e.g. 5,6 -> 4,4).
 // Returns { expectedDamage, pHit, pZero, pCrit, advantage }.
 export function battleOdds({
   at = 0, oppAt = 0, df = 0, guard = false,
   atkCard = null, defCard = null, atkWarbanner = false, defAegis = false,
+  blackgem = false, amulet = false,
 } = {}) {
-  let sumDmg = 0, hits = 0, n = 0;
+  // Striker die-cap mirrors combat.js capDie (blackgem wins over amulet).
+  const capStrikerDie = (d) => blackgem ? Math.min(d, 4) : amulet ? Math.max(d, 3) : d;
+  let sumDmg = 0, hits = 0, crits = 0, n = 0;
   for (let a1 = 1; a1 <= 6; a1++) {
     for (let a2 = 1; a2 <= 6; a2++) {
-      const crit = a1 === a2;
-      const atk = atkTotal(a1, a2, at, oppAt, atkCard);
+      // The clamped faces drive both the doubles count and the strike total under
+      // a cap item (5,6 -> 4,4 counts as a double); no cap item leaves pCrit 6/36.
+      const c1 = capStrikerDie(a1), c2 = capStrikerDie(a2);
+      const crit = c1 === c2;
+      if (crit) crits++;
+      const atk = atkTotal(c1, c2, at, oppAt, atkCard);
       for (let b1 = 1; b1 <= 6; b1++) {
         for (let b2 = 1; b2 <= 6; b2++) {
           const d = defTotal(b1, b2, df, guard, defCard);
@@ -66,7 +78,7 @@ export function battleOdds({
     expectedDamage: sumDmg / n,
     pHit,
     pZero: 1 - pHit,
-    pCrit: 6 / 36,                  // striker rolls doubles (crit chance is stat-independent)
+    pCrit: crits / 36,             // enumerated striker doubles (6/36 base; ~12/36 under die-cap)
     advantage: advantageLabel(pHit),
   };
 }

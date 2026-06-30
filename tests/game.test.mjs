@@ -409,18 +409,29 @@ test('battle response guard: transitions to battle.defCard', () => {
   assert.equal(after.phase, 'battle.defCard');
 });
 
-test('battle response escape: skips defCard, goes to battle.atkCard', () => {
+test('battle response escape: routes through battle.defCard then battle.atkCard (§2.8)', () => {
+  // §2.8: an escaping defender plays a blue card whose value feeds the flee roll
+  // (E = guaranteed escape), so escape must reach battle.defCard, not jump
+  // straight to the attacker's pursuit card.
   const state = makeGame(1);
   const s = JSON.parse(JSON.stringify(state));
-  s.hunters[1].hand = ['B2']; // Blue card required for escape option
+  s.hunters[1].hand = ['B2']; // Blue card required for escape option (and to flee with)
   s.phase = 'battle.response';
   s.battle = {
     attacker: { kind: 'hunter', index: 0 },
     defender: { kind: 'hunter', index: 1 },
     stage: 'response', response: null, defCard: null, atkCard: null,
   };
-  const { state: after } = applyAction(s, { type: 'respond', response: 'escape' });
-  assert.equal(after.phase, 'battle.atkCard');
+  // Escaping defender first reaches their own (blue) card phase.
+  const r1 = applyAction(s, { type: 'respond', response: 'escape' });
+  assert.equal(r1.state.phase, 'battle.defCard', 'escape routes the defender to battle.defCard');
+  // Only blue cards are offered for the flee roll.
+  const defCards = legalActions(r1.state).filter((a) => a.type === 'battleCard');
+  assert.ok(defCards.some((a) => a.card === 'B2'), 'defender may flee with their blue card');
+  // Playing the blue escape card advances to the attacker's pursuit card.
+  const r2 = applyAction(r1.state, { type: 'battleCard', card: 'B2' });
+  assert.equal(r2.state.phase, 'battle.atkCard', 'after the escape card, the attacker plays a pursuit card');
+  assert.ok(!r2.state.hunters[1].hand.includes('B2'), 'the played escape card leaves the defender hand');
 });
 
 test('battle response surrender: transitions to choice.surrenderGive with items', () => {
@@ -916,16 +927,22 @@ test('non-WYRM monster defeating target holder does not end mission', () => {
 // Escape bonus: Slick Boots / Jumpsuit / Longcoat add to escape roll
 
 function runEscape(seed, defItems) {
-  // Escape skips the defender card phase; only the attacker plays a card.
-  // Sequence: respond → battle.atkCard; ONE battleCard → resolves (escapeRolled fires here).
+  // Escape routes through the defender's (blue) card phase first, then the
+  // attacker's pursuit card (§2.8, D02). Sequence: respond → battle.defCard;
+  // defender battleCard (null = flee on MV+items only) → battle.atkCard;
+  // attacker battleCard → resolves (escapeRolled fires here).
   const state = makeGame(seed);
   const s = JSON.parse(JSON.stringify(state));
   s.hunters[0].items = [];
   s.hunters[1].items = defItems;
+  // Give the defender a blue card so escape is a legal response; play null below
+  // (no blue card) so only the item escape bonus moves the dTotal.
+  s.hunters[1].hand = ['B2'];
   s.phase = 'battle.response';
   s.battle = { attacker: { kind: 'hunter', index: 0 }, defender: { kind: 'hunter', index: 1 },
     stage: 'response', response: null, defCard: null, atkCard: null };
   let r = applyAction(s, { type: 'respond', response: 'escape' });
+  r = applyAction(r.state, { type: 'battleCard', card: null }); // defender's escape card (none)
   r = applyAction(r.state, { type: 'battleCard', card: null }); // attacker's pursuit card
   return (r.state.events || []).find((e) => e.type === 'escapeRolled') ?? null;
 }

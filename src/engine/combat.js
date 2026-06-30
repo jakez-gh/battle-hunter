@@ -43,9 +43,13 @@ function defenseTotal(dice, df, guard, card) {
 function strike(phase, rng, events, striker, strikerCard, target, targetCard, opts) {
   const { guard = false, dfZero = false, negateAttempt = false, targetLabel } = opts;
   const capDie = (d, eff) => eff.blackgem ? Math.min(d, 4) : eff.amulet ? Math.max(d, 3) : d;
-  const sDice = [rng.d6(), rng.d6()].map((d) => capDie(d, fx(striker)));
+  // Crit = the dice the striker actually ROLLED are doubles (§2.8 step 5), tested
+  // on the raw faces BEFORE the item value-clamp so a die-cap can't manufacture a
+  // false crit (D12). The clamped dice still feed the attack/defense totals.
+  const sRaw = [rng.d6(), rng.d6()];
   const tDice = [rng.d6(), rng.d6()].map((d) => capDie(d, fx(target)));
-  const crit = sDice[0] === sDice[1];
+  const sDice = sRaw.map((d) => capDie(d, fx(striker)));
+  const crit = sRaw[0] === sRaw[1];
   const atk = attackTotal(sDice, striker.at, target.at, strikerCard);
   const def = defenseTotal(tDice, dfZero ? 0 : target.df, guard, targetCard);
   let damage = Math.max(0, atk - def);

@@ -101,13 +101,15 @@ function getNextCurrent(current, state) {
   for (let i = 0; i < (state.monsters?.length || 0); i++) order.push({ kind: 'monster', index: i });
   if (!order.length) return null;
   let start = 0;
+  let prevIdx = -1;
   if (current) {
-    const idx = order.findIndex((u) => u.kind === current.kind && u.index === current.index);
-    start = idx >= 0 ? (idx + 1) % order.length : 0;
+    prevIdx = order.findIndex((u) => u.kind === current.kind && u.index === current.index);
+    start = prevIdx >= 0 ? (prevIdx + 1) % order.length : 0;
   }
 
   for (let i = 0; i < order.length; i++) {
-    const candidate = order[(start + i) % order.length];
+    const candIdx = (start + i) % order.length;
+    const candidate = order[candIdx];
     const unit = resolveUnit(state, candidate);
     if (!unit || unit.hp <= 0 || !unit.pos) continue;
     if (candidate.kind === 'hunter' && unit.status?.stun > 0) {
@@ -116,7 +118,11 @@ function getNextCurrent(current, state) {
       unit.status.stun = Math.max(0, unit.status.stun - 1);
       continue;
     }
-    return candidate;
+    // wrapped: advancing forward landed at an order index not greater than the
+    // previous unit's — i.e. the turn order looped back to (or past) the front.
+    // Used to advance the round independent of whether a monster is alive
+    // (D07/§2.4: a round is one full hunter cycle).
+    return { candidate, wrapped: prevIdx >= 0 && candIdx <= prevIdx };
   }
   return null;
 }
@@ -284,7 +290,7 @@ function applyEndTurn(state, rng) {
   }
   const previous = state.current;
   if (state.turn?.actAgain) {
-    state.turn.actAgain = false;
+    state.turn = { moved: false, rested: false, actAgain: false };
     state.phase = 'turn.action';
     state.move = null;
     state.battle = null;
@@ -292,12 +298,16 @@ function applyEndTurn(state, rng) {
     addEvent(state, { type: 'turnStarted', unit: state.current });
     return;
   }
-  const next = getNextCurrent(previous, state);
-  if (!next) {
+  const result = getNextCurrent(previous, state);
+  if (!result) {
     setMissionOver(state, false, 'no units remain');
     return;
   }
-  if (previous?.kind === 'monster' && next.kind === 'hunter' && next.index === 0) {
+  const next = result.candidate;
+  // A round is one full hunter cycle (§2.4). Bump it whenever the turn order
+  // wraps back to the lowest live hunter, independent of whether a monster is
+  // alive (D07) — getNextCurrent flags that wrap.
+  if (result.wrapped && next.kind === 'hunter') {
     state.round = (state.round || 1) + 1;
   }
   state.current = next;
@@ -320,15 +330,19 @@ function maybeSpawnMonster(state, rng) {
     if (!wyrm) {
       const free = randomFreeTile(state, rng);
       if (!free) return;
+      const ws = monsterStats('WYRM', state.relicLevel);
       const existing = state.monsters?.find((m) => m.kind === 'WYRM');
       if (existing) {
-        existing.hp = monsterStats('WYRM', state.relicLevel).hp;
-        existing.maxHp = monsterStats('WYRM', state.relicLevel).hp;
+        existing.hp = ws.hp;
+        existing.maxHp = ws.hp;
+        existing.at = ws.at;
+        existing.df = ws.df;
+        existing.mv = ws.mv;
         existing.pos = free;
         existing.kind = 'WYRM';
         addEvent(state, { type: 'wyrmRespawned', kind: 'WYRM', pos: free });
       } else {
-        state.monsters.push({ id: rng.int(1000000), kind: 'WYRM', hp: monsterStats('WYRM', state.relicLevel).hp, maxHp: monsterStats('WYRM', state.relicLevel).hp, pos: free });
+        state.monsters.push({ id: rng.int(1000000), kind: 'WYRM', hp: ws.hp, maxHp: ws.hp, at: ws.at, df: ws.df, mv: ws.mv, pos: free });
         addEvent(state, { type: 'wyrmSpawned', kind: 'WYRM', pos: free });
       }
       return;
@@ -404,12 +418,6 @@ function drawBox(state, hunter) {
     options: hunter.items.map((item) => ({ ...item })),
   };
   addEvent(state, { type: 'boxOpened', pos: { ...box }, contents });
-}
-
-function claimFlag(state, hunter, flag) {
-  if (!flag || flag.taken) return;
-  flag.taken = true;
-  const roll = state.rng ? null : null; // handled by rng in applyAction
 }
 
 function flagEffect(state, hunter, flag, roll, rng) {
@@ -699,7 +707,10 @@ function resolveBattleOutcome(state, rng) {
 }
 
 export function createGame(config) {
-  const seed = config.seed ?? Date.now();
+  // Engine purity (ADR-002): no wall-clock reads. Callers must supply a seed so
+  // the run is deterministic and replayable (UI/relic-dive always do).
+  if (config.seed == null) throw new Error('createGame requires config.seed');
+  const seed = config.seed;
   const rng = makeRng(seed);
   const players = (config.hunters || []).map((h) => ({ ...h }));
   const levels = players.map((h) => Math.max(1, Math.min(15, h.level ?? 1)));
@@ -844,6 +855,12 @@ function legalActions(state) {
     for (const enemy of enemies) {
       actions.push({ type: 'attack', target: { kind: enemy.kind, index: enemy.index } });
     }
+    // A unit with no Move/Attack must still end its turn. Monsters have no Rest, so
+    // a boxed-in monster (no walkable neighbour, no adjacent hunter) would otherwise
+    // produce zero legal actions and deadlock the turn loop. Pass skips to the next
+    // unit (applyPass → applyEndTurn). Only fires when nothing else is possible, so
+    // it never changes behaviour for a unit that can act.
+    if (actions.length === 0) actions.push({ type: 'pass' });
     return actions;
   }
 
@@ -1005,10 +1022,25 @@ function applyStep(state, action, rng) {
       flag.taken = true;
       const roll = rng.d6();
       flagEffect(state, current, flag, roll, rng);
-      // Roll 1: trap was placed on the current tile — spring it immediately.
+      // Roll 1: trap was placed on the current tile — spring it on the spot
+      // (dodgeable, §2.6). Mirror the normal stepped-on-trap path: passive
+      // evasion first, then the human dodge minigame; AI triggers directly.
       if (roll === 1) {
         const selfTrap = state.board.traps.find((t) => samePos(t, nextPos));
-        if (selfTrap) { triggerTrap(state, current, selfTrap, rng, true); return; }
+        if (selfTrap) {
+          const chance = passiveEvasion(current, state.move.cardPlayed);
+          if (rng.float() < chance) {
+            addEvent(state, { type: 'trapDodged', unit: current.id, pos: { ...nextPos } });
+            if (state.move.remaining > 0) return;
+          } else if (current.human) {
+            state.phase = 'react.dodge';
+            state.move.trap = selfTrap;
+            return;
+          } else {
+            triggerTrap(state, current, selfTrap, rng, true);
+            return;
+          }
+        }
       }
     }
   }
@@ -1147,7 +1179,7 @@ function applyRespond(state, action, rng) {
     state.phase = 'battle.atkCard';
     return;
   }
-  if (resolveUnit(state, state.battle.defender)?.kind === 'monster' || action.response === 'escape') {
+  if (resolveUnit(state, state.battle.defender)?.kind === 'monster') {
     state.battle.stage = 'battle.atkCard';
     state.phase = 'battle.atkCard';
     return;

@@ -404,9 +404,13 @@ const app = {
     const rec = this.roster.hunters.find((h) => h.id === this.session.hunterId);
     if (!rec) return false;
     try {
-      const coopRecs = (this.session.coopIds || [])
-        .map((id) => this.roster.hunters.find((h) => h.id === id))
-        .filter(Boolean);
+      // Co-op party only applies to normal mode (D04): solo story / relic dive
+      // must not inherit a stale normal-mode co-op roster.
+      const coopRecs = this.session.mode === 'normal'
+        ? (this.session.coopIds || [])
+          .map((id) => this.roster.hunters.find((h) => h.id === id))
+          .filter(Boolean)
+        : [];
       const config = buildRelicDiveConfig(runState, [rec, ...coopRecs]);
       const state = adapt.createGame(config);
       const renderer = adapt.makeRenderer(canvas, atlas);
@@ -429,9 +433,13 @@ const app = {
     const rec = this.roster.hunters.find((h) => h.id === this.session.hunterId);
     if (!rec) return false;
     try {
-      const coopRecs = (this.session.coopIds || [])
-        .map((id) => this.roster.hunters.find((h) => h.id === id))
-        .filter(Boolean);
+      // Co-op party only applies to normal mode (D04): solo story / Quick Start
+      // must not inherit a stale normal-mode co-op roster.
+      const coopRecs = this.session.mode === 'normal'
+        ? (this.session.coopIds || [])
+          .map((id) => this.roster.hunters.find((h) => h.id === id))
+          .filter(Boolean)
+        : [];
       const config = buildMissionConfig(mission, [rec, ...coopRecs], this.session.mode);
       const state = adapt.createGame(config);
       const renderer = adapt.makeRenderer(canvas, atlas);
@@ -452,9 +460,13 @@ const app = {
     const rec = this.roster.hunters.find((h) => h.id === this.session.hunterId);
     if (!rec) return false;
     try {
-      const coopRecs = (this.session.coopIds || [])
-        .map((id) => this.roster.hunters.find((h) => h.id === id))
-        .filter(Boolean);
+      // Co-op party only applies to normal mode (D04): solo story must not
+      // inherit a stale normal-mode co-op roster.
+      const coopRecs = this.session.mode === 'normal'
+        ? (this.session.coopIds || [])
+          .map((id) => this.roster.hunters.find((h) => h.id === id))
+          .filter(Boolean)
+        : [];
       const config = buildMissionConfig(mission, [rec, ...coopRecs], this.session.mode);
       const state = adapt.createGame(config);
       const renderer = adapt.makeRenderer(canvas, atlas);

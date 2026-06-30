@@ -260,9 +260,16 @@ export function createRenderer(canvas, opts = {}) {
     for (const m of next.monsters ?? []) {
       if (!prevIds.has(`m${m.id}`)) hiddenUnits.add(`m${m.id}`);
     }
+    const nextById = new Map((next.monsters ?? []).map((n) => [`m${n.id}`, n]));
     for (const m of prev.monsters ?? []) {
       const k = `m${m.id}`;
-      if (!(next.monsters ?? []).some((n) => `m${n.id}` === k)) {
+      const n = nextById.get(k);
+      // Monster gone from the array OR killed in place (engine keeps dead monsters
+      // with hp<=0 / pos===null) — spawn a ghost from its last live position so the
+      // monsterKilled handler can detect the kind and fire the kill/detonation FX.
+      const wasAlive = (m.hp ?? 0) > 0 && m.pos != null;
+      const nowDead = !n || (n.hp ?? 0) <= 0 || n.pos == null;
+      if (wasAlive && nowDead && !ghosts.has(k)) {
         ghosts.set(k, { kind: m.kind, pos: visual.get(k) ?? m.pos, alpha: 1 });
       }
     }
@@ -709,7 +716,7 @@ export function createRenderer(canvas, opts = {}) {
           const floatCol = dmg >= 9 ? '#ffe050' : dmg >= 6 ? '#ff9a40' : '#ff6a5a';
           const floatGlow = dmg >= 9 ? 22 : dmg >= 6 ? 15 : 10;
           addFloat(battle?.d ?? k, `-${dmg}`, floatCol, { big: true, glow: floatGlow });
-          unitFlash = { key: battle?.d ?? k, t: 0, dur: EVENT_DURATIONS.strikeRolled,
+          unitFlash = { key: battle?.d ?? k, t: 0, dur: eventDuration('strikeRolled', timeScale),
             color: ev.crit ? '#ffe060' : dmg >= 6 ? '#ff8820' : '#ff3828' };
         }
         if (ev.crit) {

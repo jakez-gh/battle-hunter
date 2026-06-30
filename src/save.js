@@ -229,7 +229,16 @@ function loadAllLeaderboards() {
     const raw = storageArea().getItem(LEADERBOARD_KEY);
     if (!raw) return {};
     const p = JSON.parse(raw);
-    return (p && typeof p === 'object' && !Array.isArray(p)) ? p : {};
+    if (!p || typeof p !== 'object' || Array.isArray(p)) return {};
+    // Sanitize: drop entries whose score is not a finite number so the sort
+    // comparator (b.score - a.score) never produces NaN (D17).
+    const sanitized = {};
+    for (const [mode, entries] of Object.entries(p)) {
+      if (Array.isArray(entries)) {
+        sanitized[mode] = entries.filter((e) => Number.isFinite(e.score));
+      }
+    }
+    return sanitized;
   } catch { return {}; }
 }
 

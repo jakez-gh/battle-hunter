@@ -65,7 +65,6 @@ test('D05: evKey resolves raw monster ids via the pool (canonicalKey), not a bar
 // diffOverrides function body so an unrelated `h.hp <= 0` in draw code (line
 // ~3035) cannot satisfy it.
 test('D09: diffOverrides creates a ghost when a monster dies (hp<=0 / pos cleared) so kill FX can fire',
-  { todo: 'DEFECT D09 — dead monster never removed so kill burst + WYRM detonation are unreachable; remove todo when fixed (see DEFECTS.md)' },
   () => {
     const m = SRC.match(/function diffOverrides\(prev, next\)\s*\{[\s\S]*?\n {2}\}/);
     assert.ok(m, 'expected to locate the diffOverrides() function in renderer.js');
@@ -98,7 +97,6 @@ test('D09: diffOverrides creates a ghost when a monster dies (hp<=0 / pos cleare
 // constant. Fails today (constant is hardcoded); passes once the dur is computed
 // from eventDuration with timeScale.
 test('D19: strikeRolled unitFlash duration is time-scaled (eventDuration), so the tint decays at timeScale>1',
-  { todo: 'DEFECT D19 — strikeRolled unitFlash uses un-scaled dur so the impact tint freezes during fast AI playback; remove todo when fixed (see DEFECTS.md)' },
   () => {
     // Isolate the strikeRolled unitFlash set site (the one keyed off battle?.d).
     const m = SRC.match(/unitFlash = \{ key: battle\?\.d \?\? k, t: 0, dur:[^\n]*\n[^\n]*\};/);

@@ -32,9 +32,9 @@ export function ready() {
 
 export function setVolumes({ master: m, music, sfx }) {
   if (!ctx) return;
-  if (m !== undefined) master.gain.value = m;
-  if (music !== undefined) musicGain.gain.value = music;
-  if (sfx !== undefined) sfxGain.gain.value = sfx;
+  if (m !== undefined) master.gain.setTargetAtTime(m, ctx.currentTime, 0.01);
+  if (music !== undefined) musicGain.gain.setTargetAtTime(music, ctx.currentTime, 0.01);
+  if (sfx !== undefined) sfxGain.gain.setTargetAtTime(sfx, ctx.currentTime, 0.01);
 }
 
 // midi note number -> frequency

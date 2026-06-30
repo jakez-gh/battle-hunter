@@ -54,9 +54,10 @@ export function decodeRunResult(str) {
   if (hash32(payloadOf([tag, date, seed, depths, score, won])).toString(36) !== checksum) {
     return null; // tampered or corrupt
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  if (date !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   if (won !== '0' && won !== '1') return null;
   const version = Number(tag.slice(PREFIX.length));
+  if (!Number.isInteger(version) || version < 1 || version > VERSION) return null;
   const rootSeed = parseInt(seed, 36);
   const depthsCleared = Number(depths);
   const sc = parseInt(score, 36);

@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { chooseAction } from '../src/engine/ai.js';
 
 // Regression tests documenting diagnosed AI defects (see DEFECTS.md: D03, D08, D14).
-// Each test asserts the CORRECT (spec) behavior, so it FAILS against today's buggy
-// code. Wrapped as `todo` so the suite stays green; remove the todo when fixed.
+// Each test asserts the CORRECT (spec) behavior. These are hard regression guards: the
+// defects are fixed, so each test now passes; it will fail if the defect regresses.
 
 // Minimal hunter (mirrors tests/ai.test.mjs mkHunter conventions).
 function mkHunter(opts = {}) {
@@ -55,7 +55,6 @@ function mkState(phase, actions, opts = {}) {
 // burn the warp card on a routine move (§2.11 — BE is the flee/chase escape card).
 
 test('D03: non-holder AI must not burn the BE warp card on a routine move',
-  { todo: 'DEFECT D03 — chooseMoveAction matches BE via startsWith("B") and picks it; remove todo when fixed (see DEFECTS.md)' },
   () => {
     // BE appended last, mirroring legalActions push order (game.js:837-839).
     const acts = [
@@ -81,7 +80,6 @@ test('D03: non-holder AI must not burn the BE warp card on a routine move',
   });
 
 test('D03: among numbered blue moves the AI picks the highest-value one (B3 over B1)',
-  { todo: 'DEFECT D03 — chooseMoveAction returns last-in-hand-order, not highest value; remove todo when fixed (see DEFECTS.md)' },
   () => {
     // B1 listed AFTER B3 so the buggy "last blue card" heuristic picks B1.
     const acts = [
@@ -112,7 +110,6 @@ test('D03: among numbered blue moves the AI picks the highest-value one (B3 over
 // specials are strictly strongest in role (YD = guaranteed evade, RS = double AT).
 
 test('D08: guarding AI plays YD (guaranteed evade) over the highest numbered yellow (Y9)',
-  { todo: 'DEFECT D08 — special YD scored as value 0, ranked below Y9; remove todo when fixed (see DEFECTS.md)' },
   () => {
     const acts = [
       { type: 'battleCard', card: null },
@@ -130,7 +127,6 @@ test('D08: guarding AI plays YD (guaranteed evade) over the highest numbered yel
   });
 
 test('D08: attacking AI plays RS (double AT) over the highest numbered red (R9)',
-  { todo: 'DEFECT D08 — special RS scored as value 0, ranked below R9; remove todo when fixed (see DEFECTS.md)' },
   () => {
     const acts = [
       { type: 'battleCard', card: null },
@@ -156,7 +152,6 @@ test('D08: attacking AI plays RS (double AT) over the highest numbered red (R9)'
 // The fix removes the dead literal (or wires up a reachable panicked rate path).
 
 test('D14: ai.js must not contain the unreachable `panicked: 25` react-rate entry',
-  { todo: 'DEFECT D14 — dead panicked:25 react-rate entry; remove todo when fixed (see DEFECTS.md)' },
   () => {
     const src = readFileSync(new URL('../src/engine/ai.js', import.meta.url), 'utf8');
     assert.doesNotMatch(src, /panicked:\s*25/,

@@ -1,8 +1,7 @@
 // Regression tests documenting already-diagnosed combat/odds defects.
-// Each test asserts the CORRECT (spec/fixed) behavior, so it FAILS against the
-// current buggy code and is wrapped as a `todo` (the file still runs green —
-// failures are counted only under todo). Remove the todo wrapper when the
-// matching DEFECTS.md entry is fixed. See DEFECTS.md D12, D13.
+// Each test asserts the CORRECT (spec/fixed) behavior. These are hard regression
+// guards: the defects are fixed, so each test now passes; it will fail if the
+// defect regresses. See DEFECTS.md D12, D13.
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -43,7 +42,6 @@ const ctx = (over = {}) => ({
 // rolls the hunter rider floats), so the assertion fails.
 // ---------------------------------------------------------------------------
 test('D12: Black Gem die-cap that collapses a raw non-double to a double is NOT a crit',
-  { todo: 'DEFECT D12 — crit computed from clamped dice; remove todo when fixed (see DEFECTS.md)' },
   () => {
     const r = resolveBattle(ctx({
       // striker raw 5,6 (clamps to 4,4); target 1,2. Floats supplied defensively:
@@ -79,7 +77,6 @@ test('D12: Black Gem die-cap that collapses a raw non-double to a double is NOT 
 // asserting ~12/36 fails.
 // ---------------------------------------------------------------------------
 test('D13: battleOdds models Black Gem die-cap in crit probability (~12/36)',
-  { todo: 'DEFECT D13 — pCrit hardcoded 6/36, ignores blackgem; remove todo when fixed (see DEFECTS.md)' },
   () => {
     const plain = battleOdds({ at: 4, df: 3 });
     assert.equal(plain.pCrit, 6 / 36, 'sanity: a plain striker crits on 6/36');

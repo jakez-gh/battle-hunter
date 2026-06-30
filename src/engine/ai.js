@@ -1,6 +1,8 @@
 // AI: choose a legal action for the current unit. Receives the full GameState
 // (with an optional legalActions helper attached). Returns an action object.
 
+import { CARDS, cardColor, cardValue, isSpecial } from './cards.js';
+
 // Archetype → { priority, restHp } per §2.11. restHp is the HP fraction below
 // which the AI rests instead of acting. Panicked = RAVEN agents (random each turn).
 const BEHAVIORS = {
@@ -189,22 +191,49 @@ function chooseBestStep(state, steps, priority) {
   }, steps[0]);
 }
 
+// Effective battle-card strength for AI ranking (§2.11 — always play the
+// strongest legal card in role). Numbered cards score by their value; the
+// in-role specials outrank every numbered card of their color:
+//   yellow  YD (double DF / 100% evade), YA (take 0 / 100% evade)
+//   red     RS (double own AT),          RC (add foe's AT)
+// BE (warp/escape) is never a battle card here — it only flees, handled by the
+// escape response — so it ranks below everything.
+function battleCardWeight(id) {
+  if (!id) return -1;
+  // Unknown id: fall back to digit parsing (defensive — the engine only ever
+  // offers catalog cards, but never throw on a malformed action).
+  if (!CARDS[id]) return parseInt(id.replace(/\D/g, ''), 10) || 0;
+  if (isSpecial(id)) {
+    if (id === 'BE') return -1;           // escape-only; keep out of battle ranking
+    return 100;                            // YD/YA/RS/RC strongest in role
+  }
+  return cardValue(id);                    // numbered: rank by bonus
+}
+
 function chooseBattleCard(actions) {
   const cards = actions.filter((a) => a.type === 'battleCard');
-  const playable = cards.filter((a) => a.card).sort((a, b) => {
-    const va = parseInt((a.card ?? '').replace(/\D/g, ''), 10) || 0;
-    const vb = parseInt((b.card ?? '').replace(/\D/g, ''), 10) || 0;
-    return vb - va;
-  });
+  const playable = cards
+    .filter((a) => a.card)
+    .sort((a, b) => battleCardWeight(b.card) - battleCardWeight(a.card));
   return playable[0] ?? cards.find((a) => !a.card) ?? cards[0];
 }
 
-function chooseMoveAction(actions) {
+function chooseMoveAction(actions, unit) {
   const moves = actions.filter((a) => a.type === 'move');
-  // Prefer blue card moves (most range bonus); fall back to plain move.
-  const blueMoves = moves.filter((a) => a.card && a.card.startsWith('B'));
-  if (blueMoves.length) return blueMoves[blueMoves.length - 1];
-  return moves.find((a) => !a.card) ?? moves[0];
+
+  // BE (warp to EXIT) is a deliberate, scarce card — never burn it on a routine
+  // move. A target-holder warps straight to the EXIT to *win* the mission, so
+  // that is the one case where consuming it during a move is correct.
+  const beMove = moves.find((a) => a.card === 'BE');
+  if (beMove && unit?.hasTarget) return beMove;
+
+  // Routine move: prefer the highest-value numbered blue card (most range bonus);
+  // exclude specials (BE) so they are never wasted. Fall back to a plain move.
+  const blueMoves = moves
+    .filter((a) => a.card && CARDS[a.card] && cardColor(a.card) === 'blue' && !isSpecial(a.card))
+    .sort((a, b) => cardValue(b.card) - cardValue(a.card));
+  if (blueMoves.length) return blueMoves[0];
+  return moves.find((a) => !a.card) ?? moves.find((a) => a.card !== 'BE') ?? moves[0];
 }
 
 export function chooseAction(state) {
@@ -219,7 +248,7 @@ export function chooseAction(state) {
 
     if (phase === 'react.dodge' || phase === 'react.crit') {
       // Deterministic success rate by archetype — clever AIs react faster.
-      const rates = { clever: 65, aggressive: 45, balanced: 30, passive: 15, panicked: 25 };
+      const rates = { clever: 65, aggressive: 45, balanced: 30, passive: 15 };
       const rate = rates[priority] ?? 30;
       // Hash from round + unit index + event count so each timing event is independent.
       const h = ((state?.round ?? 0) * 7919 + (state?.current?.index ?? 0) * 4001
@@ -294,7 +323,7 @@ export function chooseAction(state) {
         if (attack) return attack;
       }
 
-      const move = chooseMoveAction(actions);
+      const move = chooseMoveAction(actions, unit);
       if (move) return move;
 
       return actions.find((a) => a.type === 'rest') ?? actions[0];

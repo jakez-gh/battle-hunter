@@ -1,7 +1,7 @@
 // Regression tests documenting diagnosed engine (GameState) defects.
-// Each test asserts the CORRECT / spec behavior, so it FAILS against today's
-// buggy code. Every test is wrapped as a `todo` so the suite stays green-as-todo
-// until the corresponding fix lands (remove the todo flag then). See DEFECTS.md.
+// Each test asserts the CORRECT / spec behavior. These are hard regression guards:
+// the defects are fixed, so each test now passes; it will fail if the defect
+// regresses. See DEFECTS.md.
 //
 // Pure: no DOM / canvas / audio / timers / network. RNG is seeded or the rng
 // seed is set explicitly so every documented failure is reproducible.
@@ -68,7 +68,6 @@ function freeAdjacent(s, pos) {
 // ---------------------------------------------------------------------------
 
 test('D01: engine-spawned deck-out WYRM has finite at/df/mv and resolves combat without NaN HP',
-  { todo: 'DEFECT D01 — deck-out WYRM is pushed with only hp/maxHp/pos; at/df/mv are undefined → NaN combat; remove todo when fixed (see DEFECTS.md)' },
   () => {
     // Build a turn.steer state for an AI hunter with one step remaining, an
     // EMPTY deck and NO monsters, so finishing the move drives endMovement →
@@ -121,7 +120,6 @@ test('D01: engine-spawned deck-out WYRM has finite at/df/mv and resolves combat 
 // ---------------------------------------------------------------------------
 
 test('D02: escaping HUNTER defender reaches battle.defCard to play their blue/escape card',
-  { todo: "DEFECT D02 — applyRespond fast-paths escape straight to battle.atkCard so the defender's blue/E card never feeds the escape roll; remove todo when fixed (see DEFECTS.md)" },
   () => {
     const s = clone(makeGame(1));
     s.hunters[1].hand = ['B2']; // blue card → escape response is offered
@@ -147,7 +145,6 @@ test('D02: escaping HUNTER defender reaches battle.defCard to play their blue/es
 // ---------------------------------------------------------------------------
 
 test('D06: act-again resets state.turn (moved/cardPlayed) before the bonus action',
-  { todo: 'DEFECT D06 — the actAgain branch clears only turn.actAgain, leaking moved/cardPlayed into the bonus action; remove todo when fixed (see DEFECTS.md)' },
   () => {
     // Arrange the current hunter with a "just claimed a blue flag, rolled 6"
     // turn record: moved=true, a yellow card played, actAgain pending. Drive a
@@ -173,7 +170,6 @@ test('D06: act-again resets state.turn (moved/cardPlayed) before the bonus actio
 // ---------------------------------------------------------------------------
 
 test('D07: round advances after a full all-hunter cycle even with no monster alive',
-  { todo: 'DEFECT D07 — state.round only bumps on a monster→hunter-0 transition, so an all-hunter cycle never advances the round; remove todo when fixed (see DEFECTS.md)' },
   () => {
     // 2-hunter game, no monsters. Rest never sets turn.moved, so
     // maybeSpawnMonster never fires → the cycle stays all-hunter and is fully
@@ -194,7 +190,6 @@ test('D07: round advances after a full all-hunter cycle even with no monster ali
 // ---------------------------------------------------------------------------
 
 test('D10: human stepping onto a flag and rolling 1 enters the dodge flow (react.dodge)',
-  { todo: 'DEFECT D10 — the flag roll-1 self-trap calls triggerTrap directly, bypassing react.dodge/passiveEvasion the normal trap path gives humans; remove todo when fixed (see DEFECTS.md)' },
   () => {
     // Construct a turn.steer state for a HUMAN hunter about to step onto an
     // unclaimed flag tile (no pre-existing trap there). Seed the rng so the
@@ -228,7 +223,6 @@ test('D10: human stepping onto a flag and rolling 1 enters the dodge flow (react
 // ---------------------------------------------------------------------------
 
 test('D11: dead claimFlag() helper is removed from src/engine/game.js',
-  { todo: 'DEFECT D11 — game.js still defines a dead claimFlag() with a degenerate no-op body; remove todo when deleted (see DEFECTS.md)' },
   () => {
     // Source-introspection: claimFlag is dead code (live logic is inline in
     // applyStep). The fix is to delete the function entirely.
@@ -241,7 +235,6 @@ test('D11: dead claimFlag() helper is removed from src/engine/game.js',
 // ---------------------------------------------------------------------------
 
 test('D18: engine has no Date.now() non-deterministic global read',
-  { todo: 'DEFECT D18 — createGame uses `config.seed ?? Date.now()`; ADR-002 forbids non-deterministic global reads in src/engine/; remove todo when seed handling moves to the caller (see DEFECTS.md)' },
   () => {
     // Source-introspection: src/engine/ must contain NO non-deterministic global
     // reads. Date.now( is currently the only one (game.js seed fallback).

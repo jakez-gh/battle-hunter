@@ -70,6 +70,21 @@ export function createScreenStack() {
       triggerFade();
       return s;
     },
+    // Unwind the stack until the screen tagged `tag` is on top (it stays).
+    // Returns true if such a screen was found, false otherwise (stack untouched).
+    // Used to route back to the Hub regardless of what sits above it (D20):
+    // story leaves [Title, Hub, Client, RESULTS], so a blind pop misses the Hub.
+    popToTag(tag) {
+      const i = stack.findIndex((s) => s?.tag === tag);
+      if (i < 0) return false;
+      while (stack.length > i + 1) {
+        const s = stack.pop();
+        s?.exit?.();
+      }
+      top()?.resume?.();
+      triggerFade();
+      return true;
+    },
     replace(s) {
       const old = stack.pop();
       old?.exit?.();
@@ -565,6 +580,7 @@ export function makeTitleScreen(app) {
     // Push Hub below so results screen pops back to it, then launch directly into
     // a Level 1 Normal mission — skips the Client/party-setup friction (F6 demo path).
     app.session.mode = 'normal';
+    app.session.coopIds = []; // D04: clear any stale co-op party (1 human + 3 AI)
     app.stack.push(makeHubScreen(app));
     const hunter = currentHunter(app);
     if (hunter) {
@@ -1114,6 +1130,7 @@ export function makeHubScreen(app) {
   const openLeaderboard = () => { sfx.menuConfirm(); app.stack.push(makeLeaderboardScreen(app)); };
   const iconRect = (i) => ({ x: 120 + i * 190, y: 160, w: 150, h: 130 });
   return {
+    tag: 'hub', // lets popToTag('hub') unwind back here from RESULTS/RunSummary (D20)
     enter() { app.music('hub'); },
     resume() { app.music('hub'); },
     update(dt) { t += dt; },
@@ -2521,8 +2538,12 @@ export function makeGameScreen(app, g) {
       if (broken) { if (k === 'cancel') { app.music('hub'); app.stack.pop(); } return; }
       if (handoff) { handoff = null; return; }
       if (tipOverlay) dismissTip();
-      if (k === 'cancel' && !host.top()) { openPauseMenu(); return; }
-      if (host.top()) { host.key(k); return; }
+      // D21: while steering, Esc must commit/stop the move (handled below), not
+      // open pause — no menu is open during steer so !host.top() is always true.
+      if (k === 'cancel' && !host.top() && !steering) { openPauseMenu(); return; }
+      // D23: a held Enter auto-repeats; don't re-fire confirm into an open menu
+      // (YOUR TURN → Move/Attack push a submenu synchronously and would fall through).
+      if (host.top()) { if (!(k === 'confirm' && e?.repeat)) host.key(k); return; }
       if (k === 'speedDown') { aiSpeed = Math.max(1, Math.floor(aiSpeed / 2)); say(`AI speed: ${aiSpeed}x`, 1.2); return; }
       if (k === 'speedUp') { aiSpeed = Math.min(64, aiSpeed * 2); say(`AI speed: ${aiSpeed}x`, 1.2); return; }
       if (A.rendererBusy(g.renderer)) { A.rendererSkip(g.renderer); return; } // any key skips animations
@@ -2538,7 +2559,7 @@ export function makeGameScreen(app, g) {
         if (k === 'undo') { undoStep(); return; }
         let acts = [];
         try { acts = A.legalActions(st) || []; } catch { /* ignore */ }
-        if (DIR_BY_KEY[k]) {
+        if (DIR_BY_KEY[k] && !e?.repeat) { // D22: ignore OS auto-repeat so a held arrow doesn't overshoot
           const step = acts.find((a) => a.type === 'step' && a.dir === DIR_BY_KEY[k]);
           if (step) { undoStack.push(snapshot(st)); act(step); } else sfx.error();
         } else if (k === 'confirm' || k === 'cancel') {
@@ -3466,7 +3487,9 @@ export function makeResultsScreen(app, g) {
       if (e?.code === 'KeyH' && win && !g.runState && t >= 1.8) {
         sfx.menuConfirm();
         applyToRoster();
-        app.stack.pop(); // go to hub first
+        // Route back to the actual Hub before launching the Daily Hunt (D20):
+        // story leaves Client below RESULTS, so a blind single pop misses the Hub.
+        if (!app.stack.popToTag('hub')) app.stack.pop();
         app.stack.push(makeRelicDiveScreen(app, { daily: true }));
       }
     },
@@ -3988,7 +4011,8 @@ export function makeRunSummaryScreen(app, g) {
     onKey(k, e) {
       if (k === 'confirm' || k === 'cancel') {
         sfx.menuConfirm();
-        app.stack.pop(); // back to hub
+        // Unwind to the actual Hub (D20) — story leaves Client below, so a blind pop misses it.
+        if (!app.stack.popToTag('hub')) app.stack.pop();
       }
       if (e?.code === 'KeyS') copyShare();
     },
@@ -3997,7 +4021,10 @@ export function makeRunSummaryScreen(app, g) {
       const shareBoxY = Math.max(330 + metaRows * 20 + 6, 340);
       const btnY = shareBoxY + 92;
       if (pos.y >= btnY && pos.y < btnY + 36) copyShare();
-      else { sfx.menuConfirm(); app.stack.pop(); }
+      else {
+        sfx.menuConfirm();
+        if (!app.stack.popToTag('hub')) app.stack.pop();
+      }
     },
     draw(ctx) {
       drawWallpaper(ctx, app.W, app.H, app.options().wallpaper);

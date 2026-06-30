@@ -3,8 +3,8 @@
 // an AudioContext (unavailable in Node) — the defect lives in the function body,
 // not in observable runtime output reachable from a pure Node test.
 //
-// Each test wraps its assertion as a { todo: '...' } so the file exits 0 even
-// while the defect is unresolved. Remove the todo once the fix lands.
+// These are hard regression guards: the defect is fixed, so each test now passes;
+// it will fail if the defect regresses.
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -28,9 +28,6 @@ const setVolumesBody = setVolumesMatch ? setVolumesMatch[1] : '';
 
 test(
   'D24: setVolumes uses an AudioParam ramp (setTargetAtTime or linearRampToValueAtTime) not a bare .gain.value assignment',
-  {
-    todo: 'DEFECT D24 — setVolumes assigns gain.value directly causing audio click/pop on slider scrub; remove todo when fixed (see DEFECTS.md)',
-  },
   () => {
     // The body must have been extracted; if it's empty the regex failed and
     // the test itself is broken — fail loudly so we notice.
@@ -40,7 +37,6 @@ test(
     );
 
     // PRIMARY assertion: the fixed code must use a scheduled ramp.
-    // Currently absent → this fails (todo records the defect).
     assert.match(
       setVolumesBody,
       /setTargetAtTime|linearRampToValueAtTime/,

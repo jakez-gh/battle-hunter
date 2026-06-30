@@ -1,8 +1,7 @@
-// FAILING regression tests documenting already-diagnosed persistence/codec
+// Regression tests documenting already-diagnosed persistence/codec
 // defects (see DEFECTS.md D15, D16, D17). Each test asserts the CORRECT
-// (fixed/spec) behavior, so it fails against today's buggy code; each is wrapped
-// as a `todo` so the suite stays green until the fix lands (remove the todo
-// when the defect is fixed).
+// (fixed/spec) behavior. These are hard regression guards: the defects are fixed,
+// so each test now passes; it will fail if the defect regresses.
 //
 // Pure: no DOM/canvas/audio/timers/network. save.js falls back to an in-memory
 // store under Node; we reset it between leaderboard tests via resetMemoryStore,
@@ -24,7 +23,6 @@ import {
 // or tampered strings). A round-trip of an encoder-produced string must verify.
 // --------------------------------------------------------------------------
 test('D15: an encoder-produced string with a missing date round-trips (decode != null)',
-  { todo: 'DEFECT D15 — encode/decode disagree on legal date; remove todo when fixed (see DEFECTS.md)' },
   () => {
     // Valid run object EXCEPT date is missing -> encode emits an empty date with
     // a correct checksum.
@@ -45,7 +43,6 @@ test('D15: an encoder-produced string with a missing date round-trips (decode !=
 // must be rejected (decode -> null).
 // --------------------------------------------------------------------------
 test('D16: decode rejects an unsupported future version (returns null)',
-  { todo: 'DEFECT D16 — decode accepts unknown version; remove todo when fixed (see DEFECTS.md)' },
   () => {
     const futureRun = {
       version: 2, date: '2026-06-24', rootSeed: 3735928559,
@@ -67,7 +64,6 @@ test('D16: decode rejects an unsupported future version (returns null)',
 // score. The legitimate top score must sort first (rank 0).
 // --------------------------------------------------------------------------
 test('D17: a legitimate top score outranks a corrupt non-numeric stored score (rank 0)',
-  { todo: 'DEFECT D17 — leaderboard NaN comparator on corrupt stored score; remove todo when fixed (see DEFECTS.md)' },
   () => {
     resetMemoryStore();
     const mode = 'relic-dive';
