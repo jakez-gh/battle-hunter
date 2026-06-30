@@ -1915,7 +1915,7 @@ export function makeOptionsScreen(app) {
       opts.wallpaper = unlocked[(at + dir + unlocked.length) % unlocked.length];
       sfx.menuMove();
     } else if (row === 'aiSpeed') {
-      opts.aiSpeed = Math.max(1, Math.min(64, (opts.aiSpeed ?? 8) + dir));
+      opts.aiSpeed = Math.max(1, Math.min(64, (opts.aiSpeed ?? 2) + dir));
       sfx.menuMove();
     } else if (row === 'colorblind') {
       opts.colorblind = !opts.colorblind;
@@ -2091,7 +2091,7 @@ export function makeGameScreen(app, g) {
   let steering = false;
   let undoStack = [];      // pre-step snapshots for in-move soft-undo
   let timing = null;       // { t } while a react.* minigame runs
-  let aiSpeed = app.options().aiSpeed ?? 8;
+  let aiSpeed = app.options().aiSpeed ?? 2;
   let aiDelay = 0.2 / aiSpeed;
   let infoIndex = 0;
   let banner = null;       // { text, t }
@@ -2812,8 +2812,28 @@ export function makeGameScreen(app, g) {
   // undo (only while steering, when there's a step to take back).
   function drawToolbar(ctx) {
     btnBox(ctx, SPEED_BTN);
-    text(ctx, `${aiSpeed}×`, SPEED_BTN.x + SPEED_BTN.w / 2, SPEED_BTN.y + 12, { size: 15, align: 'center', color: '#cfd6f0' });
-    text(ctx, 'speed', SPEED_BTN.x + SPEED_BTN.w / 2, SPEED_BTN.y + 32, { size: 8, align: 'center', color: '#8088a8' });
+    // Speed label
+    text(ctx, `${aiSpeed}×`, SPEED_BTN.x + SPEED_BTN.w / 2, SPEED_BTN.y + 6, { size: 12, align: 'center', color: '#cfd6f0' });
+    // 7-segment bar: one pip per speed level (1×/2×/4×/8×/16×/32×/64×)
+    { const LEVELS = [1, 2, 4, 8, 16, 32, 64];
+      const curIdx = LEVELS.indexOf(aiSpeed);
+      const nSegs = LEVELS.length, segW = 4, segGap = 1;
+      const totalBarW = nSegs * segW + (nSegs - 1) * segGap;
+      const bsx = (SPEED_BTN.x + (SPEED_BTN.w - totalBarW) / 2) | 0;
+      const bsy = SPEED_BTN.y + 22;
+      const segH = 10;
+      for (let i = 0; i < nSegs; i++) {
+        const filled = i <= curIdx;
+        const sx = bsx + i * (segW + segGap);
+        ctx.fillStyle = filled ? '#f0c050' : '#222638';
+        ctx.fillRect(sx, bsy, segW, segH);
+        if (filled) {
+          ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = '#fff';
+          ctx.fillRect(sx, bsy, segW, 2); ctx.restore();
+        }
+      }
+    }
+    text(ctx, 'speed', SPEED_BTN.x + SPEED_BTN.w / 2, SPEED_BTN.y + 35, { size: 8, align: 'center', color: '#8088a8' });
 
     btnBox(ctx, INFO_BTN);
     text(ctx, 'i', INFO_BTN.x + INFO_BTN.w / 2, INFO_BTN.y + 10, { size: 20, align: 'center', color: '#cfd6f0' });

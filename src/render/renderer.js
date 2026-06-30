@@ -191,6 +191,18 @@ export function createRenderer(canvas, opts = {}) {
     return (pool ?? []).find((u) => String(u.id) === k.slice(1)) ?? null;
   }
 
+  // Resolve a raw ID (number or string) to the canonical unit key by searching
+  // both pools. Needed for battleStarted events where ev.attacker/defender are
+  // raw numeric IDs that unitKey() would wrongly prefix as 'h'.
+  function canonicalKey(rawId) {
+    if (rawId == null) return null;
+    const sid = String(rawId);
+    if (sid[0] === 'h' || sid[0] === 'm') return sid; // already prefixed
+    if ((state?.hunters ?? []).some((u) => String(u.id) === sid)) return `h${sid}`;
+    if ((state?.monsters ?? []).some((u) => String(u.id) === sid)) return `m${sid}`;
+    return `h${sid}`; // fallback: assume hunter
+  }
+
   function evKey(ev) {
     return unitKey(ev.unit ?? ev.hunter ?? ev.monster ?? null);
   }
@@ -671,7 +683,7 @@ export function createRenderer(canvas, opts = {}) {
         break;
       }
       case 'battleStarted': {
-        battle = { a: k ?? unitKey(ev.attacker), d: unitKey(ev.defender ?? ev.target),
+        battle = { a: canonicalKey(ev.attacker) ?? k, d: canonicalKey(ev.defender ?? ev.target),
           response: null, escape: null, strike: null };
         // Pre-combat clash aura: pulse rings at both combatants + flash
         const baKey = battle.a, bdKey = battle.d;
@@ -3344,8 +3356,13 @@ export function createRenderer(canvas, opts = {}) {
     text('DEFENDER', bx + bw - 8, by + 5, 'rgba(154,223,232,0.55)', 9, 'right');
     const defImg = spriteFor(battle.d);
     const defW = defImg ? defImg.width * 3 : 48;
-    drawCombatant(battle.a, bx + 24, by + 28, false);
-    drawCombatant(battle.d, bx + bw - 24 - defW, by + 28, true);
+    // Lunge animation: attacker surges toward center on strikeRolled, defender staggers back
+    const _isStrike = anim?.ev.type === 'strikeRolled';
+    const _sp = _isStrike ? anim.t / anim.dur : 0;
+    const _lungeX = _isStrike ? Math.round(Math.sin(_sp * Math.PI) * 24) : 0;
+    const _staggerX = (_isStrike && _sp > 0.5) ? Math.round(Math.sin((_sp - 0.5) * Math.PI) * 12) : 0;
+    drawCombatant(battle.a, bx + 24 + _lungeX, by + 28, false);
+    drawCombatant(battle.d, bx + bw - 24 - defW + _staggerX, by + 28, true);
     // Center divider â€” thin vertical line with gradient fade to top/bottom
     { const dvx = (bx + bw / 2) | 0;
       const dvAlpha = 0.18 + 0.10 * Math.sin(clock / 900);
