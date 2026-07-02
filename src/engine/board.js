@@ -429,6 +429,54 @@ export function reachableTiles(board, occupied, from, range) {
   return out;
 }
 
+// Shortest legal move path from `from` to `to` within `range` orthogonal steps,
+// as an ordered list of direction labels ('N'|'S'|'E'|'W'). Steps stay on floor
+// and never enter an occupied tile; `to` must itself be a free floor tile a unit
+// can stand on. Returns [] if already there, or null if `to` is not reachable
+// within `range` (i.e. not one of the "available" squares). Used for tap/click-
+// to-move: a single tap on a reachable tile walks the unit all the way there.
+const STEP_DIRS = [
+  { n: 'E', x: 1, y: 0 }, { n: 'W', x: -1, y: 0 },
+  { n: 'S', x: 0, y: 1 }, { n: 'N', x: 0, y: -1 },
+];
+export function movePath(board, occupied, from, to, range) {
+  if (!from || !to) return null;
+  if (from.x === to.x && from.y === to.y) return [];
+  if (!(to.x >= 0 && to.y >= 0 && to.x < board.w && to.y < board.h)) return null;
+  if (!board.floor[to.y][to.x]) return null;
+  const occ = asOccupied(occupied);
+  if (occ.has(key(to.x, to.y))) return null; // cannot end a move on an occupant
+  const seen = new Set([key(from.x, from.y)]);
+  const prev = new Map(); // "x,y" -> { from: parentKey, dir }
+  let frontier = [from];
+  for (let d = 1; d <= range && frontier.length; d++) {
+    const next = [];
+    for (const p of frontier) {
+      for (const s of STEP_DIRS) {
+        const nx = p.x + s.x, ny = p.y + s.y;
+        if (nx < 0 || ny < 0 || nx >= board.w || ny >= board.h) continue;
+        if (!board.floor[ny][nx]) continue;
+        const k = key(nx, ny);
+        if (seen.has(k) || occ.has(k)) continue;
+        seen.add(k);
+        prev.set(k, { from: key(p.x, p.y), dir: s.n });
+        if (nx === to.x && ny === to.y) {
+          const path = [];
+          for (let cur = k; prev.has(cur); ) {
+            const e = prev.get(cur);
+            path.push(e.dir);
+            cur = e.from;
+          }
+          return path.reverse();
+        }
+        next.push({ x: nx, y: ny });
+      }
+    }
+    frontier = next;
+  }
+  return null; // unreachable within range
+}
+
 // Uniform random unoccupied floor tile, excluding the EXIT (warp destinations
 // and monster spawns must never land there — monsters can't enter it at all).
 export function randomFreeTile(state, rng) {

@@ -399,9 +399,9 @@ function makeMenu(items, { title = '', onPick, onCancel, footer = '', footerColo
 
 function drawMenu(ctx, m, x, y, w, opt = {}) {
   const lh = opt.lineH ?? 24;
-  const pad = 10;
-  const headH = m.title ? 26 : 0;
-  const footH = m.footer ? 20 : 0;
+  const pad = opt.pad ?? 10;
+  const headH = m.title ? (opt.headH ?? 26) : 0;
+  const footH = m.footer ? (opt.footH ?? 20) : 0;
   const h = m.items.length * lh + pad * 2 + headH + footH;
   box(ctx, x, y, w, h, { title: m.title });
   m.rects = [];
@@ -2041,7 +2041,7 @@ export function makeOptionsScreen(app) {
           text(ctx, `${spd}x`, 712, y, { size: 14, color: DIM }); return;
         }
         if (row === 'colorblind') {
-          text(ctx, 'Colour Blind', 260, y, { size: 18, color: sel ? '#fff' : FG });
+          text(ctx, 'Color Blind', 260, y, { size: 18, color: sel ? '#fff' : FG });
           const cb = opts.colorblind;
           text(ctx, cb ? 'ON  (high contrast)' : 'OFF', 500, y, { size: 16, color: cb ? '#4ee8d0' : DIM });
           text(ctx, 'boosts saturation for red-green CVD', 500, y + 22, { size: 11, color: DIM }); return;
@@ -2053,7 +2053,7 @@ export function makeOptionsScreen(app) {
           ctx.restore();
           text(ctx, `${unlocked.length}/${WALLPAPERS.length} unlocked (find Discs)`, 500, y + 22, { size: 11, color: DIM }); return;
         }
-        text(ctx, cap(row), 260, y, { size: 18, color: sel ? '#fff' : FG });
+        text(ctx, row === 'sfx' ? 'SFX' : cap(row), 260, y, { size: 18, color: sel ? '#fff' : FG });
         const v = opts.volumes[row];
         drawSlider(v, 500, y + 4, 200, sel ? '#d8b83a' : '#7e9fee');
         text(ctx, `${Math.round(v * 100)}%`, 712, y, { size: 14, color: DIM });
@@ -2106,6 +2106,7 @@ export function makeGameScreen(app, g) {
   const host = makeMenuHost();
   let uiKey = null;        // phase signature the menus were built for
   let steering = false;
+  let pendingPath = [];    // queued step dirs for tap/click-to-move (walk to a tapped tile)
   let undoStack = [];      // pre-step snapshots for in-move soft-undo
   let timing = null;       // { t } while a react.* minigame runs
   let aiSpeed = app.options().aiSpeed ?? 2;
@@ -2159,6 +2160,7 @@ export function makeGameScreen(app, g) {
   // pre-step snapshot (the engine stays pure; we never un-roll the die — the
   // stack is empty at 0 steps). Feeds the renderer the restored state directly.
   function undoStep() {
+    pendingPath = []; // undo cancels any in-progress click-to-move walk
     if (!undoStack.length) { sfx.error(); return; }
     g.state = undoStack.pop();
     A.rendererFeed(g.renderer, g.state, []);
@@ -2213,7 +2215,7 @@ export function makeGameScreen(app, g) {
           const FC = { red: '#ff6a5a', blue: '#4a7dff', green: '#3aa84a', yellow: '#e0c63a' };
           say(`${cap(ev.color)} flag - rolled ${ev.roll}!`, 2.2, FC[ev.color] ?? GOLD);
           break; }
-        case 'monsterSpawned': say(`A ${ev.kind} appears!`, 2.2, '#cc4a3a'); break;
+        case 'monsterSpawned': say(`${/^[AEIOU]/.test(ev.kind) ? 'An' : 'A'} ${ev.kind} appears!`, 2.2, '#cc4a3a'); break;
         case 'wyrmSpawned': say('THE WYRM RISES!', 3, BAD); wyrmCinState = { max: 2.8, t: 2.8, line2: 'RISES' }; showTip('wyrm'); break;
         case 'wyrmRespawned': say('The WYRM returns...', 3, '#e06090'); wyrmCinState = { max: 1.8, t: 1.8, line2: 'RETURNS' }; break;
         case 'missionWon':
@@ -2499,7 +2501,7 @@ export function makeGameScreen(app, g) {
 
       if (!A.isHumanTurn(st)) {
         // AI actions fire immediately without waiting for renderer animations
-        host.clear(); steering = false; timing = null; uiKey = null;
+        host.clear(); steering = false; timing = null; uiKey = null; pendingPath = [];
         aiDelay -= dt;
         if (aiDelay > 0) return;
         aiDelay = 0.3 / aiSpeed;
@@ -2525,6 +2527,20 @@ export function makeGameScreen(app, g) {
 
       // wait for animations before showing UI
       if (A.rendererBusy(g.renderer)) return;
+      // Click-to-move: walk one queued step per idle tick toward the tapped tile.
+      // Driven off the live phase (not the steering flag, which act() toggles each
+      // step); the queue clears the instant movement ends (trap/box/exit/range).
+      if (pendingPath.length) {
+        if (g.state.phase !== 'turn.steer') { pendingPath = []; }
+        else {
+          let stepActs = [];
+          try { stepActs = A.legalActions(g.state) || []; } catch { /* ignore */ }
+          const dir = pendingPath.shift();
+          const step = stepActs.find((a) => a.type === 'step' && a.dir === dir);
+          if (step) { act(step); return; }
+          pendingPath = [];
+        }
+      }
       if (timing) {
         timing.t += dt;
         if (timing.t >= TIMING.timeout) act({ type: 'timing', hit: false });
@@ -2560,6 +2576,7 @@ export function makeGameScreen(app, g) {
         let acts = [];
         try { acts = A.legalActions(st) || []; } catch { /* ignore */ }
         if (DIR_BY_KEY[k] && !e?.repeat) { // D22: ignore OS auto-repeat so a held arrow doesn't overshoot
+          pendingPath = []; // a manual step cancels any in-progress click-to-move walk
           const step = acts.find((a) => a.type === 'step' && a.dir === DIR_BY_KEY[k]);
           if (step) { undoStack.push(snapshot(st)); act(step); } else sfx.error();
         } else if (k === 'confirm' || k === 'cancel') {
@@ -2605,10 +2622,13 @@ export function makeGameScreen(app, g) {
           return;
         }
         if (me?.pos) {
-          const dx = tile.x - me.pos.x, dy = tile.y - me.pos.y;
-          const dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'E' : 'W') : (dy > 0 ? 'S' : 'N');
-          const step = acts.find((a) => a.type === 'step' && a.dir === dir);
-          if (step) { undoStack.push(snapshot(st)); act(step); }
+          // Click-to-move: walk the whole way to the tapped tile if it is one of
+          // the reachable ("available") squares — not just a single step. update()
+          // consumes the queued path one step per idle tick so traps/boxes still
+          // resolve per step and a trap-dodge cleanly interrupts the walk.
+          const path = A.movePath(st, me.pos, tile);
+          if (path && path.length) { undoStack.push(snapshot(st)); pendingPath = path; }
+          else sfx.error();
         }
       }
     },
@@ -2649,7 +2669,23 @@ export function makeGameScreen(app, g) {
           text(ctx, 'PAUSED', 360, 340, { size: 28, align: 'center', color: GOLD, shadow: false });
           ctx.restore();
         }
-        drawMenu(ctx, m, 724, 420, 232, { lineH: 22, size: 13 });
+        if (app.isTouch && m.title !== 'Paused') {
+          // Phone: render the in-play decision menu (Move/Rest/Attack, battle
+          // response, choices, mission-over) as a large centered dialog with a
+          // dimmed board behind it — the compact side menu is unreadable/untappable
+          // on a phone. drawMenu recomputes m.rects for this geometry, so the
+          // bigger rows are also the tap targets (hit-testing stays consistent).
+          const dw = 460, lineH = 46, size = 24, pad = 16;
+          const headH = m.title ? 40 : 0, footH = m.footer ? 30 : 0;
+          const dh = m.items.length * lineH + pad * 2 + headH + footH;
+          const dx = Math.round((720 - dw) / 2);
+          const dy = Math.round(Math.max(12, (app.H - dh) / 2));
+          ctx.save(); ctx.globalAlpha = 0.5; ctx.fillStyle = '#04040a';
+          ctx.fillRect(0, 0, 720, app.H); ctx.restore();
+          drawMenu(ctx, m, dx, dy, dw, { lineH, size, pad, headH, footH });
+        } else {
+          drawMenu(ctx, m, 724, 420, 232, { lineH: 22, size: 13 });
+        }
       }
       if (steering) drawSteerHint(ctx, st);
       if (timing) drawTiming(ctx, timing);

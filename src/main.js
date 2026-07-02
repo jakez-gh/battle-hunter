@@ -9,7 +9,7 @@
 
 import { interpolateInternal, RIVALS, rivalStats } from './engine/missions.js';
 import { makeRng } from './engine/rng.js';
-import { reachableTiles, occupiedSet } from './engine/board.js';
+import { reachableTiles, occupiedSet, movePath } from './engine/board.js';
 import { perkHasEffect, perkStatBonuses } from './engine/perks.js';
 import { modifierConfig, scoreMultiplier, rollDailyModifier } from './engine/modifiers.js';
 import { buildAtlas } from './render/sprites.js';
@@ -314,6 +314,14 @@ const adapt = {
   clearOverlays(r) {
     try { r?.clearOverlays?.(); } catch { /* optional */ }
   },
+  // Tap/click-to-move: shortest legal path (list of 'N'|'S'|'E'|'W' steps) from
+  // the current unit to a tapped tile, within the remaining move range. Returns
+  // null if the tile isn't one of the reachable "available" squares. The UI walks
+  // the unit one step per idle tick so traps/boxes still resolve per step.
+  movePath(state, from, to) {
+    try { return movePath(state.board, occupiedSet(state), from, to, state.move?.remaining ?? 0); }
+    catch { return null; }
+  },
 };
 
 // Minimal board view used only when renderer.js is absent/broken, so the
@@ -382,6 +390,10 @@ const stack = createScreenStack();
 
 const app = {
   canvas, ctx, W: canvas.width, H: canvas.height,
+  // Touch devices (phones/tablets) get larger, centered in-play dialogs — the
+  // compact side menu is too small to read/tap on a phone.
+  isTouch: (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0)
+    || (typeof window !== 'undefined' && 'ontouchstart' in window),
   atlas, stack, adapt,
   roster: loadRoster(),
   session: { mode: 'normal', hunterId: null, coopIds: [] },

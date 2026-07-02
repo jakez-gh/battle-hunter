@@ -512,7 +512,7 @@ adjacency, move-then-attack reachable, monster defenders only counter) as correc
 ## Round 3 — UI text defects found by automated screen study {#round-3--ui-text}
 
 Found by Playwright A15-emulator automation + screenshot review (2026-07-01).
-**Documented with failing tests, not yet fixed.**
+**Fixed (2026-07-02) during the UI pass; the tests now pass as regression guards.**
 
 ### D28 — Options screen renders the SFX volume row label as "Sfx" instead of "SFX" {#d28}
 
@@ -522,7 +522,7 @@ Found by Playwright A15-emulator automation + screenshot review (2026-07-01).
   only the first character, so the 'sfx' row renders as **"Sfx"** — an unreadable
   half-acronym. The correct label is **"SFX"** (industry-standard all-caps abbreviation).
 - **Fix:** Add a special case: `row === 'sfx' ? 'SFX' : cap(row)`.
-- **Test:** `tests/defects-ui.test.mjs` (D28 — currently failing).
+- **Test:** `tests/defects-ui.test.mjs` (D28 — fixed, now passing).
 
 ### D29 — Options screen uses British spelling "Colour Blind" instead of "Color Blind" {#d29}
 
@@ -531,7 +531,7 @@ Found by Playwright A15-emulator automation + screenshot review (2026-07-01).
 - **Defect:** The colorblind accessibility row hardcodes the label `'Colour Blind'`
   (British English). The rest of the game and codebase uses American English spellings.
 - **Fix:** Change the literal: `'Colour Blind'` → `'Color Blind'`.
-- **Test:** `tests/defects-ui.test.mjs` (D29 — currently failing).
+- **Test:** `tests/defects-ui.test.mjs` (D29 — fixed, now passing).
 
 ### D30 — Monster spawn banner always says "A [KIND] appears!" — wrong article for OOZ {#d30}
 
@@ -543,7 +543,41 @@ Found by Playwright A15-emulator automation + screenshot review (2026-07-01).
   **"A OOZ appears!"**. The correct form is **"An OOZ appears!"**.
 - **Fix:** Use an article-aware expression:
   `` `${/^[AEIOU]/.test(ev.kind) ? 'An' : 'A'} ${ev.kind} appears!` ``
-- **Test:** `tests/defects-ui.test.mjs` (D30 — currently failing).
+- **Test:** `tests/defects-ui.test.mjs` (D30 — fixed, now passing).
+
+---
+
+## Round 4 — UI/UX pass (2026-07-02, verified on the A15 emulator)
+
+Requested UI work, implemented and verified by driving the real app in Chromium
+(Playwright A15 emulation) with screenshots + scripted input.
+
+### D31 — Click-to-move only stepped one tile (dominant axis), not to the tapped square {#d31}
+
+- **Severity:** Medium (core touch UX). **Fixed.**
+- **Location:** `src/ui/screens.js` game-screen `onClick` (steering branch).
+- **Defect:** Tapping a reachable ("available") square during steering computed the
+  single dominant-axis direction and took **one** step, so a tap on a square 2+ tiles
+  away barely moved the unit — contrary to the expectation that tapping an available
+  square walks the character *to* that square.
+- **Fix:** New pure helper `board.movePath(board, occupied, from, to, range)` returns
+  the shortest legal path (step dirs) within the move range; `onClick` queues it and
+  `update()` walks one step per idle tick (so traps/boxes still resolve per step and a
+  dodge cleanly interrupts). Exposed via `A.movePath`.
+- **Tests:** `tests/movepath.test.mjs` (7 hard tests). Verified end-to-end on A15: a
+  hunter tapped 2 tiles away walked exactly to the target, staying in steering.
+
+### D32 — Move/Rest (and other in-play) menus too small to read/tap on a phone {#d32}
+
+- **Severity:** Medium (mobile usability). **Fixed.**
+- **Location:** `src/ui/screens.js` game-screen `draw` (host-menu render); touch flag
+  in `src/main.js` (`app.isTouch`).
+- **Defect:** In-play decision menus were drawn as a compact side panel (font 13, 232px)
+  — unreadable and hard to tap on a phone.
+- **Fix:** On touch devices, render the in-play menu as a large centered dialog (font 24,
+  460px, dimmed board behind). `drawMenu` recomputes hit-rects for the new geometry, so
+  taps land correctly. Verified on the A15 emulator (Move → submenu responds to taps).
+- **Test:** presentation-only; verified via emulator screenshots (no unit test).
 
 ---
 
