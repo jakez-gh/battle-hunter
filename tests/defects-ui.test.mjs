@@ -120,3 +120,50 @@ test('D23: open-menu key dispatch suppresses confirm auto-repeat (screens.js)',
       "the open-menu branch (if (host.top())) must guard host.key against repeated 'confirm' via !(k === 'confirm' && e?.repeat)",
     );
   });
+
+// ---------------------------------------------------------------------------
+// D28 — Options screen renders the SFX volume row label as "Sfx" instead of "SFX".
+// Fix: special-case 'sfx' in the options draw loop: `row === 'sfx' ? 'SFX' : cap(row)`.
+// Today cap('sfx') = 'Sfx'; the string 'SFX' does not appear in screens.js.
+
+test('D28: options screen renders SFX row label in all-caps (screens.js)', () => {
+  // FIXED condition: the literal 'SFX' appears in screens.js (added by the special-case).
+  // Today 'SFX' is absent → this assertion fails.
+  assert.match(
+    screensSrc,
+    /'SFX'/,
+    "options screen must label the sfx volume row 'SFX' (all-caps), not 'Sfx' produced by cap(row)",
+  );
+});
+
+// ---------------------------------------------------------------------------
+// D29 — Options screen uses British spelling "Colour Blind" instead of "Color Blind".
+// Fix: change the hardcoded label literal from 'Colour Blind' → 'Color Blind'.
+// Today 'Colour Blind' is hardcoded at ~line 2044.
+
+test('D29: options screen uses American spelling "Color Blind", not "Colour Blind" (screens.js)', () => {
+  // FIXED condition: the British spelling 'Colour Blind' is gone from screens.js.
+  // Today it IS present → this assertion fails.
+  assert.doesNotMatch(
+    screensSrc,
+    /'Colour Blind'/,
+    "options screen must not use British spelling 'Colour Blind'; change the label to 'Color Blind'",
+  );
+});
+
+// ---------------------------------------------------------------------------
+// D30 — Monster spawn banner always says "A [KIND] appears!" — wrong for OOZ (vowel initial).
+// Fix: `${/^[AEIOU]/.test(ev.kind) ? 'An' : 'A'} ${ev.kind} appears!`
+// Today the monsterSpawned handler hardcodes `A ${ev.kind} appears!` unconditionally,
+// producing "A OOZ appears!" instead of "An OOZ appears!".
+
+test('D30: monsterSpawned banner does not use hardcoded "A" article for all monster kinds (screens.js)', () => {
+  // FIXED condition: the exact bug pattern is gone — the handler no longer uses
+  // the bare template literal `A ${ev.kind} appears!` (replaced by article-aware code).
+  // Today the pattern IS present → this assertion fails.
+  assert.doesNotMatch(
+    screensSrc,
+    /`A \$\{ev\.kind\} appears!/,
+    'monsterSpawned handler must use article-aware wording — "An OOZ appears!" not "A OOZ appears!"',
+  );
+});

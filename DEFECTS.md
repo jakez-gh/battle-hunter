@@ -9,10 +9,13 @@ The four findings that did not survive verification are listed at the bottom.
   is therefore on an **uncovered or test-masked** path — a green suite does not
   contradict them. Several are actively *masked* by tests that assert the buggy
   behavior (see [Cross-cutting notes](#cross-cutting-notes)).
-- **Status: ALL FIXED (2026-06-30).** Every defect below is resolved; each has a
-  hard regression test in `tests/defects-*.test.mjs` (suite: 458 pass, 0 fail).
-  One further engine defect ([D25](#d25)) was found and fixed during the fix pass.
-  Locations are `path:line` against the tree at audit time. Spec refs → `DESIGN.md`.
+- **Status: D01–D25 FIXED (2026-06-30).** Each has a hard regression test in
+  `tests/defects-*.test.mjs`. One further engine defect ([D25](#d25)) was found and
+  fixed during the fix pass. Locations are `path:line` against the tree at audit
+  time. Spec refs → `DESIGN.md`.
+- **Round 2 (2026-07-01) — 2 new defects, OPEN (documented, not yet fixed):**
+  [D26](#d26), [D27](#d27). Each has a failing (todo-wrapped) test in
+  `tests/defects-r2-*.test.mjs` documenting it. See the **Round 2** section below.
 - Severity = player-facing blast radius × likelihood of hitting the path in real play.
 
 | # | Severity | Area | Defect |
@@ -465,6 +468,82 @@ The four findings that did not survive verification are listed at the bottom.
   Only fires when the list is otherwise empty, so it never changes behaviour for a unit
   that can act — and cannot affect determinism for any previously-passing seed.
 - **Guard:** `tests/termination.test.mjs` (all 20 seeds reach `mission.over`).
+
+---
+
+## Round 2 — newly found (open) {#round-2--newly-found-open}
+
+Found by a second audit pass (2026-07-01) focused on proximity/engagement and
+under-covered mechanics. **Documented with failing (todo) tests, not yet fixed.**
+The pass also re-verified board generation/connectivity (1000 seeds), pathfinding,
+mission setup, scoring math, and the *core* proximity rules (orthogonal-only
+adjacency, move-then-attack reachable, monster defenders only counter) as correct.
+
+### D26 — A hunter can Surrender to a monster attacker, handing it an item (or the Target) {#d26}
+
+- **Severity:** High. **Spec:** §2.8 ("Surrender … not allowed vs monsters";
+  "Monsters take nothing").
+- **Location:** `src/engine/game.js:897` (the `battle.response` surrender gate checks
+  only `defender.kind === 'hunter'` — never the *attacker's* kind); transfer at
+  `applyRespond` (~`game.js:1164-1175`) and `applyPick` surrenderGive (~`game.js:1263-1288`).
+- **Defect:** Monsters routinely attack adjacent hunters (§2.10). When one does, the
+  defending hunter is wrongly offered **Surrender**; choosing it pushes the surrendered
+  item into the *monster's* `items` — or, for the Target Item, sets `monster.hasTarget`
+  and makes the monster the `targetHolder`, corrupting the target-chase/win logic.
+- **Fix:** require the **attacker** to be a hunter before offering/allowing surrender
+  (escape/guard remain legal vs monsters; monster *defenders* are already correctly
+  limited to Counter).
+- **Tests:** `tests/defects-r2-proximity.test.mjs` (R2-proximity-1/2/3).
+
+### D27 — Rest lets an Empty-statused hunter draw cards {#d27}
+
+- **Severity:** Medium. **Spec:** §2.9 ("Empty: … can't draw for 1 round"); §2.16.8.
+- **Location:** `src/engine/game.js` `applyRest` (~`1145-1158`) → `drawDeckCards`
+  (~`478-491`), which has no Empty gate.
+- **Defect:** The end-of-turn auto-draw (`game.js:258`) and the green-flag-6 refill
+  (`game.js:466`) both correctly skip drawing while `status.empty` is active, but
+  **Rest** does not — an Empty hunter (e.g. hit by an FNG crit rider last turn) can
+  Rest and refill a full hand, contradicting "can't draw for 1 round".
+- **Fix:** gate Rest's draw on `status.empty` like the other two draw paths.
+- **Test:** `tests/defects-r2-status.test.mjs` (R2-status-1).
+
+---
+
+## Round 3 — UI text defects found by automated screen study {#round-3--ui-text}
+
+Found by Playwright A15-emulator automation + screenshot review (2026-07-01).
+**Documented with failing tests, not yet fixed.**
+
+### D28 — Options screen renders the SFX volume row label as "Sfx" instead of "SFX" {#d28}
+
+- **Severity:** Low (presentation only).
+- **Location:** `src/ui/screens.js` (~line 2056, options draw loop).
+- **Defect:** The options draw loop uses `cap(row)` to label each row. `cap` uppercases
+  only the first character, so the 'sfx' row renders as **"Sfx"** — an unreadable
+  half-acronym. The correct label is **"SFX"** (industry-standard all-caps abbreviation).
+- **Fix:** Add a special case: `row === 'sfx' ? 'SFX' : cap(row)`.
+- **Test:** `tests/defects-ui.test.mjs` (D28 — currently failing).
+
+### D29 — Options screen uses British spelling "Colour Blind" instead of "Color Blind" {#d29}
+
+- **Severity:** Low (presentation only).
+- **Location:** `src/ui/screens.js` (~line 2044, options draw loop, colorblind row).
+- **Defect:** The colorblind accessibility row hardcodes the label `'Colour Blind'`
+  (British English). The rest of the game and codebase uses American English spellings.
+- **Fix:** Change the literal: `'Colour Blind'` → `'Color Blind'`.
+- **Test:** `tests/defects-ui.test.mjs` (D29 — currently failing).
+
+### D30 — Monster spawn banner always says "A [KIND] appears!" — wrong article for OOZ {#d30}
+
+- **Severity:** Low (grammar).
+- **Location:** `src/ui/screens.js` (~line 2218, `monsterSpawned` event handler).
+- **Defect:** The spawn announcement uses the hardcoded indefinite article "A":
+  `` say(`A ${ev.kind} appears!`, 2.2, '#cc4a3a') ``
+  OOZ (Slime) begins with a vowel, producing the grammatically incorrect
+  **"A OOZ appears!"**. The correct form is **"An OOZ appears!"**.
+- **Fix:** Use an article-aware expression:
+  `` `${/^[AEIOU]/.test(ev.kind) ? 'An' : 'A'} ${ev.kind} appears!` ``
+- **Test:** `tests/defects-ui.test.mjs` (D30 — currently failing).
 
 ---
 
