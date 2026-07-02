@@ -1,0 +1,60 @@
+name: Test and Deploy
+
+# Runs the test suite on every push to master. ONLY if tests pass does the
+# game get published to GitHub Pages (a free public URL friends can visit).
+# Battle Hunter is a zero-build, zero-dependency ES-module browser game, so the
+# repo root is served as-is.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# Least-privilege permissions the Pages deploy needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; a newer push supersedes an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Engine tests are pure and dependency-free (package.json "test" = node --test).
+      # If tests ever gain deps, add:  - run: npm ci
+      - name: Run tests
+        run: npm test
+
+  deploy:
+    needs: test            # deploy is gated on the test job succeeding
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Assemble static site (exclude repo/dev files)
+        run: |
+          mkdir -p _site
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='node_modules' \
+            --exclude='tests' \
+            --exclude='_site' \
+            ./ _site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+      - id: deployment
+        uses: actions/deploy-pages@v4
